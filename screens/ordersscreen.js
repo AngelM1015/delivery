@@ -1,38 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Button, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const OrdersScreen = () => {
   const [ordersData, setOrdersData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [noOrdersMessage, setNoOrdersMessage] = useState('');
+  const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
     const initialize = async () => {
       const token = await AsyncStorage.getItem('userToken');
-      if (token) {
-        fetchOrders(token);
-        setupWebSocketConnections(token);
+      const role = await AsyncStorage.getItem('userRole');
+      setUserRole(role);
+      if (token && role) {
+        fetchOrders(token, role);
       }
     };
 
     initialize();
   }, []);
 
-  const fetchOrders = async (token) => {
+  const fetchOrders = async (token, role) => {
+    setLoading(true);
     try {
-      const response = await axios.get('http://localhost:3000/api/v1/orders', { 
-        headers: { Authorization: `Bearer ${token}` } 
-      });
-
-      console.log('API Response:', response.data); // Log the response data here
-
-      if (response.data.message) {
-        setNoOrdersMessage(response.data.message);
-      } else {
-        setOrdersData(response.data);
+      let url = 'http://localhost:3000/api/v1/orders';
+      if (role === 'partner') {
+        url = 'http://localhost:3000/api/v1/partner/orders';
       }
+
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setOrdersData(response.data);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -40,114 +40,69 @@ const OrdersScreen = () => {
     }
   };
 
-  const setupWebSocketConnections = (token) => {
-    const orderWs = new WebSocket(createWebSocketURL('OrderChannel', 'user_order_id', token));
-    orderWs.onmessage = handleMessage;
-
-    const partnerOrderWs = new WebSocket(createWebSocketURL('PartnerOrderChannel', 'partner_order_id', token));
-    partnerOrderWs.onmessage = handleMessage;
-
-    return () => {
-      orderWs.close();
-      partnerOrderWs.close();
-    };
-  };
-
-  const createWebSocketURL = (channel, orderId, token) => {
-    return `ws://localhost:3000/cable?channel=${channel}&order_id=${orderId}&token=${token}`;
-  };
-
-  const handleMessage = (e) => {
-    const message = JSON.parse(e.data);
-    if (message.type === 'message') {
-      const data = JSON.parse(message.message);
-      if (data.status) {
-        updateOrderStatus(data);
-      }
+  const handleOrderAction = async (orderId, action) => {
+    const token = await AsyncStorage.getItem('userToken');
+    try {
+      const url = `http://localhost:3000/api/v1/orders/${orderId}/${action}`;
+      await axios.patch(url, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchOrders(token, userRole);  // Re-fetch orders to update the list
+    } catch (error) {
+      console.error('Error updating order:', error);
     }
   };
 
-  const updateOrderStatus = (updatedOrder) => {
-    const updatedOrders = ordersData.map(order => {
-      if (order.id === updatedOrder.id) {
-        return { ...order, status: updatedOrder.status };
-      }
-      return order;
-    });
-    setOrdersData(updatedOrders);
-  };
-
-  const renderOrder = ({ item }) => (
+  const renderOrderItem = ({ item }) => (
     <View style={styles.orderItem}>
-      <Text style={styles.orderTitle}>{item.title}</Text>
-      <Text style={styles.orderDate}>{item.date}</Text>
-      <Text style={styles.orderStatus}>{item.status}</Text>
+      <Text style={styles.orderTitle}>Order #{item.id}</Text>
+      <Text>Status: {item.status}</Text>
+      {/* Additional order details */}
+      {userRole === 'partner' && (
+        <View>
+          <Button title="Pick Up Order" onPress={() => handleOrderAction(item.id, 'pick_up_order')} />
+          <Button title="Deliver Order" onPress={() => handleOrderAction(item.id, 'deliver_order')} />
+        </View>
+      )}
+      {userRole === 'customer' && (
+        <Button title="Cancel Order" onPress={() => handleOrderAction(item.id, 'cancel_order')} />
+      )}
     </View>
   );
 
   if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
+    return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
   }
 
   return (
-    <View style={styles.container}>
-      {noOrdersMessage ? (
-        <Text style={styles.noOrdersText}>{noOrdersMessage}</Text>
-      ) : (
-        <FlatList
-          data={ordersData}
-          renderItem={renderOrder}
-          keyExtractor={item => item.id.toString()}
-        />
-      )}
-    </View>
+    <FlatList
+      data={ordersData}
+      renderItem={renderOrderItem}
+      keyExtractor={item => item.id.toString()}
+      ListEmptyComponent={<Text>No orders available</Text>}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 20,
+  orderItem: {
+    padding: 20,
+    margin: 10,
     backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+  },
+  orderTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  noOrdersText: {
-    fontSize: 16,
-    color: 'grey',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  orderItem: {
-    backgroundColor: '#f6f6f6',
-    padding: 20,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    borderRadius: 8,
-    elevation: 3,
-  },
-  orderTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  orderDate: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  orderStatus: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#4A90E2',
-  },
-  // ... Additional styles if needed
+  // Additional styles
 });
 
 export default OrdersScreen;

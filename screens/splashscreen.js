@@ -1,11 +1,13 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import Emoji from 'react-native-emoji';
+import { useNavigation } from '@react-navigation/native';
 
-const SplashScreen = ({ navigation }) => { // Include navigation prop
+
+const SplashScreen = ({ navigation }) => {
+  console.log('Navigation prop:', navigation);
   const emojiNames = ['fries', 'pizza', 'hamburger'];
   const spins = emojiNames.map(() => useRef(new Animated.Value(0)).current);
-  console.log("Navigation prop:", navigation);
 
   useEffect(() => {
     const animations = spins.map((spin, index) =>
@@ -22,23 +24,25 @@ const SplashScreen = ({ navigation }) => { // Include navigation prop
             duration: 1200,
             useNativeDriver: true,
           }),
-        ])
+        ]),
+        {
+          iterations: Infinity,
+        }
       )
     );
 
     animations.forEach(animation => animation.start());
 
-    // Set a timeout to navigate to the Login screen
     const timer = setTimeout(() => {
-      navigation.navigate('Login'); // Make sure this matches the name of your login route
-    }, 3000); // Delay of 3 seconds
+      console.log('Navigating to Login');
+      navigation.replace('Login');
+    }, 3000);
 
-    // Cleanup function
     return () => {
       animations.forEach(animation => animation.stop());
       clearTimeout(timer);
     };
-  }, [spins, navigation]); // Include navigation in the dependency array
+  }, [spins, navigation]);
 
   return (
     <View style={styles.container}>

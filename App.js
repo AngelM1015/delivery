@@ -8,22 +8,21 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Import your screen components
-import SplashScreen from './screens/splashscreen';
-import LoginScreen from './screens/loginscreen';
-import HomeScreen from './screens/homescreen';
-import OrdersScreen from './screens/ordersscreen';
-// import MenuScreen from './screens/menuscreen';
+// Import screen components
+import SplashScreen from './screens/SplashScreen';
+import LoginScreen from './screens/LoginScreen';
+import HomeScreen from './screens/HomeScreen';
+import OrdersScreen from './screens/OrdersScreen';
 import MenuStackNavigator from './screens/MenuStackNavigator';
-import SettingsScreen from './screens/settingsscreen';
+import SettingsScreen from './screens/SettingScreen';
 import RestaurantScreen from './screens/RestaurantScreen';
 import MetricScreen from './screens/MetricScreen';
 import MenuItemDetailScreen from './screens/MenuItemDetailScreen';
-
+import PartnerOrderScreen from './screens/PartnerOrderScreen';
+import { CartProvider } from './components/CartContext';
 
 // Theme colors and styles
 const themeColors = {
-  // Updated color scheme
   activeTintColor: '#e23744',
   inactiveTintColor: '#a8a8a8',
   backgroundColor: '#ffffff',
@@ -40,7 +39,6 @@ const styles = StyleSheet.create({
   },
 });
 
-
 const paperTheme = {
   ...DefaultTheme,
   colors: {
@@ -53,89 +51,54 @@ const paperTheme = {
   },
 };
 
-const roleToScreens = {
-  customer: ['Home', 'Browse', 'Order', 'Account'],
-  partner: ['Home', 'Order', 'Metrics', 'Account'],
-  admin: ['Home', 'Restaurants', 'Metrics', 'Account'],
+const getTabBarIcon = (role, route, focused) => {
+  const iconMap = {
+    customer: {
+      Home: focused ? 'home' : 'home-outline',
+      Browse: focused ? 'search' : 'search-outline',
+      Order: focused ? 'list' : 'list-outline',
+      Account: focused ? 'person' : 'person-outline',
+    },
+    partner: {
+      Home: focused ? 'home' : 'home-outline',
+      Order: focused ? 'list' : 'list-outline',
+      Metrics: focused ? 'bar-chart' : 'bar-chart-outline',
+      Account: focused ? 'person' : 'person-outline',
+    },
+    admin: {
+      Home: focused ? 'home' : 'home-outline',
+      Restaurants: focused ? 'restaurant' : 'restaurant-outline',
+      Metrics: focused ? 'bar-chart' : 'bar-chart-outline',
+      Account: focused ? 'person' : 'person-outline',
+    },
+  };
+  return iconMap[role][route.name] || 'alert-circle-outline';
 };
 
-function getScreensForRole(role) {
-  return roleToScreens[role] || [];
-}
-
-// Bottom tab navigator
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
 const MainTabNavigator = ({ role }) => {
-  const screensForRole = getScreensForRole(role);
-
-  // Define screen to component mapping
-  const screenComponents = {
-    Home: HomeScreen,
-    Browse: MenuStackNavigator,
-    Order: OrdersScreen,
-    Account: SettingsScreen,
-    Metrics: MetricScreen,
-    Restaurants: RestaurantScreen,
-  };
-
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          switch (route.name) {
-            case 'Home':
-              iconName = focused ? 'home' : 'home-outline';
-              break;
-            case 'Order':
-              iconName = focused ? 'list' : 'list-outline';
-              break;
-            case 'Menu':
-              iconName = focused ? 'menu' : 'menu-outline';
-              break;
-            case 'Settings':
-              iconName = focused ? 'settings' : 'settings-outline';
-              break;
-            case 'Metrics':
-              iconName = focused ? 'bar-chart' : 'bar-chart-outline';
-              break;
-            case 'Restaurants':
-              iconName = focused ? 'restaurant' : 'restaurant-outline';
-              break;
-            case 'Browse':
-              iconName = focused ? 'search' : 'search-outline'; // Example icon for Browse
-              break;
-            case 'Account':
-              iconName = focused ? 'person' : 'person-outline'; // Example icon for Account
-              break;
-            default:
-              iconName = 'alert-circle-outline'; // Default icon
-          }
+          let iconName = getTabBarIcon(role, route, focused);
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: themeColors.activeTintColor,
         tabBarInactiveTintColor: themeColors.inactiveTintColor,
         tabBarStyle: styles.tabBar,
-        height: 60,
       })}
     >
-     {screensForRole.map(screenName => {
-        const ScreenComponent = screenComponents[screenName];
-        return (
-          <Tab.Screen 
-            key={screenName}
-            name={screenName}
-            component={ScreenComponent} 
-          />
-        );
-      })}
+      <Tab.Screen name="Home" component={HomeScreen} />
+      {role !== 'partner' && <Tab.Screen name="Browse" component={MenuStackNavigator} />}
+      <Tab.Screen name="Order" component={role === 'partner' ? PartnerOrderScreen : OrdersScreen} />
+      {role === 'partner' && <Tab.Screen name="Metrics" component={MetricScreen} />}
+      <Tab.Screen name="Account" component={SettingsScreen} />
     </Tab.Navigator>
   );
 };
-
-// Stack navigator to handle login flow
-const Stack = createStackNavigator();
 
 function App() {
   const [userRole, setUserRole] = useState(null);
@@ -149,24 +112,23 @@ function App() {
         console.error('Error fetching user role:', error);
       }
     };
-
     fetchUserRole();
   }, []);
-
-  if (!userRole) {
-    return <SplashScreen />; // Show splash screen while loading
-  }
 
   return (
     <PaperProvider theme={paperTheme}>
       <NavigationContainer theme={paperTheme}>
-        <Stack.Navigator>
-          <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Main" options={{ headerShown: false }}>
-            {() => <MainTabNavigator role={userRole} />}
-          </Stack.Screen>
-        </Stack.Navigator>
+        <CartProvider>
+          <Stack.Navigator initialRouteName="Splash">
+            <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+            {userRole && (
+              <Stack.Screen name="Main" options={{ headerShown: false }}>
+                {props => <MainTabNavigator {...props} role={userRole} />}
+              </Stack.Screen>
+            )}
+          </Stack.Navigator>
+        </CartProvider>
       </NavigationContainer>
     </PaperProvider>
   );

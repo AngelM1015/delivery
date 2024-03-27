@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ScrollView, View, Image, StyleSheet } from 'react-native';
 import { Card, Title, Paragraph, Text, ActivityIndicator, Provider as PaperProvider, Button } from 'react-native-paper';
+import { useCart } from '../components/CartContext';
 
 const MenuItemImage = ({ menuItemDetails, index }) => {
   // Construct a random Unsplash image URL with a search term based on the menu item's name
@@ -47,6 +48,29 @@ const MenuItemDetailScreen = ({ route }) => {
 
     fetchMenuItem();
   }, [restaurantId, menuItemId]);
+
+
+  const { addToCart } = useCart();
+  
+  const handleAddToCart = () => {
+    const selectedModifiers = Object.entries(modifierCounts)
+      .map(([modifierId, optionsCounts]) => ({
+        modifierId,
+        options: Object.entries(optionsCounts)
+          .filter(([_, count]) => count > 0)
+          .map(([optionId, count]) => ({ optionId, count }))
+      }))
+      .filter(modifier => modifier.options.length > 0);
+
+    const itemForCart = {
+      id: menuItemId,
+      name: menuItemDetails.name,
+      selectedModifiers
+    };
+
+    addToCart(itemForCart);
+  };
+  
 
   const handleQuantityChange = (modifierId, optionId, increment) => {
     setModifierCounts(prevCounts => {
@@ -102,9 +126,11 @@ const MenuItemDetailScreen = ({ route }) => {
                 ))}
               </Card.Content>
             </Card>
+            
           ))
         )}
       </ScrollView>
+      <Button onPress={handleAddToCart}>Add menu item to cart</Button>
     </PaperProvider>
   );
 };

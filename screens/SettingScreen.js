@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Switch, Button } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native'; // Assuming you're using React Navigation
 
-const SettingsScreen = () => {
+const SettingScreen = () => {
   const [isSettingEnabled, setIsSettingEnabled] = useState(false);
   const navigation = useNavigation(); // Get navigation object
 
@@ -66,4 +66,4 @@ const styles = StyleSheet.create({
   // Add more styles as needed
 });
 
-export default SettingsScreen;
+export default SettingScreen;
