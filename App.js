@@ -23,7 +23,6 @@ import DashboardScreen from './screens/DashboardScreen';
 import OrdersScreen from './screens/OrdersScreen';
 import MenuStackNavigator from './screens/MenuStackNavigator';
 import SettingsScreen from './screens/SettingScreen';
-import LiveOrdersScreen from './screens/LiveOrdersScreen';
 import RestaurantScreen from './screens/RestaurantScreen';
 import MetricScreen from './screens/MetricScreen';
 import OrderDetailScreen from './screens/OrderDetailScreen';
@@ -129,7 +128,6 @@ const MainTabNavigator = ({ role }) => {
       {(role === 'admin' || role === 'restaurant_owner') && (
         <Tab.Screen name="Admin" component={AdminScreen} />
       )}
-      <Tab.Screen name="Live Orders" component={LiveOrdersScreen} />
       <Tab.Screen name="Account" component={SettingsScreen} />
     </Tab.Navigator>
   );
