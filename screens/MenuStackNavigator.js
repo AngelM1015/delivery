@@ -1,20 +1,20 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
+import { View } from 'react-native';
+import { FAB, Badge } from 'react-native-paper';
 import MenuScreen from './MenuScreen';
 import RestaurantMenuScreen from './RestaurantMenuScreen';
 import MenuItemDetailScreen from './MenuItemDetailScreen';
-import { FAB, Badge } from 'react-native-paper';
-import { View } from 'react-native';
+import CartScreen from './CartScreen';
 import { useCart } from '../components/CartContext'; // Adjust the path as necessary
-import CartScreen from './CartScreen'; // Adjust the import path as necessary
-
 
 const MenuStack = createStackNavigator();
 
 const CartIcon = ({ navigation }) => {
   const { cartItems } = useCart();
+
   return (
-    <View>
+    <View style={{ position: 'absolute', bottom: 20, right: 20 }}>
       <FAB
         small
         icon="cart"
@@ -59,6 +59,5 @@ function MenuStackNavigator() {
     </MenuStack.Navigator>
   );
 }
-
 
 export default MenuStackNavigator;

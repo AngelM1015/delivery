@@ -32,9 +32,10 @@ const RestaurantMenuScreen = ({ route, navigation }) => {
     ? menuItems.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : menuItems;
 
-  const handleSelectItem = (item) => {
-    navigation.navigate('MenuItemDetailScreen', { menuItem: item });
-  };
+const handleSelectItem = (item) => {
+  AsyncStorage.setItem('selectedRestaurantId', restaurantId.toString()); // Store restaurantId
+  navigation.navigate('MenuItemDetailScreen', { menuItem: item, restaurantId: restaurantId });
+};
 
 const renderItem = ({ item }) => {
   // Check if itemPrices is an array and has at least one price.

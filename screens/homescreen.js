@@ -60,11 +60,11 @@ const HomeScreen = ({ navigation }) => {
           style={styles.backgroundImage}
         >
           <View style={styles.titleOverlay}>
-            <Text style={styles.title}>SkyGrub Foods</Text>
+            <Text style={styles.title}>BigSkyEats</Text>
             <Text style={styles.subtitle}>Delicious meals delivered to your door, snow or shine.</Text>
             <TouchableOpacity
               style={styles.button}
-              onPress={() => navigation.navigate('Browse', { screen: 'MenuScreen' })}
+              onPress={() => navigation.navigate('RestaurantMenuScreen')}
               >
               <Text style={styles.buttonText}>Order Now</Text>
             </TouchableOpacity>

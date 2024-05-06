@@ -1,10 +1,9 @@
-// PartnerOrderScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Button, FlatList, ActivityIndicator, Alert } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const PartnerOrderScreen = () => {
+const RestaurantOwnerOrderScreen = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -37,7 +36,7 @@ const PartnerOrderScreen = () => {
   const fetchOrders = async (token, role) => {
     try {
       setLoading(true);
-      let url = 'http://localhost:3000/api/v1/partners/partner_pending_orders';
+      let url = 'http://localhost:3000/api/v1/partners/partner_orders'; // Assuming endpoint for restaurant owner orders
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -50,41 +49,25 @@ const PartnerOrderScreen = () => {
     }
   };
 
-  const acceptOrder = async (orderId) => {
-    try {
-      if (userRole !== 'partner') {
-        Alert.alert('Unauthorized', 'Only partners can accept orders.');
-        return;
-      }
-  
-      const token = await AsyncStorage.getItem('userToken');
-      if (!token) {
-        Alert.alert('Authentication Error', 'User token not found.');
-        return;
-      }
-  
-      await axios.post(
-        `http://localhost:3000/api/v1/partners/accept_order`,
-        { order_id: orderId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-  
-      // Re-fetch orders to update the list after accepting an order
-      fetchOrders(token, userRole);
-    } catch (err) {
-      console.error('Request Error:', err.response ? err.response.data : err.message);
-      Alert.alert('Request Error', err.response ? err.response.data.error : 'An error occurred while accepting the order.');
+  const renderStatus = (status) => {
+    switch (status) {
+      case 'pending':
+        return <Text style={styles.pendingStatus}>Pending</Text>;
+      case 'accepted':
+        return <Text style={styles.acceptedStatus}>Accepted</Text>;
+      case 'completed':
+        return <Text style={styles.completedStatus}>Completed</Text>;
+      default:
+        return <Text style={styles.defaultStatus}>Unknown</Text>;
     }
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.orderItem}>
       <Text style={styles.orderText}>Order ID: {item.id}</Text>
-      {item.user && <Text>Customer: {item.user.first_name} {item.user.last_name}</Text>}
+      <Text>Customer: {item.user.first_name} {item.user.last_name}</Text>
       <Text>Address: {item.delivery_address}</Text>
-      {userRole === 'partner' && (
-        <Button title="Accept Order" onPress={() => acceptOrder(item.id)} color="#007bff" />
-      )}
+      <Text>Status: {renderStatus(item.status)}</Text>
     </View>
   );
 
@@ -101,6 +84,10 @@ const styles = StyleSheet.create({
   orderText: { fontSize: 16, color: '#333' },
   loadingText: { marginTop: 10, fontSize: 18, color: '#007bff' },
   errorText: { marginTop: 10, fontSize: 18, color: 'red' },
+  pendingStatus: { color: '#ffcc00' },
+  acceptedStatus: { color: '#00cc00' },
+  completedStatus: { color: '#3366ff' },
+  defaultStatus: { color: '#666666' },
 });
 
-export default PartnerOrderScreen;
+export default RestaurantOwnerOrderScreen;

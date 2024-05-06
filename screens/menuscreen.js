@@ -19,6 +19,10 @@ const MenuScreen = ({ navigation }) => {
           ...restaurant,
           image: { uri: `https://source.unsplash.com/random/300x300?restaurant&sig=${index}` },
         }));
+        // Add a dummy item to make the number of cards even
+        if (restaurantsWithImages.length % 2 !== 0) {
+          restaurantsWithImages.push({ id: -1 }); // Use a unique identifier for the dummy item
+        }
         setRestaurants(restaurantsWithImages);
       } catch (error) {
         console.error('Error fetching restaurants:', error);
@@ -28,18 +32,25 @@ const MenuScreen = ({ navigation }) => {
     fetchRestaurants();
   }, []);
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.card} 
-      onPress={() => navigation.navigate('RestaurantMenuScreen', { restaurantId: item.id })}
-    >
-      <Image source={item.image} style={styles.cardImage} />
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.name}</Text>
-        <Text style={styles.cardText}>{item.address}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderItem = ({ item }) => {
+    // Render dummy item as an empty view
+    if (item.id === -1) {
+      return <View style={[styles.card, { backgroundColor: 'transparent' }]} />;
+    }
+    
+    return (
+      <TouchableOpacity 
+        style={styles.card} 
+        onPress={() => navigation.navigate('RestaurantMenuScreen', { restaurantId: item.id })}
+      >
+        <Image source={item.image} style={styles.cardImage} />
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle}>{item.name}</Text>
+          <Text style={styles.cardText}>{item.address}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <FlatList
@@ -64,8 +75,8 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
     borderRadius: 8,
-    margin: 8,
-    width: '45%', // Adjust the width according to your screen size and desired number of columns
+    margin: 6, // Adjusted margin for better spacing between cards
+    width: '48%', // Adjusted width to fit two cards per row on most screens
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 10,

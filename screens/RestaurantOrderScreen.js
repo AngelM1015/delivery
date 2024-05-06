@@ -1,10 +1,9 @@
-// PartnerOrderScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Button, FlatList, ActivityIndicator, Alert } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const PartnerOrderScreen = () => {
+const RestaurantOrderScreen = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -56,21 +55,13 @@ const PartnerOrderScreen = () => {
         Alert.alert('Unauthorized', 'Only partners can accept orders.');
         return;
       }
-  
       const token = await AsyncStorage.getItem('userToken');
-      if (!token) {
-        Alert.alert('Authentication Error', 'User token not found.');
-        return;
-      }
-  
       await axios.post(
         `http://localhost:3000/api/v1/partners/accept_order`,
         { order_id: orderId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-  
-      // Re-fetch orders to update the list after accepting an order
-      fetchOrders(token, userRole);
+      fetchOrders(token, userRole); // Re-fetch orders to update the list
     } catch (err) {
       console.error('Request Error:', err.response ? err.response.data : err.message);
       Alert.alert('Request Error', err.response ? err.response.data.error : 'An error occurred while accepting the order.');
@@ -103,4 +94,4 @@ const styles = StyleSheet.create({
   errorText: { marginTop: 10, fontSize: 18, color: 'red' },
 });
 
-export default PartnerOrderScreen;
+export default RestaurantOrderScreen;

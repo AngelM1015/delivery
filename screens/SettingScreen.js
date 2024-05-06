@@ -1,42 +1,68 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, Button } from 'react-native';
+// Correct import for AsyncStorage
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native'; // Assuming you're using React Navigation
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Button, Alert, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const SettingScreen = () => {
-  const [isSettingEnabled, setIsSettingEnabled] = useState(false);
-  const navigation = useNavigation(); // Get navigation object
+  const [isActivityActive, setIsActivityActive] = useState(false);
+  const [statusPopupVisible, setStatusPopupVisible] = useState(false);
+  const navigation = useNavigation();
 
-  const toggleSwitch = () => setIsSettingEnabled(previousState => !previousState);
+  const toggleSwitch = async () => {
+    try {
+      setIsActivityActive(previousState => !previousState);
+      setStatusPopupVisible(true);
+      setTimeout(() => {
+        setStatusPopupVisible(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Error toggling activity status:', error);
+    }
+  };
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('userToken'); // Remove the stored token
-      navigation.navigate('Login'); // Navigate to the Login screen
+      await AsyncStorage.removeItem('userToken');
+      await AsyncStorage.removeItem('userRole');
+      navigation.navigate('Login');
       console.log('Logged out successfully');
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Error logging out:', error);
     }
+  };
+
+  const confirmLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Logout', onPress: handleLogout, style: 'destructive' }
+      ],
+      { cancelable: true }
+    );
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.settingItem}>
-        <Text style={styles.text}>Enable Feature X</Text>
-        <Switch
-          trackColor={{ false: "#767577", true: "#81b0ff" }}
-          thumbColor={isSettingEnabled ? "#f5dd4b" : "#f4f3f4"}
-          ios_backgroundColor="#3e3e3e"
-          onValueChange={toggleSwitch}
-          value={isSettingEnabled}
-        />
+        <Text style={styles.text}>Activity Status:</Text>
+        <TouchableOpacity
+          style={[styles.activityButton, { backgroundColor: isActivityActive ? '#4CAF50' : '#FF6347' }]}
+          onPress={toggleSwitch}
+        >
+          <Text style={styles.activityButtonText}>{isActivityActive ? 'Active' : 'Inactive'}</Text>
+        </TouchableOpacity>
       </View>
-      {/* Add more setting items here */}
-
-      {/* Logout button */}
       <View style={styles.logoutButtonContainer}>
-        <Button title="Logout" onPress={handleLogout} color="#FF6347" />
+        <Button title="Logout" onPress={confirmLogout} color="#FF6347" />
       </View>
+      {statusPopupVisible && (
+        <View style={styles.popupContainer}>
+          <Text style={styles.popupText}>{isActivityActive ? 'Status: Active' : 'Status: Inactive'}</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -59,11 +85,32 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#000',
   },
+  activityButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 5,
+  },
+  activityButtonText: {
+    fontSize: 16,
+    color: '#fff',
+  },
   logoutButtonContainer: {
     marginTop: 20,
     paddingHorizontal: 10,
   },
-  // Add more styles as needed
+  popupContainer: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+    backgroundColor: '#333',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  popupText: {
+    color: '#fff',
+    fontSize: 16,
+  },
 });
 
 export default SettingScreen;

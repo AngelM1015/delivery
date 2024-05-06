@@ -1,67 +1,54 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import Emoji from 'react-native-emoji';
-import { useNavigation } from '@react-navigation/native';
-
 
 const SplashScreen = ({ navigation }) => {
-  console.log('Navigation prop:', navigation);
-  const emojiNames = ['fries', 'pizza', 'hamburger'];
-  const spins = emojiNames.map(() => useRef(new Animated.Value(0)).current);
+  const emojis = ['fries', 'pizza', 'hamburger'];
+  const spinValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const animations = spins.map((spin, index) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(spin, {
-            toValue: 1,
-            duration: 1200,
-            useNativeDriver: true,
-            delay: index * 400,
-          }),
-          Animated.timing(spin, {
-            toValue: 0,
-            duration: 1200,
-            useNativeDriver: true,
-          }),
-        ]),
-        {
-          iterations: Infinity,
-        }
-      )
-    );
-
-    animations.forEach(animation => animation.start());
+    Animated.loop(
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 4000,
+        useNativeDriver: true,
+      })
+    ).start();
 
     const timer = setTimeout(() => {
-      console.log('Navigating to Login');
       navigation.replace('Login');
     }, 3000);
 
-    return () => {
-      animations.forEach(animation => animation.stop());
-      clearTimeout(timer);
+    return () => clearTimeout(timer);
+  }, [spinValue, navigation]);
+
+  const getEmojiPosition = (index) => {
+    const inputRange = [0, 1];
+    const outputRange = [
+      `0deg`,
+      `${360 * (index + 1)}deg` // Each emoji rotates 1, 2, or 3 full circles
+    ];
+    const rotate = spinValue.interpolate({ inputRange, outputRange });
+
+    return {
+      transform: [
+        { translateX: 60 }, // Adjust radius to move emojis outwards
+        { rotate },
+        { translateX: -120 }, // Move back to form a circle around the text
+      ],
     };
-  }, [spins, navigation]);
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>SkyGub</Text>
-      <View style={styles.loader}>
-        {spins.map((spin, index) => (
-          <Animated.View
-            key={emojiNames[index]}
-            style={{
-              transform: [
-                {
-                  rotate: spin.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0deg', '360deg'],
-                  }),
-                },
-              ],
-            }}>
-            <Emoji name={emojiNames[index]} style={styles.emoji} />
+      <View style={styles.textContainer}>
+        <Text style={styles.title}>BigSkyEats</Text>
+        <Text style={styles.subtitle}>Get Local Delivery</Text>
+      </View>
+      <View style={styles.emojisContainer}>
+        {emojis.map((emoji, index) => (
+          <Animated.View key={emoji} style={[styles.emojiContainer, getEmojiPosition(index)]}>
+            <Emoji name={emoji} style={styles.emoji} />
           </Animated.View>
         ))}
       </View>
@@ -76,15 +63,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#1c1e26',
   },
+  textContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   title: {
     color: '#f8c852',
     fontSize: 36,
-    marginBottom: 10,
+    textAlign: 'center',
   },
-  loader: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: 200,
+  subtitle: {
+    color: '#f8c852',
+    fontSize: 20,
+    textAlign: 'center',
+  },
+  emojisContainer: {
+    position: 'absolute',
+    width: 240, // Increased size to accommodate larger circle
+    height: 240, // Same as width
+    alignItems: 'center',
+    justifyContent: 'center',
+    top: '50%', // Center on the screen
+    left: '40%', // Center on the screen
+    marginLeft: -120, // Adjust according to width/2
+    marginTop: -120, // Adjust according to height/2
+  },
+  emojiContainer: {
+    position: 'absolute',
   },
   emoji: {
     fontSize: 32,
