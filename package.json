@@ -9,25 +9,29 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "1.21.0",
-    "@react-native-picker/picker": "^2.7.5",
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-picker/picker": "2.7.5",
     "@react-navigation/bottom-tabs": "^6.5.14",
     "@react-navigation/stack": "^6.3.23",
     "actioncable": "^5.2.8-1",
     "axios": "^1.6.7",
-    "expo": "~50.0.14",
-    "expo-status-bar": "~1.11.1",
+    "expo": "^51.0.0",
+    "expo-location": "~17.0.1",
+    "expo-status-bar": "~1.12.1",
     "moment": "^2.30.1",
     "react": "18.2.0",
-    "react-native": "0.73.6",
+    "react-native": "0.74.1",
     "react-native-actioncable": "^0.0.3",
     "react-native-chart-kit": "^6.12.0",
     "react-native-emoji": "^1.8.0",
+    "react-native-onboarding-swiper": "^1.2.0",
     "react-native-paper": "^5.12.3",
-    "react-native-screens": "~3.29.0"
+    "react-native-permissions": "^4.1.5",
+    "react-native-screens": "3.31.1",
+    "expo-notifications": "~0.28.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.24.0"
   },
   "private": true
 }

@@ -3,7 +3,7 @@ import { ScrollView, Alert } from 'react-native';
 import { Button, Card, Text, Title, Paragraph } from 'react-native-paper';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useCart } from '../components/CartContext';
+import { useCart } from '../context/CartContext';
 import ActionCable from 'react-native-actioncable';
 import moment from 'moment';
 

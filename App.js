@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Context providers
-import { CartProvider } from './components/CartContext';
+import { CartProvider } from './context/CartContext';
 import { UserProvider } from './context/UserContext';
 
 
@@ -29,6 +29,7 @@ import OrderDetailScreen from './screens/OrderDetailScreen';
 import MenuItemDetailScreen from './screens/MenuItemDetailScreen';
 import PartnerOrderScreen from './screens/PartnerOrderScreen';
 import AdminScreen from './screens/AdminScreen';
+import OnboardingComponent from './components/OnboardingComponent';
 
 // Theme colors and styles
 const themeColors = {
@@ -136,12 +137,15 @@ const MainTabNavigator = ({ role }) => {
 function App() {
   const [userRole, setUserRole] = useState(null);
   const [isReady, setIsReady] = useState(false);
+  const [hasOnboarded, setHasOnboarded] = useState(false);
 
   useEffect(() => {
     async function fetchUserRole() {
       try {
         const role = await AsyncStorage.getItem('userRole');
         setUserRole(role);
+        const onboarded = await AsyncStorage.getItem('hasOnboarded');
+        setHasOnboarded(onboarded === 'true');
       } catch (error) {
         console.error('Error fetching user role:', error);
       } finally {
@@ -161,17 +165,18 @@ function App() {
   return (
     <PaperProvider theme={paperTheme}>
       <NavigationContainer theme={paperTheme}>
-      <UserProvider>
-        <CartProvider>
-          <Stack.Navigator initialRouteName="Splash">
-            <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Main" options={{ headerShown: false }}>
-              {props => <MainTabNavigator {...props} role={userRole} />}
-            </Stack.Screen>
-            <Stack.Screen name="OrderDetailScreen" component={OrderDetailScreen} />
-          </Stack.Navigator>
-        </CartProvider>
+        <UserProvider>
+          <CartProvider>
+            <Stack.Navigator initialRouteName={hasOnboarded ? "Login" : "Onboarding"}>
+              <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="Onboarding" component={OnboardingComponent} options={{ headerShown: false }} />
+              <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="Main" options={{ headerShown: false }}>
+                {props => <MainTabNavigator {...props} role={userRole} />}
+              </Stack.Screen>
+              <Stack.Screen name="OrderDetailScreen" component={OrderDetailScreen} />
+            </Stack.Navigator>
+          </CartProvider>
         </UserProvider>
       </NavigationContainer>
     </PaperProvider>

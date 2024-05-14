@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ScrollView, View, Image, StyleSheet } from 'react-native';
 import { Card, Title, Paragraph, Text, ActivityIndicator, Provider as PaperProvider, Button } from 'react-native-paper';
-import { useCart } from '../components/CartContext';
+import { useCart } from '../context/CartContext';
 
 const MenuItemImage = ({ menuItemDetails, index }) => {
   // Construct a random Unsplash image URL with a search term based on the menu item's name
