@@ -9,9 +9,7 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        // Retrieve the token from AsyncStorage
         const token = await AsyncStorage.getItem('userToken');
-        // Include the token in the header for the request
         const headers = {
           'Authorization': `Bearer ${token}`
         };
@@ -65,7 +63,7 @@ const HomeScreen = ({ navigation }) => {
             <TouchableOpacity
               style={styles.button}
               onPress={() => navigation.navigate('RestaurantMenuScreen')}
-              >
+            >
               <Text style={styles.buttonText}>Order Now</Text>
             </TouchableOpacity>
           </View>
@@ -76,14 +74,13 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   backgroundImage: {
     width: '100%',
-    height: 250, // fixed height for the background image header
+    height: 250, 
     justifyContent: 'flex-end',
     paddingBottom: 20,
   },
@@ -93,7 +90,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   restaurantContainer: {
-    height: 200, // fixed height for restaurant images
+    height: 200, 
     marginBottom: 10,
   },
   restaurantImage: {

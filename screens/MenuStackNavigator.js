@@ -6,7 +6,7 @@ import MenuScreen from './MenuScreen';
 import RestaurantMenuScreen from './RestaurantMenuScreen';
 import MenuItemDetailScreen from './MenuItemDetailScreen';
 import CartScreen from './CartScreen';
-import { useCart } from '../context/CartContext'; // Adjust the path as necessary
+import { useCart } from '../context/CartContext';
 
 const MenuStack = createStackNavigator();
 

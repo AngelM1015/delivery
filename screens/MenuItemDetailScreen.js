@@ -5,10 +5,7 @@ import { Card, Title, Paragraph, Text, ActivityIndicator, Provider as PaperProvi
 import { useCart } from '../context/CartContext';
 
 const MenuItemImage = ({ menuItemDetails, index }) => {
-  // Construct a random Unsplash image URL with a search term based on the menu item's name
-  // The 'sig' parameter is used to change the image on every render if needed
   const imageUrl = `https://source.unsplash.com/random/300x300?${encodeURIComponent(menuItemDetails.name)}&sig=${index}`;
-
   return (
     <Image source={{ uri: imageUrl }} style={styles.image} />
   );
@@ -43,12 +40,10 @@ const MenuItemDetailScreen = ({ route }) => {
       } finally {
         setIsLoading(false);
       }
-      console.log("Modifier Options:", modifier.modifier_options);
     };
 
     fetchMenuItem();
   }, [restaurantId, menuItemId]);
-
 
   const { addToCart } = useCart();
   
@@ -58,20 +53,25 @@ const MenuItemDetailScreen = ({ route }) => {
         modifierId,
         options: Object.entries(optionsCounts)
           .filter(([_, count]) => count > 0)
-          .map(([optionId, count]) => ({ optionId, count }))
+          .map(([optionId, count]) => {
+            const option = menuItemDetails.modifiers
+              .find(modifier => modifier.id == modifierId).modifier_options
+              .find(option => option.id == optionId);
+            return { ...option, count };
+          })
       }))
       .filter(modifier => modifier.options.length > 0);
 
     const itemForCart = {
       id: menuItemId,
       name: menuItemDetails.name,
-      selectedModifiers
+      selectedModifiers,
+      quantity: 1
     };
 
     addToCart(itemForCart);
   };
   
-
   const handleQuantityChange = (modifierId, optionId, increment) => {
     setModifierCounts(prevCounts => {
       const newCounts = { ...prevCounts };
@@ -113,7 +113,7 @@ const MenuItemDetailScreen = ({ route }) => {
                   <View key={option.id} style={styles.optionContainer}>
                     <Paragraph>
                       {option.name} 
-                      (+${option.additional_price?? '0.00'})
+                      (+${option.additional_price ?? '0.00'})
                     </Paragraph>
                     <View style={styles.counterContainer}>
                       <Button icon="minus" compact onPress={() => handleQuantityChange(modifier.id, option.id, false)} />

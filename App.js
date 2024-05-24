@@ -1,21 +1,15 @@
-// React and React Native imports
 import React, { useState, useEffect } from 'react';
-import { StyleSheet } from 'react-native';
-
-// Third-party library imports
-import { DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
+import { StyleSheet, View, Dimensions } from 'react-native';
+import { DefaultTheme, Provider as PaperProvider, ActivityIndicator } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Context providers
 import { CartProvider } from './context/CartContext';
 import { UserProvider } from './context/UserContext';
 
-
-// Screen component imports
 import SplashScreen from './screens/SplashScreen';
 import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -23,15 +17,18 @@ import DashboardScreen from './screens/DashboardScreen';
 import OrdersScreen from './screens/OrdersScreen';
 import MenuStackNavigator from './screens/MenuStackNavigator';
 import SettingsScreen from './screens/SettingScreen';
-import RestaurantScreen from './screens/RestaurantScreen';
 import MetricScreen from './screens/MetricScreen';
 import OrderDetailScreen from './screens/OrderDetailScreen';
-import MenuItemDetailScreen from './screens/MenuItemDetailScreen';
 import PartnerOrderScreen from './screens/PartnerOrderScreen';
 import AdminScreen from './screens/AdminScreen';
 import OnboardingComponent from './components/OnboardingComponent';
+import RestaurantMenuScreen from './screens/RestaurantMenuScreen';
+import MenuItemDetailScreen from './screens/MenuItemDetailScreen'; 
+// import { WebSocketProvider } from './context/WebSocketContext';
+// import { OrderListener } from './components/OrderListener';
 
-// Theme colors and styles
+
+
 const themeColors = {
   activeTintColor: '#e23744',
   inactiveTintColor: '#a8a8a8',
@@ -46,6 +43,12 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: themeColors.headerColor,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: themeColors.backgroundColor,
   },
 });
 
@@ -80,7 +83,6 @@ const getTabBarIcon = (role, route, focused) => {
       Metrics: focused ? 'bar-chart' : 'bar-chart-outline',
       Admin: focused ? 'people' : 'people-outline',
       Account: focused ? 'person' : 'person-outline',
-      LiveOrders: focused ? 'cloud-upload' : 'cloud-upload-outline',
     },
     admin: {
       Dashboard: focused ? 'grid' : 'grid-outline',
@@ -97,7 +99,7 @@ const Stack = createStackNavigator();
 
 const MainTabNavigator = ({ role }) => {
   if (!role) {
-    return null; // Handle case where role is not defined
+    return null;
   }
 
   return (
@@ -138,28 +140,37 @@ function App() {
   const [userRole, setUserRole] = useState(null);
   const [isReady, setIsReady] = useState(false);
   const [hasOnboarded, setHasOnboarded] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    async function fetchUserRole() {
+    async function fetchUserData() {
       try {
         const role = await AsyncStorage.getItem('userRole');
         setUserRole(role);
+
         const onboarded = await AsyncStorage.getItem('hasOnboarded');
         setHasOnboarded(onboarded === 'true');
+
+        const token = await AsyncStorage.getItem('userToken');
+        setIsAuthenticated(!!token);
       } catch (error) {
-        console.error('Error fetching user role:', error);
+        console.error('Error fetching user data:', error);
       } finally {
         setTimeout(() => {
           setIsReady(true);
-        }, 0); //Add a delay or sub-UI loading.. maybe a type of auth flow or initial first load requesting location services, among other things.
-      } 
+        }, 2000);
+      }
     }
 
-    fetchUserRole();
+    fetchUserData();
   }, []);
 
   if (!isReady) {
-    return <SplashScreen />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={themeColors.activeTintColor} />
+      </View>
+    );
   }
 
   return (
@@ -167,13 +178,15 @@ function App() {
       <NavigationContainer theme={paperTheme}>
         <UserProvider>
           <CartProvider>
-            <Stack.Navigator initialRouteName={hasOnboarded ? "Login" : "Onboarding"}>
+            <Stack.Navigator initialRouteName={isAuthenticated ? "Main" : (hasOnboarded ? "Login" : "Onboarding")}>
               <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
               <Stack.Screen name="Onboarding" component={OnboardingComponent} options={{ headerShown: false }} />
               <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
               <Stack.Screen name="Main" options={{ headerShown: false }}>
                 {props => <MainTabNavigator {...props} role={userRole} />}
               </Stack.Screen>
+              <Stack.Screen name="RestaurantMenuScreen" component={RestaurantMenuScreen} />
+              <Stack.Screen name="MenuItemDetailScreen" component={MenuItemDetailScreen} />
               <Stack.Screen name="OrderDetailScreen" component={OrderDetailScreen} />
             </Stack.Navigator>
           </CartProvider>

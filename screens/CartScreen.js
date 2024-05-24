@@ -96,7 +96,8 @@ const CartScreen = () => {
       const orderData = {
         order: {
           restaurant_id: parseInt(storedRestaurantId),
-          delivery_address: '209 Aspen Leaf Dr. Big Sky, MT 59716',
+          // 25 Main St, Cooperstown, NY
+          delivery_address: '209 Aspen Leaf Dr, Big Sky, MT 59716',
           total_price: calculateTotalPrice(cartItems),
           order_items_attributes: cartItems.map(item => ({
             menu_item_id: item.id,
@@ -131,14 +132,14 @@ const CartScreen = () => {
         <Text>Your cart is empty.</Text>
       ) : (
         cartItems.map((item, index) => {
-          console.log("LOOK HERE >", item);
+          console.log("LOOK HERE >", JSON.stringify(item, null, 2));
           return (
             <Card key={index} style={{ margin: 10 }}>
               <Card.Title title={item.name} />
-              {item.selectedModifiers.map((modifiers, modIndex) =>
-                modifiers.options.map((option, optIndex) => (
+              {item.selectedModifiers.map((modifier, modIndex) =>
+                modifier.options.map((option, optIndex) => (
                   <Text key={`mod-${modIndex}-opt-${optIndex}`}>
-                    Modifier: {option.name}, Extra Cost: ${option.count}
+                    Modifier: {option.name}, Extra Cost: ${option.additional_price}
                   </Text>
                 ))
               )}
@@ -169,8 +170,6 @@ const CartScreen = () => {
       )}
     </ScrollView>
   );
-  
-  
 };
 
 export default CartScreen;
