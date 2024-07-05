@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import Emoji from 'react-native-emoji';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SplashScreen = ({ navigation }) => {
   const emojis = ['fries', 'pizza', 'hamburger'];
@@ -15,8 +16,17 @@ const SplashScreen = ({ navigation }) => {
       })
     ).start();
 
-    const timer = setTimeout(() => {
-      navigation.replace('Login');
+    const timer = setTimeout(async () => {
+      const token = await AsyncStorage.getItem('userToken');
+      const hasOnboarded = await AsyncStorage.getItem('hasOnboarded') === 'true';
+
+      if (token) {
+        navigation.replace('Main');
+      } else if (hasOnboarded) {
+        navigation.replace('Login');
+      } else {
+        navigation.replace('Onboarding');
+      }
     }, 3000);
 
     return () => clearTimeout(timer);

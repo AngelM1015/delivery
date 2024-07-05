@@ -1,12 +1,14 @@
-// Correct import for AsyncStorage
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Button, Alert, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { UserContext } from '../context/UserContext';
+import GuestModeSignUpComponent from '../components/GuestModeSignUpComponent';
 
 const SettingScreen = () => {
   const [isActivityActive, setIsActivityActive] = useState(false);
   const [statusPopupVisible, setStatusPopupVisible] = useState(false);
+  const { userRole, setUserRole } = useContext(UserContext);
   const navigation = useNavigation();
 
   const toggleSwitch = async () => {
@@ -25,6 +27,7 @@ const SettingScreen = () => {
     try {
       await AsyncStorage.removeItem('userToken');
       await AsyncStorage.removeItem('userRole');
+      setUserRole('guest');
       navigation.navigate('Login');
       console.log('Logged out successfully');
     } catch (error) {
@@ -46,22 +49,28 @@ const SettingScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.settingItem}>
-        <Text style={styles.text}>Activity Status:</Text>
-        <TouchableOpacity
-          style={[styles.activityButton, { backgroundColor: isActivityActive ? '#4CAF50' : '#FF6347' }]}
-          onPress={toggleSwitch}
-        >
-          <Text style={styles.activityButtonText}>{isActivityActive ? 'Active' : 'Inactive'}</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.logoutButtonContainer}>
-        <Button title="Logout" onPress={confirmLogout} color="#FF6347" />
-      </View>
-      {statusPopupVisible && (
-        <View style={styles.popupContainer}>
-          <Text style={styles.popupText}>{isActivityActive ? 'Status: Active' : 'Status: Inactive'}</Text>
-        </View>
+      {userRole === 'guest' ? (
+        <GuestModeSignUpComponent navigation={navigation} />
+      ) : (
+        <>
+          <View style={styles.settingItem}>
+            <Text style={styles.text}>Activity Status:</Text>
+            <TouchableOpacity
+              style={[styles.activityButton, { backgroundColor: isActivityActive ? '#4CAF50' : '#FF6347' }]}
+              onPress={toggleSwitch}
+            >
+              <Text style={styles.activityButtonText}>{isActivityActive ? 'Active' : 'Inactive'}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.logoutButtonContainer}>
+            <Button title="Logout" onPress={confirmLogout} color="#FF6347" />
+          </View>
+          {statusPopupVisible && (
+            <View style={styles.popupContainer}>
+              <Text style={styles.popupText}>{isActivityActive ? 'Status: Active' : 'Status: Inactive'}</Text>
+            </View>
+          )}
+        </>
       )}
     </View>
   );

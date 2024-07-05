@@ -5,20 +5,25 @@ export const UserContext = createContext(null);
 
 export const UserProvider = ({ children }) => {
     const [userId, setUserId] = useState(null);
+    const [userRole, setUserRole] = useState('guest');
 
     useEffect(() => {
-        const fetchUserId = async () => {
+        const fetchUserData = async () => {
             const storedUserId = await AsyncStorage.getItem('userId');
+            const storedUserRole = await AsyncStorage.getItem('userRole');
             if (storedUserId) {
                 setUserId(storedUserId);
             }
+            if (storedUserRole) {
+                setUserRole(storedUserRole);
+            }
         };
 
-        fetchUserId();
+        fetchUserData();
     }, []);
 
     return (
-        <UserContext.Provider value={{ userId, setUserId }}>
+        <UserContext.Provider value={{ userId, setUserId, userRole, setUserRole }}>
             {children}
         </UserContext.Provider>
     );

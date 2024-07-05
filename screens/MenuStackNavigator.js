@@ -2,7 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View } from 'react-native';
 import { FAB, Badge } from 'react-native-paper';
-import MenuScreen from './MenuScreen';
+import MenuOfRestaurantsScreen from './MenuOfRestaurantsScreen';
 import RestaurantMenuScreen from './RestaurantMenuScreen';
 import MenuItemDetailScreen from './MenuItemDetailScreen';
 import CartScreen from './CartScreen';
@@ -34,8 +34,8 @@ function MenuStackNavigator() {
   return (
     <MenuStack.Navigator>
       <MenuStack.Screen 
-        name="MenuScreen" 
-        component={MenuScreen} 
+        name="MenuOfRestaurantsScreen" 
+        component={MenuOfRestaurantsScreen} 
         options={({ navigation }) => ({ 
           headerLeft: () => null,
           headerRight: () => <CartIcon navigation={navigation} />

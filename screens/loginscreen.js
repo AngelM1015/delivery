@@ -93,7 +93,7 @@ const LoginScreen = ({ navigation }) => {
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
       <View style={styles.quickLoginContainer}>
-        <Text style={styles.quickLoginText}>Or Quick Login as:</Text>
+        <Text style={styles.quickLoginText}>Role Dev-tool component, Login as:</Text>
         <TouchableOpacity style={styles.quickLoginButton} onPress={loginAsCustomer}>
           <Text style={styles.quickLoginButtonText}>Customer</Text>
         </TouchableOpacity>

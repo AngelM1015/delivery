@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FlatList } from 'react-native';
-import { Card, Title, Paragraph, Button, ActivityIndicator, Searchbar } from 'react-native-paper';
+import { Card, Title, Paragraph, Searchbar } from 'react-native-paper';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -32,25 +32,22 @@ const RestaurantMenuScreen = ({ route, navigation }) => {
     ? menuItems.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : menuItems;
 
-const handleSelectItem = (item) => {
-  AsyncStorage.setItem('selectedRestaurantId', restaurantId.toString()); // Store restaurantId
-  navigation.navigate('MenuItemDetailScreen', { menuItem: item, restaurantId: restaurantId });
-};
+  const handleSelectItem = (item) => {
+    navigation.navigate('MenuItemDetailScreen', { menuItemId: item.id, restaurantId: restaurantId });
+  };
 
-const renderItem = ({ item }) => {
-  // Check if itemPrices is an array and has at least one price.
-  const price = item.item_prices?.length > 0 ? item.item_prices[0].base_price : 'Not Available';
-  console.log('Price:', price)
-  return (
-    <Card style={styles.card} onPress={() => handleSelectItem(item)}>
-      <Card.Content>
-        <Title>{item.name}</Title>
-        <Paragraph>{item.description}</Paragraph>
-        <Paragraph>Price: ${price}</Paragraph>
-      </Card.Content>
-    </Card>
-  );
-};
+  const renderItem = ({ item }) => {
+    const price = item.item_prices?.length > 0 ? item.item_prices[0].base_price : 'Not Available';
+    return (
+      <Card style={styles.card} onPress={() => handleSelectItem(item)}>
+        <Card.Content>
+          <Title>{item.name}</Title>
+          <Paragraph>{item.description}</Paragraph>
+          <Paragraph>Price: ${price}</Paragraph>
+        </Card.Content>
+      </Card>
+    );
+  };
 
   return (
     <FlatList

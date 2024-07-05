@@ -1,10 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, FlatList, Animated, Easing } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HomeScreen = ({ navigation }) => {
   const [restaurants, setRestaurants] = useState([]);
+  const [backgroundIndex, setBackgroundIndex] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  const backgroundImages = [
+    require('../assets/images/Big_Sky_Resort.webp'),
+    require('../assets/images/mountain.webp'),
+    require('../assets/images/Big_Sky_Resort.webp'),
+  ];
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -13,7 +21,6 @@ const HomeScreen = ({ navigation }) => {
         const headers = {
           'Authorization': `Bearer ${token}`
         };
-        
         const response = await axios.get('http://localhost:3000/api/v1/restaurants', { headers });
         const restaurantsWithImages = response.data.map((restaurant, index) => ({
           ...restaurant,
@@ -26,9 +33,36 @@ const HomeScreen = ({ navigation }) => {
     };
 
     fetchRestaurants();
-  }, []);
 
-  const renderRestaurant = ({ item: restaurant, index }) => {
+    const changeBackgroundImage = () => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 2000,
+        useNativeDriver: true,
+        easing: Easing.ease
+      }).start(() => {
+        setBackgroundIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+          easing: Easing.ease
+        }).start();
+      });
+    };
+
+    const randomInterval = () => {
+      const minInterval = 120000; // 2 minutes in milliseconds
+      const maxInterval = 600000; // 10 minutes in milliseconds
+      return Math.floor(Math.random() * (maxInterval - minInterval + 1)) + minInterval;
+    };
+
+    const intervalId = setInterval(changeBackgroundImage, randomInterval());
+
+    return () => clearInterval(intervalId);
+  }, [fadeAnim]);
+
+  const renderRestaurant = ({ item: restaurant }) => {
     return (
       <TouchableOpacity
         style={styles.restaurantContainer}
@@ -53,21 +87,23 @@ const HomeScreen = ({ navigation }) => {
       renderItem={renderRestaurant}
       keyExtractor={(item) => item.id.toString()}
       ListHeaderComponent={
-        <ImageBackground
-          source={{ uri: 'https://images.unsplash.com/photo-1517659649778-bae24b8c2e26?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9' }}
-          style={styles.backgroundImage}
-        >
-          <View style={styles.titleOverlay}>
-            <Text style={styles.title}>BigSkyEats</Text>
-            <Text style={styles.subtitle}>Delicious meals delivered to your door, snow or shine.</Text>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => navigation.navigate('RestaurantMenuScreen')}
-            >
-              <Text style={styles.buttonText}>Order Now</Text>
-            </TouchableOpacity>
-          </View>
-        </ImageBackground>
+        <Animated.View style={{ ...styles.backgroundImage, opacity: fadeAnim }}>
+          <ImageBackground
+            source={backgroundImages[backgroundIndex]}
+            style={styles.backgroundImage}
+          >
+            <View style={styles.titleOverlay}>
+              <Text style={styles.title}>BigSkyEats</Text>
+              <Text style={styles.subtitle}>Delicious meals delivered to your door, snow or shine.</Text>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => navigation.navigate('RestaurantMenuScreen')}
+              >
+                <Text style={styles.buttonText}>Order Now</Text>
+              </TouchableOpacity>
+            </View>
+          </ImageBackground>
+        </Animated.View>
       }
       ListHeaderComponentStyle={styles.backgroundImage}
     />
