@@ -9,9 +9,8 @@ import axios from 'axios';
 import { CartProvider } from './context/CartContext';
 import { UserProvider } from './context/UserContext';
 
-import SplashScreen from './screens/SplashScreen';
-import LoginScreen from './screens/LoginScreen';
-import HomeScreen from './screens/HomeScreen';
+import SplashScreen from './screens/splashscreen';
+import LoginScreen from './screens/loginscreen';
 import OnboardingComponent from './components/OnboardingComponent';
 import RestaurantMenuScreen from './screens/RestaurantMenuScreen';
 import MenuItemDetailScreen from './screens/MenuItemDetailScreen';
