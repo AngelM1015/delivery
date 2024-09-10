@@ -1,21 +1,20 @@
-import React, { useEffect } from 'react';
-import { ScrollView, Alert } from 'react-native';
-import { Button, Card, Text, Title, Paragraph } from 'react-native-paper';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, Alert, View } from 'react-native';
+import { Button, Card, Text, Title, Paragraph, ToggleButton, FAB } from 'react-native-paper';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart } from '../context/CartContext';
 import ActionCable from 'react-native-actioncable';
 import moment from 'moment';
 
-const CartScreen = () => {
+const CartScreen = ({ navigation }) => {
   const { cartItems, removeFromCart, updateItemQuantity, clearCart } = useCart();
-  const [orderDetails, setOrderDetails] = React.useState(null);
-  const [userOrders, setUserOrders] = React.useState([]);
-  const [cable, setCable] = React.useState(null);
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [cable, setCable] = useState(null);
+  const [orderType, setOrderType] = useState(null); // State for order type
 
   useEffect(() => {
     fetchTokenAndConnect();
-    fetchUserOrders();
   }, []);
 
   const fetchTokenAndConnect = async () => {
@@ -25,34 +24,12 @@ const CartScreen = () => {
         Alert.alert('Error', 'No token found');
         return;
       }
-      const cableUrl = `ws://localhost:3000/cable?token=${token}`;
+      const cableUrl = `ws://192.168.18.86:3000/cable?token=${token}`;
       const actionCable = ActionCable.createConsumer(cableUrl);
       setCable(actionCable);
     } catch (error) {
       console.error('Error fetching token and connecting:', error);
       Alert.alert('Error', 'Failed to fetch token and connect to ActionCable');
-    }
-  };
-
-  const fetchUserOrders = async () => {
-    try {
-      const token = await AsyncStorage.getItem('userToken');
-      if (!token) {
-        Alert.alert('Error', 'No token found');
-        return;
-      }
-      
-      const response = await axios.get('http://localhost:3000/api/v1/orders/user_orders', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      setUserOrders(response.data);
-      console.log('User orders:', response.data);
-    } catch (error) {
-      console.error('Error fetching user orders:', error);
-      Alert.alert('Error', 'Failed to fetch user orders');
     }
   };
 
@@ -80,25 +57,31 @@ const CartScreen = () => {
   };
 
   const submitOrder = async () => {
+    if (!orderType) {
+      Alert.alert('Error', 'Please select an order type');
+      return;
+    }
+
     try {
       const token = await AsyncStorage.getItem('userToken');
       if (!token) {
         Alert.alert('Error', 'No token found');
         return;
       }
-  
+
       const storedRestaurantId = await AsyncStorage.getItem('selectedRestaurantId');
       if (!storedRestaurantId) {
         Alert.alert('Error', 'No associated restaurant found');
         return;
       }
-  
+
       const orderData = {
         order: {
           restaurant_id: parseInt(storedRestaurantId),
-          // 25 Main St, Cooperstown, NY
-          delivery_address: '209 Aspen Leaf Dr, Big Sky, MT 59716',
+          delivery_address: orderType === 'delivery' ? '209 Aspen Leaf Dr, Big Sky, MT 59716' : '',
           total_price: calculateTotalPrice(cartItems),
+          address_id: 1, // Adjusted based on order type
+          order_type: orderType, // Include order type in order data
           order_items_attributes: cartItems.map(item => ({
             menu_item_id: item.id,
             quantity: item.quantity,
@@ -108,12 +91,17 @@ const CartScreen = () => {
           }))
         }
       };
-  
-      const response = await axios.post('http://localhost:3000/api/v1/orders/create_order', orderData, {
+
+      const response = await axios.post('http://192.168.150.249:3000/api/v1/orders/create_order', orderData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+
+      // console.log('new order', response.data)
+
+      navigation.navigate('OngoingOrderScreen', { orderId: response.data.order.id })
+
       setOrderDetails(response.data.order);
       clearCart();
     } catch (error) {
@@ -132,42 +120,64 @@ const CartScreen = () => {
         <Text>Your cart is empty.</Text>
       ) : (
         cartItems.map((item, index) => {
-          console.log("LOOK HERE >", JSON.stringify(item, null, 2));
           return (
-            <Card key={index} style={{ margin: 10 }}>
+            <Card key={index} style={{ margin: 10, backgroundColor: 'white' }}>
               <Card.Title title={item.name} />
-              {item.selectedModifiers.map((modifier, modIndex) =>
-                modifier.options.map((option, optIndex) => (
-                  <Text key={`mod-${modIndex}-opt-${optIndex}`}>
-                    Modifier: {option.name}, Extra Cost: ${option.additional_price}
-                  </Text>
-                ))
-              )}
+              <Card.Content>
+                <Text>Price: ${item.price}</Text>
+                <Text style={{ fontWeight: 'bold' }}>Modifiers</Text>
+                {item.selectedModifiers.map((modifier, modIndex) =>
+                  modifier.options.map((option, optIndex) => (
+                    <Text key={`mod-${modIndex}-opt-${optIndex}`}>
+                      {option.count} x {option.name}, Extra Cost: ${option.additional_price * option.count}
+                    </Text>
+                  ))
+                )}
+              </Card.Content>
               <Card.Actions>
-                <Button onPress={() => decrementQuantity(item.id)}>-</Button>
+                <FAB onPress={() => decrementQuantity(item.id) }
+                 icon="minus" color='white' backgroundColor='orange' size='small' />
                 <Text>{item.quantity}</Text>
-                <Button onPress={() => incrementQuantity(item.id)}>+</Button>
-                <Button onPress={() => removeFromCart(item.id)} color="#e53935">Remove</Button>
+                <FAB onPress={() => incrementQuantity(item.id)}
+                 icon="plus" color='white' backgroundColor='orange' size='small' />
+                <FAB onPress={() => removeFromCart(item.id)}
+                 icon="delete" color='red' backgroundColor='white' size='small' />
               </Card.Actions>
             </Card>
           );
         })
       )}
-  
-      <Button onPress={submitOrder} mode="contained" style={{ margin: 10 }}>Send Order</Button>
-      {renderOrderDetails()}
-      {userOrders && userOrders.length > 0 && (
-        <Card style={{ margin: 10 }}>
-          <Card.Title title="Your Orders" />
-          <Card.Content>
-            {userOrders.map(order => (
-              <Paragraph key={order.id}>
-                Order ID: {order.id} - Status: {order.status.charAt(0).toUpperCase() + order.status.slice(1).replace(/_/g, " ")} - Time & Day created: {moment(order.created_at).format('MMMM Do YYYY, h:mm:ss a')}
-              </Paragraph>
-            ))}
-          </Card.Content>
-        </Card>
+
+      {cartItems.length > 0 && (
+        <>
+          <Text style={{ fontSize: 16, marginBottom: 10, paddingLeft: 10 }}>Select Order Type:</Text>
+          <View style={{ margin: 10, flexDirection: 'row', justifyContent: 'space-between' }}>
+            <ToggleButton.Group
+              onValueChange={value => setOrderType(value)}
+              value={orderType}
+            >
+              <ToggleButton icon="truck-delivery" value="delivery" label="Delivery" />
+              <ToggleButton icon="storefront" value="pickup" label="Pick-Up" />
+            </ToggleButton.Group>
+          </View>
+
+          <Text style={{ fontSize: 16, marginTop: 10 }}>
+            {orderType === 'delivery' && 'You have selected Delivery.'}
+            {orderType === 'pickup' && 'You have selected Pick Up.'}
+          </Text>
+
+          <Button
+            onPress={submitOrder}
+            mode="contained"
+            style={{ margin: 10 }}
+            disabled={!orderType} // Disable if order type is not selected
+          >
+            Send Order
+          </Button>
+        </>
       )}
+
+      {renderOrderDetails()}
     </ScrollView>
   );
 };

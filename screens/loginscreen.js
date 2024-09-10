@@ -28,13 +28,15 @@ const restaurant_owner3 = {
   password: 'encrypted_password'
 };
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({ navigation,route }) => {
+  const {isRoleChanged,setIsRoleChanged}=route?.params;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async (email, password) => {
     try {
-      let url = 'http://localhost:3000/api/v1/auth/login';
+      console.log(`email ${email}`);
+      let url = 'http://192.168.150.249:3000/api/v1/auth/login';
   
       const response = await axios.post(url, {
         email,
@@ -46,13 +48,17 @@ const LoginScreen = ({ navigation }) => {
         // Save token, role, and user_id in AsyncStorage
         await AsyncStorage.setItem('userToken', response.data.token);
         await AsyncStorage.setItem('userRole', response.data.role);
-        await AsyncStorage.setItem('userId', response.data.user_id.toString()); // Convert user_id to string
-  
+        await AsyncStorage.setItem('userId', response.data.user_id.toString());
+        // await AsyncStorage.setItem('customerAddress', response.data.address)
+        setIsRoleChanged(!isRoleChanged)
         navigation.replace('Main');
       } else {
         Alert.alert('Login Failed', 'No token received');
       }
     } catch (error) {
+      console.log('Error details:', error);
+      console.log('Error response:', error.response);
+      console.log('Error message:', error.message);
       Alert.alert(
         'Login Error',
         error.response && error.response.data && error.response.data.error

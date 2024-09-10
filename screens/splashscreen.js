@@ -22,9 +22,8 @@ const SplashScreen = ({ navigation }) => {
 
       if (token) {
         navigation.replace('Main');
-      } else if (hasOnboarded) {
-        navigation.replace('Login');
-      } else {
+      } 
+      else {
         navigation.replace('Onboarding');
       }
     }, 3000);
