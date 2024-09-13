@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -15,7 +14,8 @@ const OrderDetailScreen = ({ route }) => {
             try {
                 const token = await AsyncStorage.getItem('userToken');
                 const headers = { 'Authorization': `Bearer ${token}` };
-                const response = await axios.get(`http://localhost:3000/api/v1/orders/${orderId}`, { headers });
+                const response = await axios.get(`http://192.168.150.249:3000/api/v1/orders/${orderId}`, { headers });
+                console.log(response.data);
                 setOrderDetails(response.data);
             } catch (error) {
                 console.error('Error fetching order details:', error);
@@ -30,10 +30,8 @@ const OrderDetailScreen = ({ route }) => {
     const renderItem = ({ item }) => {
         return (
             <View style={styles.itemContainer}>
-                <Text style={styles.itemText}>Menu Item ID: {item.menu_item_id}</Text>
-                <Text style={styles.itemText}>Quantity: {item.quantity}</Text>
-                <Text style={styles.itemText}>Item: {item.menu_item_name}</Text>
-                <Text style={styles.itemText}>Price: ${item.price}</Text>
+                <Text style={styles.keyText}>Items</Text>
+                <Text style={styles.valueTextBold}>{item.quantity} x {item.menu_item}</Text>
             </View>
         );
     };
@@ -56,15 +54,48 @@ const OrderDetailScreen = ({ route }) => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Order Detail Screen</Text>
-            <Text style={styles.orderInfo}>Order ID: {orderDetails.id}</Text>
-            <Text style={styles.orderInfo}>Restaurant Name: {orderDetails.restaurant_name}</Text>
-            <Text style={styles.orderInfo}>Customer Name: {orderDetails.customer_name}</Text>
-            <Text style={styles.orderInfo}>Customer Email: {orderDetails.customer_email}</Text>
-            <Text style={styles.orderInfo}>Total Price: ${orderDetails.total_price}</Text>
-            <Text style={styles.orderInfo}>Estimated Wait Time: {orderDetails.estimated_wait_time} minutes</Text>
-            <Text style={styles.orderInfo}>Delivery Address: {orderDetails.delivery_address}</Text>
-            <Text style={styles.orderInfo}>Status: {orderDetails.status}</Text>
+            <Text style={styles.title}>Order Details</Text>
+
+            <View style={styles.detailRow}>
+                <Text style={styles.keyText}>Order ID:</Text>
+                <Text style={styles.valueTextOrange}>{orderDetails.id}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+                <Text style={styles.keyText}>Restaurant Name:</Text>
+                <Text style={styles.valueTextBold}>{orderDetails.restaurant_name}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+                <Text style={styles.keyText}>Customer Name:</Text>
+                <Text style={styles.valueTextBold}>{orderDetails.customer_name}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+                <Text style={styles.keyText}>Customer Email:</Text>
+                <Text style={styles.valueTextBold}>{orderDetails.customer_email}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+                <Text style={styles.keyText}>Estimated Wait Time:</Text>
+                <Text style={styles.valueTextBold}>{orderDetails.estimated_wait_time} minutes</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+                <Text style={styles.keyText}>Delivery Address:</Text>
+                <Text style={styles.valueTextBold}>{orderDetails.delivery_address}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+                <Text style={styles.keyText}>Status:</Text>
+                <Text style={styles.valueTextBold}>{orderDetails.status}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+                <Text style={styles.keyText}>Total Price:</Text>
+                <Text style={styles.valueTextBold}>${orderDetails.total_price}</Text>
+            </View>
+
             <FlatList
                 data={orderDetails.order_items}
                 renderItem={renderItem}
@@ -86,19 +117,27 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
+        textAlign: 'center'
     },
-    orderInfo: {
+    detailRow: {
+        marginBottom: 10,
+    },
+    keyText: {
+        fontSize: 16,
+        color: 'grey',
+    },
+    valueTextBold: {
         fontSize: 18,
-        marginBottom: 5,
+        fontWeight: 'bold',
+    },
+    valueTextOrange: {
+        fontSize: 18,
+        color: 'orange',
     },
     itemContainer: {
         paddingVertical: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
-    },
-    itemText: {
-        fontSize: 18,
-        marginBottom: 5,
     },
     flatList: {
         marginTop: 10,

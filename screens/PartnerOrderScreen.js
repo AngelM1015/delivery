@@ -1,12 +1,11 @@
-// PartnerOrderScreen.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Button, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, Button, FlatList, ActivityIndicator, Alert, TouchableOpacity, RefreshControl } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const PartnerOrderScreen = () => {
+const PartnerOrderScreen = ({navigation}) => {
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [userRole, setUserRole] = useState('');
 
@@ -22,9 +21,6 @@ const PartnerOrderScreen = () => {
           return;
         }
         fetchOrders(token, role);
-        const intervalId = setInterval(() => fetchOrders(token, role), 1800000); // 30 minutes
-
-        return () => clearInterval(intervalId);
       } catch (err) {
         console.error('Error during initialization:', err);
         setError(err.message);
@@ -37,7 +33,7 @@ const PartnerOrderScreen = () => {
   const fetchOrders = async (token, role) => {
     try {
       setLoading(true);
-      let url = 'http://localhost:3000/api/v1/partners/partner_pending_orders';
+      let url = 'http://192.168.150.249:3000/api/v1/orders/partner_pending_orders';
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -48,6 +44,12 @@ const PartnerOrderScreen = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    const token = await AsyncStorage.getItem('userToken');
+    const role = await AsyncStorage.getItem('userRole');
+    fetchOrders(token, role); // Call your data fetching function on refresh
   };
 
   const acceptOrder = async (orderId) => {
@@ -64,7 +66,7 @@ const PartnerOrderScreen = () => {
       }
   
       await axios.post(
-        `http://localhost:3000/api/v1/partners/accept_order`,
+        `http://192.168.150.249:3000/api/v1/partners/accept_order`,
         { order_id: orderId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -77,22 +79,35 @@ const PartnerOrderScreen = () => {
     }
   };
 
+  const handleOrderClick = (order) => {
+    console.log('Navigating to OngoingOrderScreen with order ID:', order.id);
+    console.log('Available Navigators:', navigation.getState().routeNames); // Debugging available routes
+    
+      navigation.navigate('OngoingOrderScreen', { id: order.id });
+   
+  };
+
   const renderItem = ({ item }) => (
+    <TouchableOpacity style={styles.orderItem} onPress={() => handleOrderClick(item)}>
     <View style={styles.orderItem}>
       <Text style={styles.orderText}>Order ID: {item.id}</Text>
-      {item.user && <Text>Customer: {item.user.first_name} {item.user.last_name}</Text>}
-      <Text>Address: {item.delivery_address}</Text>
-      {userRole === 'partner' && (
-        <Button title="Accept Order" onPress={() => acceptOrder(item.id)} color="#007bff" />
-      )}
+      {item.user && <Text>Customer: {item.user.email} </Text>}
+      <Text>Delivery Address: {item.delivery_address}</Text>
+      <Text>Restaurant Address: {item.restaurant_address}</Text>
+      <Text>Pick Up at:  {item.pick_up_time}</Text>
+
     </View>
+    </TouchableOpacity>
   );
 
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#0000ff" /><Text style={styles.loadingText}>Loading orders...</Text></View>;
   if (error) return <View style={styles.centered}><Text style={styles.errorText}>Error: {error}</Text></View>;
   if (orders.length === 0) return <View style={styles.centered}><Text>No orders available</Text></View>;
 
-  return <FlatList data={orders} renderItem={renderItem} keyExtractor={item => item.id.toString()} />;
+  return <FlatList data={orders} renderItem={renderItem} keyExtractor={item => item.id.toString()} 
+  refreshControl={
+    <RefreshControl loading={loading} onRefresh={onRefresh} />
+  }/>;
 };
 
 const styles = StyleSheet.create({

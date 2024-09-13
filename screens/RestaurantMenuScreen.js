@@ -16,7 +16,7 @@ const RestaurantMenuScreen = ({ route, navigation }) => {
       try {
         const token = await AsyncStorage.getItem('userToken');
         const headers = { 'Authorization': `Bearer ${token}` };
-        const response = await axios.get(`http://localhost:3000/api/v1/restaurants/${restaurantId}/menu_items/`, { headers });
+        const response = await axios.get(`http://192.168.150.249:3000/api/v1/restaurants/${restaurantId}/menu_items/`, { headers });
         setMenuItems(response.data);
       } catch (error) {
         console.error('Error fetching menu items:', error);
@@ -37,7 +37,7 @@ const RestaurantMenuScreen = ({ route, navigation }) => {
   };
 
   const renderItem = ({ item }) => {
-    const price = item.item_prices?.length > 0 ? item.item_prices[0].base_price : 'Not Available';
+    const price = item.item_prices?.length > 0 ? item.item_prices[0] : 'Not Available';
     return (
       <Card style={styles.card} onPress={() => handleSelectItem(item)}>
         <Card.Content>

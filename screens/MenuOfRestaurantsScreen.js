@@ -13,7 +13,7 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
         const headers = {
           'Authorization': `Bearer ${token}`
         };
-        const response = await axios.get('http://localhost:3000/api/v1/restaurants', { headers });
+        const response = await axios.get('http://192.168.150.249:3000/api/v1/restaurants', { headers });
         const restaurantsWithImages = response.data.map((restaurant) => ({
           ...restaurant,
           image: restaurant.image_url ? { uri: restaurant.image_url } : null,

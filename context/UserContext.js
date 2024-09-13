@@ -11,6 +11,7 @@ export const UserProvider = ({ children }) => {
         const fetchUserData = async () => {
             const storedUserId = await AsyncStorage.getItem('userId');
             const storedUserRole = await AsyncStorage.getItem('userRole');
+            console.log('in context user, userRole is: ', storedUserRole)
             if (storedUserId) {
                 setUserId(storedUserId);
             }

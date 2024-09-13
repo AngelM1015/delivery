@@ -5,7 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import { UserContext } from '../context/UserContext';
 import GuestModeSignUpComponent from '../components/GuestModeSignUpComponent';
 
-const SettingScreen = () => {
+const SettingScreen = ({route}) => {
+  
   const [isActivityActive, setIsActivityActive] = useState(false);
   const [statusPopupVisible, setStatusPopupVisible] = useState(false);
   const { userRole, setUserRole } = useContext(UserContext);
@@ -27,7 +28,10 @@ const SettingScreen = () => {
     try {
       await AsyncStorage.removeItem('userToken');
       await AsyncStorage.removeItem('userRole');
-      setUserRole('guest');
+      await AsyncStorage.removeItem('userId');
+      await AsyncStorage.removeItem('hasOnBoarded');
+      // setIsRoleChanged(!isRoleChanged)
+      // setUserRole('guest');
       navigation.navigate('Login');
       console.log('Logged out successfully');
     } catch (error) {

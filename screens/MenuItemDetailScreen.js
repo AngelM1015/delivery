@@ -4,8 +4,9 @@ import { ScrollView, View, Image, StyleSheet, Text } from 'react-native';
 import { Card, Title, Paragraph, ActivityIndicator, Button, Provider as PaperProvider } from 'react-native-paper';
 import { useCart } from '../context/CartContext';
 import { UserContext } from '../context/UserContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'http://localhost:3000'; // Your server's base URL
+const BASE_URL = 'http://192.168.150.249:3000'; // Your server's base URL
 
 const MenuItemImage = ({ menuItemDetails }) => {
   const imageUrl = `${BASE_URL}${menuItemDetails.image_url}`;
@@ -21,6 +22,8 @@ const MenuItemDetailScreen = ({ route }) => {
   const [modifierCounts, setModifierCounts] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [modifiers, setModifiers] = useState([]);
+  const [modifierOptions, setModifierOptions] = useState([]);
 
   useEffect(() => {
     const fetchMenuItem = async () => {
@@ -54,6 +57,9 @@ const MenuItemDetailScreen = ({ route }) => {
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
+    AsyncStorage.setItem('selectedRestaurantId', `${restaurantId}`);
+    console.log('Modifier Counts:', modifierCounts);
+  console.log('Menu Item Details:', menuItemDetails);
     const selectedModifiers = Object.entries(modifierCounts)
       .map(([modifierId, optionsCounts]) => ({
         modifierId,
@@ -61,16 +67,19 @@ const MenuItemDetailScreen = ({ route }) => {
           .filter(([_, count]) => count > 0)
           .map(([optionId, count]) => {
             const option = menuItemDetails.modifiers
-              .find(modifier => modifier.id === modifierId).modifier_options
-              .find(option => option.id === optionId);
+              .find(modifier => modifier.id === parseInt(modifierId)).modifier_options
+              .find(option => option.id === parseInt(optionId));
             return { ...option, count };
           })
       }))
       .filter(modifier => modifier.options.length > 0);
 
+    const price = menuItemDetails.item_prices.length > 0 ? parseFloat(menuItemDetails.item_prices[0]) : '0.0'
+
     const itemForCart = {
       id: menuItemId,
       name: menuItemDetails.name,
+      price: price + selectedModifiers.reduce((w,x)=> w + x.options.reduce((a,b) => a + parseFloat(b.additional_price * b.count), 0), 0),
       selectedModifiers,
       quantity: 1
     };
@@ -113,7 +122,7 @@ const MenuItemDetailScreen = ({ route }) => {
         ) : (
           (menuItemDetails.modifiers || []).map((modifier) => (
             <Card key={modifier.id} style={styles.card}>
-              <Card.Title title={modifier.name} />
+              <Card.Title title={modifier.name} titleStyle={styles.modifierTitle} />
               <Card.Content>
                 {(modifier.modifier_options || []).map((option) => (
                   <View key={option.id} style={styles.optionContainer}>
@@ -140,7 +149,14 @@ const MenuItemDetailScreen = ({ route }) => {
       {userRole === 'guest' ? (
         <Button disabled>We’re just browsing as guest</Button>
       ) : (
-        <Button onPress={handleAddToCart}>Add menu item to cart</Button>
+        <Button
+          style={styles.addToCart}
+          onPress={handleAddToCart}
+          textColor='white'
+          icon='cart'
+        >
+          Add to Cart
+        </Button>
       )}
     </PaperProvider>
   );
@@ -156,6 +172,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     margin: 16,
+  },
+  modifierTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    // margin: 16,
   },
   description: {
     fontSize: 16,
@@ -184,6 +205,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'grey',
   },
+  addToCart: {
+    backgroundColor: 'orange',
+    fontSize: 39,
+    margin: 16,
+  }
 });
 
 export default MenuItemDetailScreen;

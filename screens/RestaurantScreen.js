@@ -18,7 +18,7 @@ const RestaurantScreen = ({ navigation }) => {
                 const headers = {
                     'Authorization': `Bearer ${userToken}`
                 };
-                const response = await axios.get('http://localhost:3000/api/v1/restaurants', { headers });
+                const response = await axios.get('http://192.168.150.249:3000/api/v1/restaurants', { headers });
                 setRestaurants(response.data);
             } catch (error) {
                 console.error('Error fetching restaurants:', error);

@@ -1,16 +1,20 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import DashboardScreen from '../screens/DashboardScreen';
-import HomeScreen from '../screens/HomeScreen';
+import HomeScreen from '../screens/homescreen';
 import MenuOfRestaurantsScreen from '../screens/MenuOfRestaurantsScreen';
 import MenuStackNavigator from '../screens/MenuStackNavigator';
-import OrdersScreen from '../screens/OrdersScreen';
+import OrdersScreen from '../screens/ordersscreen';
 import PartnerOrderScreen from '../screens/PartnerOrderScreen';
 import MetricScreen from '../screens/MetricScreen';
 import AdminScreen from '../screens/AdminScreen';
 import SettingsScreen from '../screens/SettingScreen';
+import ChatScreen from '../screens/ChatScreen';
+import OngoingOrderScreen from '../screens/OngoingOrderScreen';
 import { StyleSheet } from 'react-native';
+import OrderDetailScreen from '../screens/OrderDetailScreen';
 
 const themeColors = {
   activeTintColor: '#e23744',
@@ -25,6 +29,25 @@ const styles = StyleSheet.create({
 });
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+// Stack Navigator for order-related screens
+const OrderStackNavigator = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="OrdersScreen" component={OrdersScreen} />
+    <Stack.Screen name="OngoingOrderScreen" component={OngoingOrderScreen} />
+    <Stack.Screen name="ChatScreen" component={ChatScreen} />
+    <Stack.Screen name="OrderDetailScreen" component={OrderDetailScreen}/>
+  </Stack.Navigator>
+);
+
+const PartnerOrderStackNavigator = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="PartnerOrderScreen" component={PartnerOrderScreen} />
+    <Stack.Screen name="OngoingOrderScreen" component={OngoingOrderScreen} />
+    <Stack.Screen name="ChatScreen" component={ChatScreen} />
+  </Stack.Navigator>
+);
 
 const getTabBarIcon = (role, route, focused) => {
   const iconMap = {
@@ -87,7 +110,10 @@ const MainTabNavigator = ({ role = 'guest' }) => {
         <Tab.Screen name="Browse" component={MenuStackNavigator} />
       )}
       {['customer', 'partner'].includes(role) && (
-        <Tab.Screen name="Order" component={role === 'partner' ? PartnerOrderScreen : OrdersScreen} />
+        <Tab.Screen
+          name="Order"
+          component={role === 'partner' ? PartnerOrderStackNavigator : OrderStackNavigator} // Use stack navigator for orders
+        />
       )}
       {['partner', 'admin', 'restaurant_owner'].includes(role) && (
         <Tab.Screen name="Metrics" component={MetricScreen} />
