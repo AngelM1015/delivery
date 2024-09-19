@@ -16,7 +16,7 @@ const OrdersScreen = ({ navigation }) => {
       const role = await AsyncStorage.getItem('userRole');
 
       setUserRole(role);
-      if (token && role === 'customer') { // Only fetch orders if the user role is 'customer'
+      if (token && role === 'customer') {
         fetchOrders(token, role);
       }
     };
@@ -27,8 +27,8 @@ const OrdersScreen = ({ navigation }) => {
   const fetchOrders = async (token, role) => {
     setLoading(true);
     try {
-      let url = 'http://192.168.150.249:3000/api/v1/orders';
-      if (role === 'customer') { // Only fetch orders for customers
+      let url = 'http://localhost:3000/api/v1/orders';
+      if (role === 'customer') {
         const response = await axios.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -46,13 +46,13 @@ const OrdersScreen = ({ navigation }) => {
   const onRefresh = async () => {
     const token = await AsyncStorage.getItem('userToken');
     const role = await AsyncStorage.getItem('userRole');
-    fetchOrders(token, role); // Call your data fetching function on refresh
+    fetchOrders(token, role);
   };
   
   const handleOrderAction = async (orderId, action) => {
     const token = await AsyncStorage.getItem('userToken');
     try {
-      const url = `http://192.168.150.249:3000/api/v1/orders/${orderId}/${action}`;
+      const url = `http://localhost:3000/api/v1/orders/${orderId}/${action}`;
       await axios.patch(url, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -64,7 +64,7 @@ const OrdersScreen = ({ navigation }) => {
 
   const handleOrderClick = (order) => {
     console.log('Navigating to OngoingOrderScreen with order ID:', order.id);
-    console.log('Available Navigators:', navigation.getState().routeNames); // Debugging available routes
+    console.log('Available Navigators:', navigation.getState().routeNames);
     if (order.status !== 'delivered' && order.status !== 'canceled') {
       navigation.navigate('OngoingOrderScreen', { id: order.id });
     } else {
@@ -73,7 +73,7 @@ const OrdersScreen = ({ navigation }) => {
   };
 
   const renderOrderItem = ({ item }) => {
-    // Determine the status text and color based on the order status
+
     let statusText = '';
     let statusColor = '';
   
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 5,
-    position: 'relative', // Needed for absolute positioning of status text
+    position: 'relative',
   },
   orderTitle: {
     fontSize: 16,
@@ -151,6 +151,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
-
 
 export default OrdersScreen;

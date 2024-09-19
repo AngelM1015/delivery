@@ -6,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BarChart } from 'react-native-chart-kit';
-import ActionCable from 'react-native-actioncable';
 import cable from '../cable';
 
 const formatStatus = status => {
@@ -47,17 +46,15 @@ const MetricScreen = ({ navigation }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState('');
     const [selectedOrderId, setSelectedOrderId] = useState(null);
-    // const [cable, setCable] = useState(null);
     const [snackbarVisible, setSnackbarVisible] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
-    const [refreshing, setRefreshing] = useState(false); // Add state for refreshing
+    const [refreshing, setRefreshing] = useState(false);
     const [restaurant, setRestaurant] = useState('');
 
     useEffect(() => {
       const fetchToken = async () => {
         const token = await AsyncStorage.getItem('userToken');
-        const cableUrl = `ws://192.168.150.249:3000/cable?token=${token}`;
-        // setCable(ActionCable.createConsumer(cableUrl));
+        const cableUrl = `ws://localhost:3000/cable?token=${token}`;
       };
       fetchToken();
       fetchUserRoleAndOrders();
@@ -69,7 +66,7 @@ const MetricScreen = ({ navigation }) => {
     const role = await AsyncStorage.getItem('userRole');
     setUserRole(role);
     const headers = { 'Authorization': `Bearer ${token}` };
-    let apiUrl = 'http://192.168.150.249:3000/api/v1/orders';
+    let apiUrl = 'http://localhost:3000/api/v1/orders';
     apiUrl += role === 'restaurant_owner' ? '/restaurant_orders' : role === 'admin' ? '/all_orders' : '/partner_orders';
     try {
         const response = await axios.get(apiUrl, { headers });
@@ -95,7 +92,6 @@ const MetricScreen = ({ navigation }) => {
       { channel: 'RestaurantChannel', id: restaurantId },
       {
         received: (data) => {
-          // Update orders list when a new order is received
           console.log('data', data)
           setOrders((prevOrders) => [data, ...prevOrders]);
         },
@@ -106,7 +102,7 @@ const MetricScreen = ({ navigation }) => {
   }
 
   const onRefresh = () => {
-    fetchUserRoleAndOrders(); // Call your data fetching function on refresh
+    fetchUserRoleAndOrders();
   };
 
   const handleReceived = data => {
@@ -129,20 +125,14 @@ const MetricScreen = ({ navigation }) => {
     if (!selectedOrderId) return;
 
     const token = await AsyncStorage.getItem('userToken');
-    console.log('token', token);
-    // const headers = { 'Authorization': `Bearer ${token}` };
 
-    const response = await axios.put(`http://192.168.150.249:3000/api/v1/orders/${id}/update_status`,
-        {status: selectedStatus},
-        {
-        headers: { 'Authorization': `Bearer ${token}`} })
+    const response = await axios.put(`http://localhost:3000/api/v1/orders/${id}/update_status`,
+      { status: selectedStatus },
+      {
+        headers: { 'Authorization': `Bearer ${token}`}
+      }
+    )
 
-    // cable.subscriptions.subscriptions.forEach(subscription => {
-    //     if (subscription.identifier.includes(`"order_id":${selectedOrderId}`)) {
-    //         subscription.perform('send_status_update', { status: selectedStatus, order_id: selectedOrderId });
-    //     }
-    // });
-    // console.log('Attempting to update status for order:', selectedOrderId, 'with new status:', selectedStatus);
     setModalVisible(false);
   };
 

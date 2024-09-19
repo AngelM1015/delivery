@@ -185,7 +185,7 @@ function App() {
     try {
       const token = await AsyncStorage.getItem('userToken');
       const response = await axios.post(
-        `http://192.168.150.249:3000/api/v1/orders/${showNotification.order_id}/accept`,
+        `http://localhost:3000/api/v1/orders/${showNotification.order_id}/accept`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

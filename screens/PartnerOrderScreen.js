@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Button, FlatList, ActivityIndicator, Alert, Tou
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const PartnerOrderScreen = ({navigation}) => {
+const PartnerOrderScreen = ({ navigation }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,7 +33,7 @@ const PartnerOrderScreen = ({navigation}) => {
   const fetchOrders = async (token, role) => {
     try {
       setLoading(true);
-      let url = 'http://192.168.150.249:3000/api/v1/orders/partner_pending_orders';
+      let url = 'http://localhost:3000/api/v1/orders/partner_pending_orders';
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -49,42 +49,11 @@ const PartnerOrderScreen = ({navigation}) => {
   const onRefresh = async () => {
     const token = await AsyncStorage.getItem('userToken');
     const role = await AsyncStorage.getItem('userRole');
-    fetchOrders(token, role); // Call your data fetching function on refresh
-  };
-
-  const acceptOrder = async (orderId) => {
-    try {
-      if (userRole !== 'partner') {
-        Alert.alert('Unauthorized', 'Only partners can accept orders.');
-        return;
-      }
-  
-      const token = await AsyncStorage.getItem('userToken');
-      if (!token) {
-        Alert.alert('Authentication Error', 'User token not found.');
-        return;
-      }
-  
-      await axios.post(
-        `http://192.168.150.249:3000/api/v1/partners/accept_order`,
-        { order_id: orderId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-  
-      // Re-fetch orders to update the list after accepting an order
-      fetchOrders(token, userRole);
-    } catch (err) {
-      console.error('Request Error:', err.response ? err.response.data : err.message);
-      Alert.alert('Request Error', err.response ? err.response.data.error : 'An error occurred while accepting the order.');
-    }
+    fetchOrders(token, role);
   };
 
   const handleOrderClick = (order) => {
-    console.log('Navigating to OngoingOrderScreen with order ID:', order.id);
-    console.log('Available Navigators:', navigation.getState().routeNames); // Debugging available routes
-    
-      navigation.navigate('OngoingOrderScreen', { id: order.id });
-   
+    navigation.navigate('OngoingOrderScreen', { id: order.id });
   };
 
   const renderItem = ({ item }) => (

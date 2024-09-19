@@ -8,7 +8,6 @@ import MenuItemDetailScreen from './MenuItemDetailScreen';
 import CartScreen from './CartScreen';
 import { useCart } from '../context/CartContext';
 import ChatScreen from './ChatScreen';
-import OngoingOrderScreen from './OngoingOrderScreen';
 
 const MenuStack = createStackNavigator();
 

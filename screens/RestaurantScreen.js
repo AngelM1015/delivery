@@ -11,32 +11,31 @@ const RestaurantScreen = ({ navigation }) => {
     
     useEffect(() => {
         const fetchRestaurants = async () => {
-            setLoading(true); // Start loading
-            setError(''); // Reset error
+            setLoading(true);
+            setError('');
             try {
                 const userToken = await AsyncStorage.getItem('userToken');
                 const headers = {
                     'Authorization': `Bearer ${userToken}`
                 };
-                const response = await axios.get('http://192.168.150.249:3000/api/v1/restaurants', { headers });
+                const response = await axios.get('http://localhost:3000/api/v1/restaurants', { headers });
                 setRestaurants(response.data);
             } catch (error) {
                 console.error('Error fetching restaurants:', error);
-                setError('Failed to load restaurants'); // Set error message
+                setError('Failed to load restaurants');
             } finally {
-                setLoading(false); // End loading
+                setLoading(false);
             }
         };
         fetchRestaurants();
     }, []);
     
-    // In your render:
     if (loading) {
-        return <Text>Loading...</Text>; // Replace with a proper loading spinner component
+        return <Text>Loading...</Text>;
     }
     
     if (error) {
-        return <Text>{error}</Text>; // Display error message
+        return <Text>{error}</Text>;
     }
 
     const renderItem = ({ item }) => (
@@ -47,8 +46,6 @@ const RestaurantScreen = ({ navigation }) => {
             <Text style={styles.menuText}>{item.name}</Text>
         </TouchableOpacity>
     );
-
-    // ... rest of your component and styles
 };
 
 export default RestaurantScreen;

@@ -5,7 +5,6 @@ import { BarChart, PieChart, LineChart } from 'react-native-chart-kit';
 const screenWidth = Dimensions.get("window").width;
 
 const AdminScreen = () => {
-  // Dummy data
   const restaurantData = [
     { name: 'Restaurant A', ordersCount: 150 },
     { name: 'Restaurant B', ordersCount: 100 },
@@ -18,7 +17,6 @@ const AdminScreen = () => {
     { name: 'Cancelled', count: 30, color: 'red', legendFontColor: '#7F7F7F', legendFontSize: 15 },
   ];
 
-  // Revenue trend (example data)
   const revenueData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May"],
     datasets: [
@@ -29,7 +27,6 @@ const AdminScreen = () => {
     ],
   };
 
-  // Chart configuration
   const chartConfig = {
     backgroundGradientFrom: "#fff",
     backgroundGradientTo: "#fff",
@@ -44,7 +41,6 @@ const AdminScreen = () => {
     }
   };
 
-  // Convert data for BarChart
   const restaurantChartData = {
     labels: restaurantData.map(item => item.name),
     datasets: [{
@@ -56,7 +52,6 @@ const AdminScreen = () => {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Admin Dashboard</Text>
 
-      {/* Restaurant Orders Chart */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Restaurant Orders</Text>
         <BarChart
@@ -68,7 +63,6 @@ const AdminScreen = () => {
         />
       </View>
 
-      {/* Order Stats Chart */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Order Stats</Text>
         <PieChart
@@ -83,7 +77,6 @@ const AdminScreen = () => {
         />
       </View>
 
-      {/* Revenue Trend Chart */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Monthly Revenue</Text>
         <LineChart

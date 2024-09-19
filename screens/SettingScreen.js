@@ -30,8 +30,7 @@ const SettingScreen = ({route}) => {
       await AsyncStorage.removeItem('userRole');
       await AsyncStorage.removeItem('userId');
       await AsyncStorage.removeItem('hasOnBoarded');
-      // setIsRoleChanged(!isRoleChanged)
-      // setUserRole('guest');
+
       navigation.navigate('Login');
       console.log('Logged out successfully');
     } catch (error) {

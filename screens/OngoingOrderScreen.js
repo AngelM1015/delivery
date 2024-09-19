@@ -10,9 +10,10 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
   const [slideAnim] = useState(new Animated.Value(0));
   const route = useRoute();
   const navigation = useNavigation();
-  const [orderMessage, setOrderMessage] = useState('');
   const [order, setOrder] = useState({});
   const [userRole, setUserRole] = useState('')
+  const [customerMessage, setCustomerMessage] = useState('');
+  const [partnerMessage, setPartnerMessage] = useState('');
 
   useEffect(() => {
     console.log('id of order ', route.params.id);
@@ -26,14 +27,6 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
       }
   
       try {
-        const response = await axios.get(`http://192.168.150.249:3000/api/v1/orders/${route.params.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-  
-        const ongoingOrder = response.data;
-        console.log('ongoing order', ongoingOrder);
-
-        setOrder(ongoingOrder);
 
         if (cable.connection.isOpen()) {
           console.log("WebSocket connection is open.");
@@ -42,15 +35,30 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
         }
 
         const subscription = await cable.subscriptions.create(
-          { channel: 'OrderChannel', id: ongoingOrder.id },
+          { channel: 'OrderChannel', id: route.params.id },
           {
             received(data) {
-              console.log("new order message:", data.message);
-              setOrderMessage(data.message);
+              console.log("new order message:", data);
+              if(data.partner_message){
+                setPartnerMessage(data.partner_message);
+              }
+
+              if(data.customer_message){
+                setCustomerMessage(data.customer_message);
+              }
             },
           }
         );
+
         console.log('subscription', subscription);
+        const response = await axios.get(`http://localhost:3000/api/v1/orders/${route.params.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+  
+        const ongoingOrder = response.data;
+        console.log('ongoing order', ongoingOrder);
+
+        setOrder(ongoingOrder);
 
         return () => {
           subscription.unsubscribe();
@@ -71,7 +79,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
       }
 
       try {
-        await axios.patch(`http://192.168.150.249:3000/api/v1/orders/${order.id}/pick_up_order`, order, {
+        await axios.patch(`http://localhost:3000/api/v1/orders/${order.id}/pick_up_order`, order, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -92,19 +100,23 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
       </View>
       <View style={styles.content}>
         <Text style={styles.orderText}>Order ID: {order.id}</Text>
-        {userRole === 'customer' && (
+        {userRole === 'customer' ? (
           <>
             <Text>Status: {order.status}</Text>
-            <Text>Order message: {orderMessage}</Text>
+            <Text>Order message: {customerMessage}</Text>
             <Text>Your order will be delivered in {order.estimated_wait_time} - {order.estimated_wait_time + 15} mins</Text>
           </>
+        ) : (
+          <Text>{partnerMessage}</Text>
         )}
         {order.status === 'partner_assigned' && (
+          <>
           <FAB
             icon='message'
             style={styles.fab}
             onPress={() => navigation.navigate('ChatScreen', { conversationId: order.conversation_id })}
           />
+          </>
         )}
         {order.order_type === 'pickup' && order.status === 'restaurant_approved' && (
           <TouchableOpacity style={styles.pickupButton} onPress={() => handlePickedUp()}>

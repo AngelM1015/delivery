@@ -21,7 +21,7 @@ const RestaurantOrderScreen = () => {
           return;
         }
         fetchOrders(token, role);
-        const intervalId = setInterval(() => fetchOrders(token, role), 1800000); // 30 minutes
+        const intervalId = setInterval(() => fetchOrders(token, role), 1800000);
 
         return () => clearInterval(intervalId);
       } catch (err) {
@@ -36,7 +36,7 @@ const RestaurantOrderScreen = () => {
   const fetchOrders = async (token, role) => {
     try {
       setLoading(true);
-      let url = 'http://192.168.150.249:3000/api/v1/partners/partner_pending_orders';
+      let url = 'http://localhost:3000/api/v1/orders/partner_pending_orders';
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -57,11 +57,11 @@ const RestaurantOrderScreen = () => {
       }
       const token = await AsyncStorage.getItem('userToken');
       await axios.post(
-        `http://192.168.150.249:3000/api/v1/partners/accept_order`,
+        `http://localhost:3000/api/v1/orders/accept_order`,
         { order_id: orderId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchOrders(token, userRole); // Re-fetch orders to update the list
+      fetchOrders(token, userRole);
     } catch (err) {
       console.error('Request Error:', err.response ? err.response.data : err.message);
       Alert.alert('Request Error', err.response ? err.response.data.error : 'An error occurred while accepting the order.');

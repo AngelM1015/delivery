@@ -29,7 +29,7 @@ const ChatScreen = () => {
         { channel: 'ChatChannel', id: conversationId },
         {
           received: (data) => {
-            console.log("Received new message:", data); // Log received data
+            console.log("Received new message:", data);
             setMessages((messages) => [...messages, data]);
           },
         }
@@ -37,14 +37,13 @@ const ChatScreen = () => {
 
       console.log('subscription', subscription);
   
-      const response = await axios.get(`http://192.168.150.249:3000/api/v1/conversations/${conversationId}`,
+      const response = await axios.get(`http://localhost:3000/api/v1/conversations/${conversationId}`,
         { headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } }
       );
   
       setMessages(response.data.messages);
   
       return () => {
-        // Cleanup WebSocket subscription
         subscription.unsubscribe();
       };
     };
@@ -57,7 +56,7 @@ const ChatScreen = () => {
     const token = await AsyncStorage.getItem('userToken');
 
     try {
-      const response = await fetch('http://192.168.150.249:3000/api/v1/messages', {
+      const response = await fetch('http://localhost:3000/api/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

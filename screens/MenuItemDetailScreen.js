@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext';
 import { UserContext } from '../context/UserContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'http://192.168.150.249:3000'; // Your server's base URL
+const BASE_URL = 'http://localhost:3000';
 
 const MenuItemImage = ({ menuItemDetails }) => {
   const imageUrl = `${BASE_URL}${menuItemDetails.image_url}`;
@@ -29,9 +29,9 @@ const MenuItemDetailScreen = ({ route }) => {
     const fetchMenuItem = async () => {
       try {
         const url = `${BASE_URL}/api/v1/restaurants/${restaurantId}/menu_items/${menuItemId}`;
-        console.log(`Fetching menu item from: ${url}`); // Debugging log
+        console.log(`Fetching menu item from: ${url}`);
         const response = await axios.get(url);
-        console.log('Response data:', response.data); // Debugging log
+        console.log('Response data:', response.data);
         if (!response.data) {
           throw new Error('No data received');
         }
