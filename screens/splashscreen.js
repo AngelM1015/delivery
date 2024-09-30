@@ -35,15 +35,15 @@ const SplashScreen = ({ navigation }) => {
     const inputRange = [0, 1];
     const outputRange = [
       `0deg`,
-      `${360 * (index + 1)}deg` // Each emoji rotates 1, 2, or 3 full circles
+      `${360 * (index + 1)}deg`
     ];
     const rotate = spinValue.interpolate({ inputRange, outputRange });
 
     return {
       transform: [
-        { translateX: 60 }, // Adjust radius to move emojis outwards
+        { translateX: 60 },
         { rotate },
-        { translateX: -120 }, // Move back to form a circle around the text
+        { translateX: -120 },
       ],
     };
   };
@@ -88,14 +88,14 @@ const styles = StyleSheet.create({
   },
   emojisContainer: {
     position: 'absolute',
-    width: 240, // Increased size to accommodate larger circle
-    height: 240, // Same as width
+    width: 240,
+    height: 240,
     alignItems: 'center',
     justifyContent: 'center',
-    top: '50%', // Center on the screen
-    left: '40%', // Center on the screen
-    marginLeft: -120, // Adjust according to width/2
-    marginTop: -120, // Adjust according to height/2
+    top: '50%',
+    left: '40%',
+    marginLeft: -120,
+    marginTop: -120,
   },
   emojiContainer: {
     position: 'absolute',

@@ -36,7 +36,7 @@ const LoginScreen = ({ navigation,route }) => {
   const handleLogin = async (email, password) => {
     try {
       console.log(`email ${email}`);
-      let url = 'http://192.168.150.249:3000/api/v1/auth/login';
+      let url = 'http://localhost:3000/api/v1/auth/login';
   
       const response = await axios.post(url, {
         email,
@@ -45,11 +45,10 @@ const LoginScreen = ({ navigation,route }) => {
   
       if (response.data && response.data.token) {
         console.log('Login Successful:', response.data);
-        // Save token, role, and user_id in AsyncStorage
+
         await AsyncStorage.setItem('userToken', response.data.token);
         await AsyncStorage.setItem('userRole', response.data.role);
         await AsyncStorage.setItem('userId', response.data.user_id.toString());
-        // await AsyncStorage.setItem('customerAddress', response.data.address)
         setIsRoleChanged(!isRoleChanged)
         navigation.replace('Main');
       } else {

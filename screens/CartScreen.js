@@ -5,13 +5,12 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart } from '../context/CartContext';
 import ActionCable from 'react-native-actioncable';
-import moment from 'moment';
 
 const CartScreen = ({ navigation }) => {
   const { cartItems, removeFromCart, updateItemQuantity, clearCart } = useCart();
   const [orderDetails, setOrderDetails] = useState(null);
   const [cable, setCable] = useState(null);
-  const [orderType, setOrderType] = useState(null); // State for order type
+  const [orderType, setOrderType] = useState(null);
 
   useEffect(() => {
     fetchTokenAndConnect();
@@ -80,7 +79,7 @@ const CartScreen = ({ navigation }) => {
           restaurant_id: parseInt(storedRestaurantId),
           delivery_address: orderType === 'delivery' ? '209 Aspen Leaf Dr, Big Sky, MT 59716' : '',
           total_price: calculateTotalPrice(cartItems),
-          address_id: 1, // Adjusted based on order type
+          address_id: 1, // fetch address from customer and then send that address
           order_type: orderType, // Include order type in order data
           order_items_attributes: cartItems.map(item => ({
             menu_item_id: item.id,
@@ -92,7 +91,7 @@ const CartScreen = ({ navigation }) => {
         }
       };
 
-      const response = await axios.post('http://192.168.150.249:3000/api/v1/orders/create_order', orderData, {
+      const response = await axios.post('http://localhost:3000/api/v1/orders/create_order', orderData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
