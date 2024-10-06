@@ -13,6 +13,7 @@
     "@react-native-picker/picker": "2.7.5",
     "@react-navigation/bottom-tabs": "^6.5.14",
     "@react-navigation/stack": "^6.3.23",
+    "@stripe/stripe-react-native": "^0.38.6",
     "actioncable": "^5.2.8-1",
     "axios": "^1.6.7",
     "expo": "~51.0.26",

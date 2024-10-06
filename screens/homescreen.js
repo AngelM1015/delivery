@@ -26,6 +26,7 @@ const HomeScreen = ({ navigation }) => {
           ...restaurant,
           image: { url: `https://source.unsplash.com/random/800x600?restaurant&sig=${index}` },
         }));
+        console.log('restaurants', response.data);
         setRestaurants(restaurantsWithImages);
       } catch (error) {
         console.error('Error fetching restaurants:', error);
