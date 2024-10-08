@@ -50,6 +50,7 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
         <View style={styles.cardContent}>
           <Text style={styles.cardTitle}>{item.name}</Text>
           <Text style={styles.cardText}>{item.address}</Text>
+          <Text>delivery fee: $20</Text>
         </View>
       </TouchableOpacity>
     );

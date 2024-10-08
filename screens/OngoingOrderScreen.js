@@ -89,9 +89,31 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
           Alert.alert('Error', 'something went wrong!');
         }
       } catch (error) {
-        
+        Alert.alert('Error', 'something went wrong!');
       }
   };
+
+  const deliverOrder = async () => {
+    const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        Alert.alert('Error', 'you have been logged out!');
+        return;
+      }
+
+      try {
+        await axios.patch(`http://localhost:3000/api/v1/orders/${order.id}/deliver_order`, order, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (order.order_type === 'delivery'){
+          navigation.replace('Main');
+        } else {
+          Alert.alert('Error', 'something went wrong!');
+        }
+      } catch (error) {
+        Alert.alert('Error', 'something went wrong!');
+      }
+  }
 
   return (
     <Animated.View style={[styles.container, { transform: [{ translateY: slideAnim }] }]}>
@@ -107,7 +129,12 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
             <Text>Your order will be delivered in {order.estimated_wait_time} - {order.estimated_wait_time + 15} mins</Text>
           </>
         ) : (
+          <>
           <Text>{partnerMessage}</Text>
+          <TouchableOpacity style={styles.pickupButton} onPress={() => deliverOrder()}>
+            <Text style={styles.pickupButtonText}>Deliver order</Text>
+          </TouchableOpacity>
+          </>
         )}
         {order.status === 'partner_assigned' && (
           <>

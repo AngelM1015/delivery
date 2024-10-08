@@ -59,7 +59,7 @@ const MenuItemDetailScreen = ({ route }) => {
   const handleAddToCart = () => {
     AsyncStorage.setItem('selectedRestaurantId', `${restaurantId}`);
     console.log('Modifier Counts:', modifierCounts);
-  console.log('Menu Item Details:', menuItemDetails);
+    console.log('Menu Item Details:', menuItemDetails);
     const selectedModifiers = Object.entries(modifierCounts)
       .map(([modifierId, optionsCounts]) => ({
         modifierId,

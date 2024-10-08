@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, ScrollView, StyleSheet, View, Dimensions } from 'react-native';
+import { Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { BarChart, PieChart } from 'react-native-chart-kit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';

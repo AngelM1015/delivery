@@ -40,9 +40,11 @@ const ChatScreen = () => {
       const response = await axios.get(`http://localhost:3000/api/v1/conversations/${conversationId}`,
         { headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } }
       );
-  
+
+      console.log('messages', response.data);
+
       setMessages(response.data.messages);
-  
+
       return () => {
         subscription.unsubscribe();
       };

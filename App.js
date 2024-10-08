@@ -17,7 +17,8 @@ import MenuItemDetailScreen from './screens/MenuItemDetailScreen';
 import MainTabNavigator from './routes/MainTabNavigator';
 import SettingScreen from './screens/SettingScreen';
 import cable from './cable';
-import Toast from 'react-native-toast-message'; // Import Toast
+import Toast from 'react-native-toast-message';
+import { StripeProvider } from '@stripe/stripe-react-native';
 
 const themeColors = {
   activeTintColor: '#e23744',
@@ -214,6 +215,11 @@ function App() {
   }
 
   return (
+    <StripeProvider
+      publishableKey="pk_test_51Q0mkTEgTqpUY0IgW4AtWE1mfMbHEtxq50HDVdRSBr4R43oG23hhmLf4W57QphaiXJWT7efFKXcxXnJqsYVJ0rUe00lVjPrrrP"
+      merchantIdentifier="merchant.identifier" // required for Apple Pay
+      urlScheme="your-url-scheme" // required for 3D Secure and bank redirects
+    >
     <PaperProvider theme={paperTheme}>
       <NavigationContainer theme={paperTheme}>
         <UserProvider>
@@ -234,6 +240,7 @@ function App() {
         <Toast ref={(ref) => Toast.setRef(ref)} /> 
       </NavigationContainer>
     </PaperProvider>
+    </StripeProvider>
   );
 }
 

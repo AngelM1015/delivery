@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Button, ActivityIndicator, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Button, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
