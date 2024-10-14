@@ -6,10 +6,10 @@ import { useCart } from '../context/CartContext';
 import { UserContext } from '../context/UserContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'http://localhost:3000';
+import { base_url } from '../constants/api';
 
 const MenuItemImage = ({ menuItemDetails }) => {
-  const imageUrl = `${BASE_URL}${menuItemDetails.image_url}`;
+  const imageUrl = `${base_url}${menuItemDetails.image_url}`;
   return menuItemDetails.image_url ? (
     <Image source={{ uri: imageUrl }} style={styles.image} />
   ) : null;
@@ -28,7 +28,7 @@ const MenuItemDetailScreen = ({ route }) => {
   useEffect(() => {
     const fetchMenuItem = async () => {
       try {
-        const url = `${BASE_URL}/api/v1/restaurants/${restaurantId}/menu_items/${menuItemId}`;
+        const url = `${base_url}api/v1/restaurants/${restaurantId}/menu_items/${menuItemId}`;
         console.log(`Fetching menu item from: ${url}`);
         const response = await axios.get(url);
         console.log('Response data:', response.data);

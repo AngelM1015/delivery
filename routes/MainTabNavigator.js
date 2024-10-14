@@ -96,6 +96,7 @@ const MainTabNavigator = ({ role = 'guest' }) => {
         tabBarActiveTintColor: themeColors.activeTintColor,
         tabBarInactiveTintColor: themeColors.inactiveTintColor,
         tabBarStyle: styles.tabBar,
+        headerShown: false
       })}
     >
       {['partner', 'restaurant_owner', 'admin'].includes(role) ? (
