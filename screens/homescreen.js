@@ -6,7 +6,7 @@ import { base_url, restuarants } from '../constants/api';
 import { Icons } from '../constants/Icons';
 import { COLORS } from '../constants/colors';
 import { Card, Title, Paragraph, Searchbar } from 'react-native-paper';
-import { FontAwesome } from '@expo/vector-icons'; 
+import { FontAwesome } from '@expo/vector-icons';
 const HomeScreen = ({navigation}) => {
   const [restaurants, setRestaurants] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
@@ -29,6 +29,7 @@ const HomeScreen = ({navigation}) => {
           Authorization: `Bearer ${token}`,
         };
         const response = await axios.get(`${base_url}${restuarants.restuarant}`, { headers });
+        console.log('resturant=================', response)
         const restaurantsWithImages = response.data.map((restaurant, index) => ({
           ...restaurant,
           image: { url: `https://source.unsplash.com/random/800x600?restaurant&sig=${index}` },
@@ -99,10 +100,10 @@ const HomeScreen = ({navigation}) => {
         <Card
           style={[
             styles.restaurantCard,
-            { backgroundColor: isSelected ? '#F09B00' : 'white' }, // Change background when selected
+            { backgroundColor: isSelected ? '#F09B00' : 'white', justifyContent:'center',alignItems:'center' }, // Change background when selected
           ]}
         >
-          <Image source={{ uri: restaurant.image.url }} style={styles.restaurantImage} />
+          <Image source={{ uri: restaurant.image_url}} style={styles.restaurantImage} />
           <Text numberOfLines={1} style={styles.restaurantTitle}>{restaurant.name}</Text>
           <Text style={styles.restaurantSubtitle}>{restaurant.address}</Text>
         </Card>
@@ -115,10 +116,10 @@ const HomeScreen = ({navigation}) => {
     const imageUrl = item.image_url || 'https://via.placeholder.com/150'; // Use placeholder if no image_url
     const rating = '4.9'; // Static rating for now, can be dynamic
     const distance = '190m'; // Static distance for now
-    
+
     return (
-      <TouchableOpacity onPress={() => navigation.navigate('MenuItemDetailScreen', { menuItemId: item.id, restaurantId: selectedRestaurant })}>
-        <Card style={styles.menuCard}> 
+      <TouchableOpacity onPress={() => navigation.navigate('MenuAboutScreen', { menuItemId: item.id, restaurantId: item.restaurant_id })}>
+        <Card style={styles.menuCard}>
           <View style={styles.innerCardContainer}>
             <View style={styles.menuCardTop}>
               <Image source={{ uri: imageUrl }} style={styles.menuImage} />
@@ -143,8 +144,8 @@ const HomeScreen = ({navigation}) => {
       </TouchableOpacity>
     );
   };
-  
-  
+
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -263,6 +264,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     marginBottom: 10,
+    alignSelf:'center'
   },
   restaurantTitle: {
     fontSize: 14,
@@ -346,5 +348,3 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
-
-
