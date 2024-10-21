@@ -12,14 +12,16 @@ import MetricScreen from '../screens/MetricScreen';
 import AdminScreen from '../screens/AdminScreen';
 import SettingsScreen from '../screens/SettingScreen';
 import ChatScreen from '../screens/ChatScreen';
+import CartScreen from '../screens/CartScreen';
+import MenuCheckoutScreen from '../screens/MenuCheckoutScreen';
 import OngoingOrderScreen from '../screens/OngoingOrderScreen';
 import { StyleSheet } from 'react-native';
 import OrderDetailScreen from '../screens/OrderDetailScreen';
 
 const themeColors = {
-  activeTintColor: '#e23744',
-  inactiveTintColor: '#a8a8a8',
-  backgroundColor: '#ffffff',
+  activeTintColor: "#F09B00", // Tomato red for active
+  inactiveTintColor: "#B0C4DE", // Light steel blue for inactive
+  backgroundColor: "#F2F2F5", // Alice blue background
 };
 
 const styles = StyleSheet.create({
@@ -34,8 +36,8 @@ const Stack = createStackNavigator();
 // Stack Navigator for order-related screens
 const OrderStackNavigator = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="OrdersScreen" component={OrdersScreen} />
-    <Stack.Screen name="OngoingOrderScreen" component={OngoingOrderScreen} />
+    <Stack.Screen name="CartScreen" component={CartScreen} />
+    <Stack.Screen name="MenuCheckoutScreen" component={MenuCheckoutScreen} />
     <Stack.Screen name="ChatScreen" component={ChatScreen} />
     <Stack.Screen name="OrderDetailScreen" component={OrderDetailScreen}/>
   </Stack.Navigator>
@@ -60,7 +62,7 @@ const getTabBarIcon = (role, route, focused) => {
     customer: {
       Home: focused ? 'home' : 'home-outline',
       Browse: focused ? 'search' : 'search-outline',
-      Order: focused ? 'list' : 'list-outline',
+      Cart: focused ? "cart" : "cart-outline",
       Account: focused ? 'person' : 'person-outline',
     },
     partner: {
@@ -112,7 +114,7 @@ const MainTabNavigator = ({ role = 'guest' }) => {
       )}
       {['customer', 'partner'].includes(role) && (
         <Tab.Screen
-          name="Order"
+          name="Cart"
           component={role === 'partner' ? PartnerOrderStackNavigator : OrderStackNavigator} // Use stack navigator for orders
         />
       )}

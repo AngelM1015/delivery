@@ -15,6 +15,8 @@ import CustomButton from '../components/CustomButton';
 import CustomInput from '../components/CustomInput';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {base_url, auth} from '../constants/api';
+import EmailIcon from '../assets/svgs/emailIcon.svg';
+import PasswordIcon from '../assets/svgs/passwordIcon.svg';
 
 
 const admin = {
@@ -112,7 +114,7 @@ const LoginScreen = ({ navigation,route }) => {
           secureTextEntry
         />
         <TouchableOpacity
-          // onPress={() => navigation.navigate('EmailVerificationScreen')}
+          onPress={() => navigation.navigate('EmailVerificationScreen')}
           style={styles.forgotPasswordContainer}
         >
           <Text style={styles.forgotPasswordText}>Forgot password?</Text>
