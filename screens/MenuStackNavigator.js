@@ -5,6 +5,7 @@ import { FAB, Badge } from 'react-native-paper';
 import MenuOfRestaurantsScreen from './MenuOfRestaurantsScreen';
 import RestaurantMenuScreen from './RestaurantMenuScreen';
 import MenuItemDetailScreen from './MenuItemDetailScreen';
+import MenuCheckoutScreen from './MenuCheckoutScreen';
 import CartScreen from './CartScreen';
 import { useCart } from '../context/CartContext';
 import AddPaymentMethodScreen from './AddPaymentMethodScreen';
@@ -48,29 +49,30 @@ function MenuStackNavigator() {
   return (
     <>
       <MenuStack.Navigator>
-        <MenuStack.Screen 
-          name="MenuOfRestaurantsScreen" 
-          component={MenuOfRestaurantsScreen} 
-          options={({ navigation }) => ({ 
+        <MenuStack.Screen
+          name="MenuOfRestaurantsScreen"
+          component={MenuOfRestaurantsScreen}
+          options={({ navigation }) => ({
             headerLeft: () => null,
             headerRight: () => <CartIcon navigation={navigation} />
-          })} 
+          })}
         />
-        <MenuStack.Screen 
-          name="RestaurantMenuScreen" 
+        <MenuStack.Screen
+          name="RestaurantMenuScreen"
           component={RestaurantMenuScreen}
           options={({ navigation }) => ({
             headerRight: () => <CartIcon navigation={navigation} />
           })}
         />
-        <MenuStack.Screen 
-          name="MenuItemDetailScreen" 
-          component={MenuItemDetailScreen} 
+        <MenuStack.Screen
+          name="MenuItemDetailScreen"
+          component={MenuItemDetailScreen}
           options={({ navigation }) => ({
             headerRight: () => <CartIcon navigation={navigation} />
-          })} 
+          })}
         />
-        <MenuStack.Screen name="CartScreen" component={CartScreen} />
+        <MenuStack.Screen name="CartScreen" component={CartScreen}  options={{ headerShown: false }}/>
+        <MenuStack.Screen name="MenuCheckoutScreen" component={MenuCheckoutScreen}  options={{ headerShown: false }}/>
         <MenuStack.Screen name="AddPaymentMethodScreen" component={AddPaymentMethodScreen} />
       </MenuStack.Navigator>
     </>
