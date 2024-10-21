@@ -1,48 +1,64 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, Alert, View, StyleSheet } from 'react-native';
-import { Button, Card, Text, ToggleButton, FAB, Menu, PaperProvider, Icon } from 'react-native-paper';
+import { ScrollView, Alert, View, StyleSheet, TextInput, Image, TouchableOpacity } from 'react-native';
+import { Button, Card, Text, ToggleButton, FAB, Menu, PaperProvider, Icon, Checkbox  } from 'react-native-paper';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart } from '../context/CartContext';
+import { FontAwesome } from '@expo/vector-icons';
+import CustomButton from '../components/CustomButton';
+import Header from '../components/Header';
 
 const CartScreen = ({ navigation }) => {
   const { cartItems, removeFromCart, updateItemQuantity, clearCart } = useCart();
+  console.log('cartItems', cartItems);
+  const deliveryFee = 5.00; // Example fee
+  const discount = 10.00;
   const [orderType, setOrderType] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [paymentMethods, setPaymentMethods] = useState([]); // State to hold payment methods
   const [visible, setVisible] = useState(false);
-  const [deliveryFee, setDeliveryFee] = useState(null);
+  // const [discount, setDiscount] = useState(0); // Add discount logic
+  // const [extraOptions, setExtraOptions] = useState([]);
+  const [extraChecked, setExtraChecked] = useState(false);
+  // const [deliveryFee, setDeliveryFee] = useState(null);
   const [displayMessage, setDisplayMessage] = useState("Your cart is empty!");
+  const [extraOptions, setExtraOptions] = useState([
+    { productName: 'Extra Chess', price: '1$' },
+    { productName: 'Extra Vegan Chess', price: '0.15$' },
+    { productName: 'Extra Sause', price: '0.5$' },
+    { productName: 'Extra Garlic Sause', price: '0.75$' },
+  ]);
+
 
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
 
-  useEffect(() => {
-    fetchPaymentMethods(); // Fetch payment methods on load
-  }, []);
+  // useEffect(() => {
+  //   fetchPaymentMethods(); // Fetch payment methods on load
+  // }, []);
 
-  const fetchPaymentMethods = async () => {
-    try {
-      const token = await AsyncStorage.getItem('userToken');
-      const response = await axios.get('http://localhost:3000/api/v1/payments/get_payment_methods', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+  // const fetchPaymentMethods = async () => {
+  //   try {
+  //     const token = await AsyncStorage.getItem('userToken');
+  //     const response = await axios.get(`${base_url}api/v1/payments/get_payment_methods`, {
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`
+  //       }
+  //     });
 
-      // Add cash payment option to the fetched payment methods
-      const cashPaymentOption = {
-        id: 'cash',
-        brand: 'Cash',
-        last4: 'N/A'
-      };
+  //     // Add cash payment option to the fetched payment methods
+  //     const cashPaymentOption = {
+  //       id: 'cash',
+  //       brand: 'Cash',
+  //       last4: 'N/A'
+  //     };
 
-      setPaymentMethods([cashPaymentOption, ...response.data]); // Add cash as the first option
-    } catch (error) {
-      console.error('Error fetching payment methods:', error);
-      Alert.alert('Error', 'Failed to fetch payment methods');
-    }
-  };
+  //     setPaymentMethods([cashPaymentOption, ...response.data]); // Add cash as the first option
+  //   } catch (error) {
+  //     console.error('Error fetching payment methods:', error);
+  //     Alert.alert('Error', 'Failed to fetch payment methods');
+  //   }
+  // };
 
   const incrementQuantity = itemId => {
     const item = cartItems.find(item => item.id === itemId);
@@ -54,219 +70,347 @@ const CartScreen = ({ navigation }) => {
     updateItemQuantity(itemId, Math.max(item.quantity - 1, 1));
   };
 
-  const submitOrder = async () => {
-    if (!orderType || !paymentMethod) {
-      Alert.alert('Error', 'Please select an order type and payment method');
-      return;
-    }
+  // const submitOrder = async () => {
+  //   if (!orderType || !paymentMethod) {
+  //     Alert.alert('Error', 'Please select an order type and payment method');
+  //     return;
+  //   }
 
-    console.log('payment method', paymentMethod)
-    try {
-      const token = await AsyncStorage.getItem('userToken');
+  //   console.log('payment method', paymentMethod)
+  //   try {
+  //     const token = await AsyncStorage.getItem('userToken');
 
-      const storedRestaurantId = await AsyncStorage.getItem('selectedRestaurantId');
-      if (!storedRestaurantId) {
-        Alert.alert('Error', 'No associated restaurant found');
-        return;
-      }
+  //     const storedRestaurantId = await AsyncStorage.getItem('selectedRestaurantId');
+  //     if (!storedRestaurantId) {
+  //       Alert.alert('Error', 'No associated restaurant found');
+  //       return;
+  //     }
 
-      const orderData = {
-        order: {
-          restaurant_id: parseInt(storedRestaurantId),
-          delivery_address: orderType === 'delivery' ? '209 Aspen Leaf Dr, Big Sky, MT 59716' : '',
-          total_price: calculateTotalPrice(cartItems),
-          address_id: 1, // fetch address from customer and then send that address
-          order_type: orderType,
-          payment_method: paymentMethod.brand === 'Cash' ? 'cash' : 'other',
-          order_items_attributes: cartItems.map(item => ({
-            menu_item_id: item.id,
-            quantity: item.quantity,
-            order_item_modifiers_attributes: item.selectedModifiers.map(modifier => ({
-              modifier_option_id: modifier.modifierId
-            }))
-          }))
-        }
-      };
+  //     const orderData = {
+  //       order: {
+  //         restaurant_id: parseInt(storedRestaurantId),
+  //         delivery_address: orderType === 'delivery' ? '209 Aspen Leaf Dr, Big Sky, MT 59716' : '',
+  //         total_price: calculateTotalPrice(cartItems),
+  //         address_id: 1, // fetch address from customer and then send that address
+  //         order_type: orderType,
+  //         payment_method: paymentMethod.brand === 'Cash' ? 'cash' : 'other',
+  //         order_items_attributes: cartItems.map(item => ({
+  //           menu_item_id: item.id,
+  //           quantity: item.quantity,
+  //           order_item_modifiers_attributes: item.selectedModifiers.map(modifier => ({
+  //             modifier_option_id: modifier.modifierId
+  //           }))
+  //         }))
+  //       }
+  //     };
 
-      const response = await axios.post('http://localhost:3000/api/v1/orders/create_order', {order: orderData.order, payment_method_id: paymentMethod.id}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+  //     const response = await axios.post('http://localhost:3000/api/v1/orders/create_order', {order: orderData.order, payment_method_id: paymentMethod.id}, {
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`
+  //       }
+  //     });
 
-      clearCart();
-      setOrderType(null);
-      setDisplayMessage('your order has been placed! ✅')
-    } catch (error) {
-      console.error('Order submission error:', error.response.data.message);
-      Alert.alert('Error', error.response.data.message);
-    }
+  //     clearCart();
+  //     setOrderType(null);
+  //     setDisplayMessage('your order has been placed! ✅')
+  //   } catch (error) {
+  //     console.error('Order submission error:', error.response.data.message);
+  //     Alert.alert('Error', error.response.data.message);
+  //   }
+  // };
+
+  const calculateCartTotal = () => {
+    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
   };
 
-  const calculateTotalPrice = (items) => {
-    return items.reduce((total, item) => total + item.price, 0) + deliveryFee;
+  const calculateFinalTotal = () => {
+    const cartTotal = calculateCartTotal();
+    const extrasTotal = extraOptions.reduce((total, option) => total + parseFloat(option.price || 0), 0);
+    return cartTotal + extrasTotal + deliveryFee - discount;
+  };
+
+  const addExtraOption = () => {
+    setExtraOptions([...extraOptions, { productName: '', price: '' }]);
+  };
+
+  const updateExtraOption = (index, field, value) => {
+    const newOptions = [...extraOptions];
+    newOptions[index][field] = value;
+    setExtraOptions(newOptions);
   };
 
   return (
     <PaperProvider>
-    <ScrollView>
-      {cartItems.length === 0 ? (
-        <Text style={styles.displayMessage}>{displayMessage}</Text>
-      ) : (
-        <>
-          {/* Displaying Cart Items */}
-          {cartItems.map((item, index) => (
-            <Card key={index} style={{ margin: 10, backgroundColor: 'white' }}>
-              <Card.Title title={item.name} />
-              <Card.Content>
-                <Text>Price: ${item.price + deliveryFee}</Text>
-                <Text style={{ fontWeight: 'bold' }}>Modifiers</Text>
-                {item.selectedModifiers.map((modifier, modIndex) =>
-                  modifier.options.map((option, optIndex) => (
-                    <Text key={`mod-${modIndex}-opt-${optIndex}`}>
-                      {option.count} x {option.name}, Extra Cost: ${option.additional_price * option.count}
-                    </Text>
-                  ))
-                )}
-                {deliveryFee > 0 && (<Text style={{ fontWeight: 'bold' }}>Delivery Fee: $15</Text>)}
-              </Card.Content>
-              <Card.Actions>
-                { item.quantity > 1 && (
-                  <FAB onPress={() => removeFromCart(item.id)}
-                    icon="delete" color="red" backgroundColor="white" size="small"
-                  />
-                )}
-                <FAB onPress={() => item.quantity > 1 ? decrementQuantity(item.id) : removeFromCart(item.id)}
-                 icon={item.quantity > 1 ? "minus" : "delete"}
-                 color={item.quantity > 1 ? "white" : "red"}
-                 backgroundColor={item.quantity > 1 ? "orange" : "white"} size="small"
-                />
-                <Text>{item.quantity}</Text>
-                <FAB onPress={() => incrementQuantity(item.id)}
-                 icon="plus" color="white" backgroundColor="orange" size="small"
-                />
-              </Card.Actions>
-            </Card>
-          ))}
-
-          {/* Order Type Selection */}
-          <Text style={{ fontSize: 16, marginBottom: 10, paddingLeft: 10 }}>Select Order Type:</Text>
-          <View style={styles.orderTypeContainer}>
-            <View style={styles.orderTypeWrapper}>
-              <ToggleButton.Group
-                style={styles.orderTypeGroup}
-                onValueChange={value => {
-                  setOrderType(value);
-                  if (value === 'delivery') {
-                    setDeliveryFee(15);  // Set delivery fee for delivery option
-                  } else {
-                    setDeliveryFee(0);    // Set delivery fee for pickup option
-                  }
-                }}
-                value={orderType}
-              >
-                <View style={styles.orderTypeItem}>
-                  <ToggleButton icon="bike" value="delivery"/>
-                  <Text style={styles.orderTypeLabel}>Delivery</Text>
-                </View>
-
-                <View style={styles.orderTypeItem}>
-                  <ToggleButton icon="storefront" value="pickup"/>
-                  <Text style={styles.orderTypeLabel}>Pick-Up</Text>
-                </View>
-              </ToggleButton.Group>
-            </View>
+      <View style={{flex:1}}>
+        <View style={{paddingTop:50}}>
+          <Header title="About This Menu" navigation={navigation} showShareIcon={true} />
+        </View>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        {/* Location Section */}
+        <View style={styles.locationContainer}>
+          <Text style={styles.locationText}>Delivery Location</Text>
+          <View style={styles.locationInnerContainer}>
+            {/* <Text style={styles.locationAddress}>{deliveryLocation}</Text> */}
+            <Button mode="text" onPress={() => setDeliveryLocation('Change Location')}>
+              Change Location
+            </Button>
           </View>
+        </View>
 
-          {/* Payment Method Selection */}
-          <Text style={{ fontSize: 16, marginBottom: 10, fontWeight: 'bold' }}>Payment Method:</Text>
+        {/* Cart Items Section */}
+        {cartItems.length === 0 ? (
+          <Text style={styles.displayMessage}>Your cart is empty!</Text>
+        ) : (
+          <>
+            {cartItems.map((item, index) => (
+              <Card key={index} style={styles.cartCard}>
+                <View style={styles.cartItemContainer}>
+                  <Image source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }} style={styles.cartImage} />
+                  <View style={styles.cartItemDetails}>
+                    <Text style={styles.itemTitle}>{item.name}</Text>
+                    <Text style={styles.itemPrice}>${item.price}</Text>
+                    <View style={styles.quantityControls}>
+                      <TouchableOpacity onPress={() => decrementQuantity(item.id)}>
+                        <FontAwesome name="minus" size={20} color="black" />
+                      </TouchableOpacity>
+                      <Text style={styles.quantityText}>{item.quantity}</Text>
+                      <TouchableOpacity onPress={() => incrementQuantity(item.id)}>
+                        <FontAwesome name="plus" size={20} color="black" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <TouchableOpacity onPress={() => removeFromCart(item.id)}>
+                    <FontAwesome name="trash" size={24} color="red" />
+                  </TouchableOpacity>
+                </View>
+              </Card>
+            ))}
 
-          {paymentMethods.length === 0 ? (
-            <Text>No payment methods available.</Text>
-          ) : (
-            <View style={{ margin: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              {paymentMethod && (
-                <Text>{paymentMethod.brand === 'Cash' ? 'Cash Payment' : `${paymentMethod.brand}  ....${paymentMethod.last4}`}</Text>
+            {/* Add Extra Section with Checkbox */}
+            <View style={styles.extraSection}>
+              <View style={styles.addExtraHeader}>
+                <Checkbox
+                  status={extraChecked ? 'checked' : 'unchecked'}
+                  onPress={() => setExtraChecked(!extraChecked)}
+                />
+                <Text style={styles.sectionTitle}>Add Extra</Text>
+              </View>
+
+              {/* Extra Input Fields, shown only if checkbox is checked */}
+              {extraChecked && (
+                <>
+                  {extraOptions.map((option, index) => (
+                    <View key={index} style={styles.extraOptionContainer}>
+                      <View style={styles.extraInputContainer}>
+                        <Text style={styles.inputLabel}>Product Name</Text>
+                        <TextInput
+                          style={styles.productInput} // Larger input for product name
+                          placeholder={option.productName}
+                          value={option.productName}
+                          editable={false} // Fixed names as placeholders
+                        />
+                      </View>
+                      <View style={styles.priceInputContainer}>
+                        <Text style={styles.inputLabel}>Price</Text>
+                        <TextInput
+                          style={styles.priceInput} // Smaller input for price
+                          placeholder={option.price}
+                          keyboardType="numeric"
+                          value={option.price}
+                          editable={false} // Fixed prices as placeholders
+                        />
+                      </View>
+                    </View>
+                  ))}
+                </>
               )}
-              <Menu
-                anchorPosition='anchorPosition'
-                mode="elevated"
-                visible={visible}
-                onDismiss={closeMenu}
-                anchor={
-                  <Text style={{ color: 'black', fontWeight: 'bold' }} onPress={openMenu}>
-                    {paymentMethod
-                      ? 'change'
-                      : 'Select Payment Method'
-                    }
-                  </Text>
-                }
-              >
-                {paymentMethods.map(method => (
-                  <Menu.Item
-                    key={method.id}
-                    onPress={() => {
-                      setPaymentMethod(method);
-                      closeMenu();
-                    }}
-                    title={method.brand === 'Cash' ? 'Cash Payment' : `${method.brand}   ..... ${method.last4}`}
-                  />
-                ))}
-              </Menu>
             </View>
-          )}
 
-          {/* Add New Payment Method Button */}
-          <Button
-            icon="plus"
-            mode="contained"
-            onPress={() => navigation.navigate('AddPaymentMethodScreen')}
-          >
-            Add New Payment Method
-          </Button>
-        </>
-      )}
-    </ScrollView>
-    <Button
-      mode="contained"
-      onPress={submitOrder}
-      disabled={!orderType || !paymentMethod}
-      buttonColor='red'
-    >
-      {paymentMethod ? 'Proceed to Payment' : 'Submit Order'}
-    </Button>
-    </PaperProvider>
+            {/* Payment Summary */}
+            <View style={styles.paymentSummary}>
+              <Text style={styles.summaryText}>Payment Summary</Text>
+
+              {/* Total Items Row */}
+              <View style={styles.summaryRow}>
+                <Text>Total Items:</Text>
+                <Text>${calculateCartTotal().toFixed(2)}</Text>
+              </View>
+
+              {/* Delivery Fee Row */}
+              <View style={styles.summaryRow}>
+                <Text>Delivery Fee:</Text>
+                <Text>{deliveryFee === 0 || deliveryFee === null ? 'Free' : `$${(deliveryFee || 0).toFixed(2)}`}</Text>
+              </View>
+
+              {/* Discount Row */}
+              <View style={styles.summaryRow}>
+                <Text>Discount:</Text>
+                <Text>-${discount.toFixed(2)}</Text>
+              </View>
+
+              {/* Total Row */}
+              <View style={styles.summaryRow}>
+                <Text>Total:</Text>
+                <Text>${calculateFinalTotal().toFixed(2)}</Text>
+              </View>
+            </View>
+          </>
+        )}
+      </ScrollView>
+
+      {/* Order Now Button */}
+        <CustomButton
+          text="Order Now"
+          onPress={() =>
+            navigation.navigate('MenuCheckoutScreen', {
+              cartItems,  // Passing cartItems to CheckoutScreen
+              orderDetails: {
+                deliveryFee: deliveryFee || 0,
+                discount: discount || 0,
+                totalPrice: calculateFinalTotal(),
+                imageUrl: cartItems[0].imageUrl, // Assuming the first item's image for simplicity
+                itemName: cartItems[0].name, // Passing name
+                itemPrice: cartItems[0].price, // Passing price
+                quantity: cartItems[0].quantity, // Passing quantity
+              },
+            })
+          }
+        />
+      </View>
+     </PaperProvider>
   );
 };
 
 const styles = StyleSheet.create({
-  orderTypeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    margin: 10,
+  scrollViewContent: {
+    // paddingBottom: 20,
+    // paddingHorizontal: 10,
+    padding: 20,
+    flex:1,
+    // padding:40
   },
-  orderTypeWrapper: {
+  locationContainer: {
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  locationText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  locationInnerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
-  },
-  orderTypeGroup: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  orderTypeItem: {
-    alignItems: 'center',
-    marginHorizontal: 10,
-  },
-  orderTypeLabel: {
     marginTop: 5,
-    fontSize: 12,
+  },
+  locationAddress: {
+    fontSize: 16,
+  },
+  cartCard: {
+    marginVertical: 10,
+    padding: 10,
+    borderRadius: 10,
+  },
+  cartItemContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cartImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 5,
+  },
+  cartItemDetails: {
+    flex: 1,
+    paddingLeft: 10,
+  },
+  itemTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  itemPrice: {
+    fontSize: 14,
+    color: '#F09B00',
+  },
+  quantityControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  quantityText: {
+    marginHorizontal: 10,
+    fontSize: 16,
+  },
+  extraSection: {
+    marginTop: 20,
+  },
+  addExtraHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  extraOptionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  extraInputContainer: {
+    flex: 2, // Make this wider
+    marginRight: 10,
+  },
+  priceInputContainer: {
+    flex: 1, // Make this smaller
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  productInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 8,
+    borderRadius: 5,
+  },
+  priceInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 8,
+    borderRadius: 5,
+  },
+  paymentSummary: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 5,
+  },
+  summaryText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  orderButton: {
+    backgroundColor: '#F09B00',
+    padding: 15,
+    marginHorizontal: 10,
+    marginVertical: 20,
   },
   displayMessage: {
     textAlign: 'center',
-    marginTop: 300
-  }
+    marginTop: 50,
+    fontSize: 18,
+    color: 'gray',
+  },
 });
 
 export default CartScreen;
