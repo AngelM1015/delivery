@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Button, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Button, ActivityIndicator, TouchableOpacity, RefreshControl, SafeAreaView } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import {base_url, orders} from '../constants/api';
 const OrdersScreen = ({ navigation }) => {
   const [ordersData, setOrdersData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,7 +27,8 @@ const OrdersScreen = ({ navigation }) => {
   const fetchOrders = async (token, role) => {
     setLoading(true);
     try {
-      let url = 'http://localhost:3000/api/v1/orders';
+      let url = `${base_url}${orders.order}`;
+    
       if (role === 'customer') {
         const response = await axios.get(url, {
           headers: { Authorization: `Bearer ${token}` },
@@ -52,7 +53,7 @@ const OrdersScreen = ({ navigation }) => {
   const handleOrderAction = async (orderId, action) => {
     const token = await AsyncStorage.getItem('userToken');
     try {
-      const url = `http://localhost:3000/api/v1/orders/${orderId}/${action}`;
+      const url = `https://de4a-2400-adc5-18a-ff00-fdfb-b8b5-d09b-b1c7.ngrok-free.app/api/v1/orders/${orderId}/${action}`;
       await axios.patch(url, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -115,12 +116,14 @@ const OrdersScreen = ({ navigation }) => {
   }
 
   return (
-    <FlatList data={ordersData}renderItem={renderOrderItem}keyExtractor={item => item.id.toString()}
-      ListEmptyComponent={<Text>No orders available</Text>}
-      refreshControl={
-                    <RefreshControl loading={loading} onRefresh={onRefresh} />
-                  }
-    />
+    <SafeAreaView>
+      <FlatList data={ordersData}renderItem={renderOrderItem}keyExtractor={item => item.id.toString()}
+        ListEmptyComponent={<Text>No orders available</Text>}
+        refreshControl={
+                      <RefreshControl loading={loading} onRefresh={onRefresh} />
+                    }
+      />
+    </SafeAreaView>
   );
 };
 

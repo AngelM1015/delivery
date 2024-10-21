@@ -151,9 +151,15 @@ const HomeScreen = ({navigation}) => {
     <SafeAreaView style={styles.container}>
       <Animated.View style={{ opacity: fadeAnim }}>
         <ImageBackground
-          source={require('../assets/images/homeImage.png')} // Header image
+          source={require('../assets/images/homeImage.png')}
           style={styles.backgroundImage}
         >
+          {/* <Searchbar
+            placeholder="Search Menu Items"
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={styles.searchBar}
+          /> */}
           <View style={styles.titleOverlay}>
             <View style={styles.notification}>
               <View>
@@ -180,8 +186,8 @@ const HomeScreen = ({navigation}) => {
           data={restaurants}
           renderItem={renderRestaurant}
           keyExtractor={(item) => item.id.toString()}
-          horizontal // To make the list horizontally scrollable
-          showsHorizontalScrollIndicator={false} // Hides the horizontal scroll indicator
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
           contentContainerStyle={styles.horizontalListContainer}
         />
 

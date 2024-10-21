@@ -12,8 +12,8 @@ import { UserProvider } from './context/UserContext';
 import SplashScreen from './screens/splashscreen';
 import LoginScreen from './screens/loginscreen';
 import SignupScreen from './screens/SignupScreen';
-import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
-import EmailVerificationScreen from './screens/EmailVerificationScreen';
+// import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
+// import EmailVerificationScreen from './screens/EmailVerificationScreen';
 import OnboardingComponent from './components/OnboardingComponent';
 import RestaurantMenuScreen from './screens/RestaurantMenuScreen';
 import MenuItemDetailScreen from './screens/MenuItemDetailScreen';
@@ -232,8 +232,8 @@ function App() {
               <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
               <Stack.Screen name="Onboarding" component={OnboardingComponent} options={{ headerShown: false }} />
               <Stack.Screen name="SignupScreen" component={SignupScreen} options={{ headerShown: false }}/>
-              <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} options={{ headerShown: false }}/>
-              <Stack.Screen name="EmailVerificationScreen" component={ EmailVerificationScreen} options={{ headerShown: false }}/>
+              {/* <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} options={{ headerShown: false }}/>
+              <Stack.Screen name="EmailVerificationScreen" component={ EmailVerificationScreen} options={{ headerShown: false }}/> */}
               <Stack.Screen initialParams={{setIsRoleChanged: setIsRoleChanged ,isRoleChanged: isRoleChanged}} name="Login" component={LoginScreen} options={{ headerShown: false }} />
               <Stack.Screen name="Main" options={{ headerShown: false }}>
                 {props => <MainTabNavigator {...props} role={userRole} />}
