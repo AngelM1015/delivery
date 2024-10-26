@@ -20,6 +20,8 @@ import MenuItemDetailScreen from './screens/MenuItemDetailScreen';
 import MenuAboutScreen from './screens/MenuAboutScreen';
 import MainTabNavigator from './routes/MainTabNavigator';
 import SettingScreen from './screens/SettingScreen';
+import PersonalData from './screens/PersonalData';
+import SettingEdit from './screens/SettingsEdit';
 import MenuCheckoutScreen from './screens/MenuCheckoutScreen';
 import cable from './cable';
 import Toast from 'react-native-toast-message';
@@ -229,7 +231,7 @@ function App() {
       <NavigationContainer theme={paperTheme}>
         <UserProvider>
           <CartProvider>
-            <Stack.Navigator initialRouteName={isAuthenticated ? "Main" : (hasOnboarded ? "Login" : "Onboarding")}>
+            <Stack.Navigator  screenOptions={{ headerShown: false }}  initialRouteName={isAuthenticated ? "Main" : (hasOnboarded ? "Login" : "Onboarding")}>
               <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
               <Stack.Screen name="Onboarding" component={OnboardingComponent} options={{ headerShown: false }} />
               <Stack.Screen name="SignupScreen" component={SignupScreen} options={{ headerShown: false }}/>
@@ -240,6 +242,8 @@ function App() {
                 {props => <MainTabNavigator {...props} role={userRole} />}
               </Stack.Screen>
               <Stack.Screen initialParams={{setIsRoleChanged,isRoleChanged}} name="SettingScreen" component={SettingScreen} />
+              <Stack.Screen initialParams={{setIsRoleChanged,isRoleChanged}} name="PersonalData" component={PersonalData} />
+              <Stack.Screen name="SettingEdit" component={SettingEdit} />
               <Stack.Screen name="RestaurantMenuScreen" component={RestaurantMenuScreen} />
               <Stack.Screen name="MenuItemDetailScreen" component={MenuItemDetailScreen} />
               <Stack.Screen name="MenuAboutScreen" component={ MenuAboutScreen} options={{ headerShown: false }}/>

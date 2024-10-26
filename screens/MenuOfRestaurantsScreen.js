@@ -153,6 +153,7 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
   const fetchRestaurants = async () => {
     try {
       const token = await AsyncStorage.getItem('userToken');
+      console.log('token...........', token)
       const headers = { Authorization: `Bearer ${token}` };
       const response = await axios.get(`${base_url}api/v1/restaurants`, { headers });
       const restaurantsWithImages = response.data.map((restaurant, index) => ({
@@ -172,6 +173,8 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
       const response = await axios.get(`${base_url}${orders.order}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log('token...........', token)
+      console.log('orderssss==========',response.data)
       setOrdersData(response.data);
       setFilteredOrders(response.data);
     } catch (error) {
@@ -257,7 +260,7 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
     }
 
     return (
-      <TouchableOpacity style={styles.orderItem} onPress={() => navigation.navigate('OrderDetailScreen', { orderId: item.id })}>
+      <TouchableOpacity style={styles.orderItem} onPress={() => navigation.navigate('OngoingOrderScreen', { id: item.id })}>
         <Text style={styles.orderTitle}>Order #{item.id}</Text>
         <Text style={[styles.statusText, { color: statusColor }]}>{statusText}</Text>
       </TouchableOpacity>

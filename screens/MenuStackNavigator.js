@@ -9,6 +9,8 @@ import MenuCheckoutScreen from './MenuCheckoutScreen';
 import CartScreen from './CartScreen';
 import { useCart } from '../context/CartContext';
 import AddPaymentMethodScreen from './AddPaymentMethodScreen';
+import OngoingOrderScreen from './OngoingOrderScreen';
+import ChatScreen from './ChatScreen';
 
 const MenuStack = createStackNavigator();
 
@@ -57,6 +59,8 @@ function MenuStackNavigator() {
             headerRight: () => <CartIcon navigation={navigation} />
           })}
         />
+         <MenuStack.Screen name="OngoingOrderScreen" component={OngoingOrderScreen}  options={{ headerShown: false }}/>
+         <MenuStack.Screen name="ChatScreen" component={ChatScreen}  options={{ headerShown: false }}/>
         <MenuStack.Screen
           name="RestaurantMenuScreen"
           component={RestaurantMenuScreen}

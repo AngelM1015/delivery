@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Animated, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, Alert, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -51,7 +51,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
         );
 
         console.log('subscription', subscription);
-        const response = await axios.get(`http://localhost:3000/api/v1/orders/${route.params.id}`, {
+        const response = await axios.get(`https://6f5c-182-185-190-152.ngrok-free.app/api/v1/orders/${route.params.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
   
@@ -79,7 +79,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
       }
 
       try {
-        await axios.patch(`http://localhost:3000/api/v1/orders/${order.id}/pick_up_order`, order, {
+        await axios.patch(`https://6f5c-182-185-190-152.ngrok-free.app/api/v1/orders/${order.id}/pick_up_order`, order, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -101,7 +101,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
       }
 
       try {
-        await axios.patch(`http://localhost:3000/api/v1/orders/${order.id}/deliver_order`, order, {
+        await axios.patch(`https://6f5c-182-185-190-152.ngrok-free.app/api/v1/orders/${order.id}/deliver_order`, order, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -116,42 +116,44 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
   }
 
   return (
-    <Animated.View style={[styles.container, { transform: [{ translateY: slideAnim }] }]}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Order Details</Text>
-      </View>
-      <View style={styles.content}>
-        <Text style={styles.orderText}>Order ID: {order.id}</Text>
-        {userRole === 'customer' ? (
-          <>
-            <Text>Status: {order.status}</Text>
-            <Text>Order message: {customerMessage}</Text>
-            <Text>Your order will be delivered in {order.estimated_wait_time} - {order.estimated_wait_time + 15} mins</Text>
-          </>
-        ) : (
-          <>
-          <Text>{partnerMessage}</Text>
-          <TouchableOpacity style={styles.pickupButton} onPress={() => deliverOrder()}>
-            <Text style={styles.pickupButtonText}>Deliver order</Text>
-          </TouchableOpacity>
-          </>
-        )}
-        {order.status === 'partner_assigned' && (
-          <>
-          <FAB
-            icon='message'
-            style={styles.fab}
-            onPress={() => navigation.navigate('ChatScreen', { conversationId: order.conversation_id })}
-          />
-          </>
-        )}
-        {order.order_type === 'pickup' && order.status === 'restaurant_approved' && (
-          <TouchableOpacity style={styles.pickupButton} onPress={() => handlePickedUp()}>
-            <Text style={styles.pickupButtonText}>Pick Your Order</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </Animated.View>
+    <SafeAreaView style={{flex: 1}}>
+      <Animated.View style={[styles.container, { transform: [{ translateY: slideAnim }] }]}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Order Details</Text>
+        </View>
+        <View style={styles.content}>
+          <Text style={styles.orderText}>Order ID: {order.id}</Text>
+          {userRole === 'customer' ? (
+            <>
+              <Text>Status: {order.status}</Text>
+              <Text>Order message: {customerMessage}</Text>
+              <Text>Your order will be delivered in {order.estimated_wait_time} - {order.estimated_wait_time + 15} mins</Text>
+            </>
+          ) : (
+            <>
+            <Text>{partnerMessage}</Text>
+            <TouchableOpacity style={styles.pickupButton} onPress={() => deliverOrder()}>
+              <Text style={styles.pickupButtonText}>Deliver order</Text>
+            </TouchableOpacity>
+            </>
+          )}
+          {order.status === 'partner_assigned' && (
+            <>
+            <FAB
+              icon='message'
+              style={styles.fab}
+              onPress={() => navigation.navigate('ChatScreen', { conversationId: order.conversation_id })}
+            />
+            </>
+          )}
+          {order.order_type === 'pickup' && order.status === 'restaurant_approved' && (
+            <TouchableOpacity style={styles.pickupButton} onPress={() => handlePickedUp()}>
+              <Text style={styles.pickupButtonText}>Pick Your Order</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </Animated.View>
+    </SafeAreaView>
   );
 };
 
