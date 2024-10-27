@@ -15,9 +15,6 @@ import CustomButton from '../components/CustomButton';
 import CustomInput from '../components/CustomInput';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {base_url, auth} from '../constants/api';
-import EmailIcon from '../assets/svgs/emailIcon.svg';
-import PasswordIcon from '../assets/svgs/passwordIcon.svg';
-
 
 const admin = {
   email: 'mobileadmin@example.com',

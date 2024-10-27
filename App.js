@@ -29,6 +29,7 @@ import { StripeProvider } from '@stripe/stripe-react-native';
 import AddPaymentMethodScreen from './screens/AddPaymentMethodScreen';
 import OrdersScreen from './screens/ordersscreen';
 import OrderDetailScreen from './screens/OrderDetailScreen';
+import OngoingOrderScreen from './screens/OngoingOrderScreen';
 
 const themeColors = {
   activeTintColor: '#e23744',
@@ -254,6 +255,7 @@ function App() {
               <Stack.Screen name="AddPaymentMethod" component={ AddPaymentMethodScreen } />
               <Stack.Screen name="Orders" component={ OrdersScreen } />
               <Stack.Screen name="OrderDetails" component={ OrderDetailScreen } />
+              <Stack.Screen name="OngoingOrder" component={ OngoingOrderScreen } />
             </Stack.Navigator>
           </CartProvider>
         </UserProvider>

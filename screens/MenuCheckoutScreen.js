@@ -1,10 +1,21 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, FlatList, Alert} from 'react-native';
 import CustomButton from '../components/CustomButton';
 import Header from '../components/Header';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { useCart } from '../context/CartContext';
+import { base_url, restuarants } from '../constants/api';
+import { ToggleButton } from 'react-native-paper';
 
 const MenuCheckoutScreen = ({ navigation, route }) => {
+  const { clearCart } = useCart();
   const { cartItems = [], orderDetails = {} } = route.params || {};
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [showPaymentMethods, setShowPaymentMethods] = useState(false);
+  const [orderType, setOrderType] = useState(null);
+  const [deliveryFee, setDeliveryFee] = useState(null);
 
   const deliveryDetails = {
     name: 'Albert Stevano',
@@ -14,19 +25,94 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
     city: 'New York City',
   };
 
+  useEffect(() => {
+    fetchPaymentMethods();
+  }, []);
+
+  const fetchPaymentMethods = async () => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const response = await axios.get(`${base_url}api/v1/payments/get_payment_methods`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const cashPaymentOption = {
+        id: 'cash',
+        brand: 'Cash',
+        last4: 'N/A'
+      };
+
+      setPaymentMethods([cashPaymentOption, ...response.data]);
+    } catch (error) {
+      console.error('Error fetching payment methods:', error);
+      Alert.alert('Error', 'Failed to fetch payment methods');
+    }
+  };
+
+  const submitOrder = async () => {
+    if (!orderType || !paymentMethod) {
+      Alert.alert('Error', 'Please select an order type and payment method');
+      return;
+    }
+
+    console.log('payment method', paymentMethod)
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+
+      const storedRestaurantId = await AsyncStorage.getItem('selectedRestaurantId');
+      if (!storedRestaurantId) {
+        Alert.alert('Error', 'No associated restaurant found');
+        return;
+      }
+
+      const orderData = {
+        order: {
+          restaurant_id: parseInt(storedRestaurantId),
+          delivery_address: orderType === 'delivery' ? '209 Aspen Leaf Dr, Big Sky, MT 59716' : '',
+          total_price: orderDetails.totalPrice,
+          address_id: 1, // fetch address from customer and then send that address
+          order_type: orderType,
+          payment_method: paymentMethod.brand === 'Cash' ? 'cash' : 'other',
+          
+          order_items_attributes: cartItems.map(item => ({
+            menu_item_id: item.id,
+            quantity: item.quantity,
+            order_item_modifiers_attributes: item.selectedModifiers.map(modifier => ({
+              modifier_option_id: modifier.modifierId
+            }))
+          }))
+        }
+      };
+
+      const response = await axios.post('http://localhost:3000/api/v1/orders/create_order',
+        { order: orderData.order, payment_method_id: paymentMethod.id },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+      });
+
+      clearCart();
+      setOrderType(null);
+      navigation.navigate('Orders');
+      setDisplayMessage('your order has been placed! ✅')
+    } catch (error) {
+      console.error('Order submission error:', error.response.data.message);
+      Alert.alert('Error', error.response.data.message);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.headerContainer}>
         <Header title="Checkout" navigation={navigation} showShareIcon={true} />
       </View>
 
-      {/* Scrollable content */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* You deserve better meal text */}
         <Text style={styles.subtext}>You deserve better meal</Text>
 
-        {/* Item Ordered Section */}
         <View style={styles.section}>
           <Text style={styles.subHeader}>Items Ordered</Text>
           {cartItems.length > 0 ? (
@@ -45,7 +131,6 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Details Transaction Section */}
         <View style={styles.section}>
           <Text style={styles.subHeader}>Details Transaction</Text>
           <View style={styles.transactionDetails}>
@@ -70,7 +155,6 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 
         <View style={styles.separator} />
 
-        {/* Deliver to Section */}
         <View style={styles.section}>
           <Text style={styles.subHeader}>Deliver to :</Text>
           <View style={styles.deliverySection}>
@@ -82,13 +166,73 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
             ))}
           </View>
         </View>
+        {/* Order Type Selection */}
+        <Text style={{ fontSize: 16, marginBottom: 10, paddingLeft: 10 }}>Select Order Type:</Text>
+          <View style={styles.orderTypeContainer}>
+            <View style={styles.orderTypeWrapper}>
+              <ToggleButton.Group
+                style={styles.orderTypeGroup}
+                onValueChange={value => {
+                  setOrderType(value);
+                  if (value === 'delivery') {
+                    setDeliveryFee(15);  // Set delivery fee for delivery option
+                  } else {
+                    setDeliveryFee(0);    // Set delivery fee for pickup option
+                  }
+                }}
+                value={orderType}
+              >
+                <View style={styles.orderTypeItem}>
+                  <ToggleButton icon="bike" value="delivery"/>
+                  <Text style={styles.orderTypeLabel}>Delivery</Text>
+                </View>
 
-        {/* Checkout Button */}
+                <View style={styles.orderTypeItem}>
+                  <ToggleButton icon="storefront" value="pickup"/>
+                  <Text style={styles.orderTypeLabel}>Pick-Up</Text>
+                </View>
+              </ToggleButton.Group>
+            </View>
+          </View>
+
+        {/* Payment Method Section */}
+        <View style={styles.section}>
+          <Text style={styles.subHeader}>Payment Method</Text>
+          <TouchableOpacity
+            style={styles.paymentSelector}
+            onPress={() => setShowPaymentMethods(!showPaymentMethods)}
+          >
+            <Text style={styles.selectedPaymentMethod}>{paymentMethod === 'cash' ? 'Cash' : `**** ${paymentMethod.last4}`}</Text>
+            <Text style={styles.expandText}>{showPaymentMethods ? '▲' : '▼'}</Text>
+          </TouchableOpacity>
+
+          {showPaymentMethods && (
+            <FlatList
+              data={paymentMethods}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.paymentMethodItem,
+                    paymentMethod === item.id && styles.selectedPaymentMethodItem
+                  ]}
+                  onPress={() => {
+                    setPaymentMethod(item);
+                    setShowPaymentMethods(false);
+                  }}
+                >
+                  <Text style={styles.paymentMethodText}>{item.brand} {item.last4 !== 'N/A' ? `**** ${item.last4}` : ''}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+        </View>
+
         <View style={styles.buttonContainer}>
           <CustomButton
             text="Checkout Now"
             onPress={() => {
-              // Handle checkout logic
+              submitOrder()
             }}
           />
         </View>
@@ -200,6 +344,59 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: 20,
+  },
+  paymentSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  selectedPaymentMethod: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  expandText: {
+    fontSize: 16,
+    color: '#888',
+  },
+  paymentMethodItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  selectedPaymentMethodItem: {
+    backgroundColor: '#e0f7fa',
+  },
+  paymentMethodText: {
+    fontSize: 16,
+  },
+  orderTypeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    margin: 10,
+  },
+  orderTypeWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  orderTypeGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  orderTypeItem: {
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  orderTypeLabel: {
+    marginTop: 5,
+    fontSize: 12,
   },
 });
 

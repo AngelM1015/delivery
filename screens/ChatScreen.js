@@ -146,25 +146,24 @@ const ChatScreen = ({navigation}) => {
           renderItem={renderItem}
         />
         
-        
-         <View style={styles.inputContainer}>
-            <View style={styles.inputWrapper}>
-              <Icons.SmileIcon/>
-              <TextInput
-                value={newMessage}
-                onChangeText={setNewMessage}
-                placeholder="Type something..."
-                style={styles.input}
-                onSubmitEditing={handleSendMessage}
-              />
-              <TouchableOpacity onPress={() => {}}>
-                <Icons.AttachmentIcon/>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity onPress={handleSendMessage} style={{marginLeft: 10}}>
-              <Icons.SendIcon/>
+        <View style={styles.inputContainer}>
+          <View style={styles.inputWrapper}>
+            <Icons.SmileIcon/>
+            <TextInput
+              value={newMessage}
+              onChangeText={setNewMessage}
+              placeholder="Type something..."
+              style={styles.input}
+              onSubmitEditing={handleSendMessage}
+            />
+            <TouchableOpacity onPress={() => {}}>
+              <Icons.AttachmentIcon/>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity onPress={handleSendMessage} style={{marginLeft: 10}}>
+            <Icons.SendIcon/>
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

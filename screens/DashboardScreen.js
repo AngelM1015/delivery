@@ -9,7 +9,6 @@ const colorPalette = [
     "#9966FF", "#FF9F40", "#FFCD56", "#4BC0C2",
     "#C9CBFF", "#FF6386"
   ];
-  
 
 const DashboardScreen = () => {
     const [role, setRole] = useState(null);

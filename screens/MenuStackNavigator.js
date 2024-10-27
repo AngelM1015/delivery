@@ -19,13 +19,6 @@ const CartIcon = ({ navigation }) => {
 
   return (
     <View style={{ position: 'absolute', bottom: 20, right: 20 }}>
-      {/* <FAB
-        icon="cart"
-        color='orange'
-        backgroundColor='white'
-        onPress={() => navigation.navigate('CartScreen')}
-        style={{ marginRight: 10 }}
-      /> */}
       {cartItems.length > 0 && (
         <Badge size={25} style={{ position: 'absolute', top: -5, right: 0, backgroundColor: 'orange' }}>
           {cartItems.length}

@@ -16,12 +16,12 @@ const SettingEdit = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-        <View style={{flexDirection:'row', alignItems:'center'}}>
-            <TouchableOpacity onPress={()=>navigation.goBack()} style={styles.backButton}>
-                <Icons.BackIcon/>
-            </TouchableOpacity>
+      <View style={{flexDirection:'row', alignItems:'center'}}>
+        <TouchableOpacity onPress={()=>navigation.goBack()} style={styles.backButton}>
+          <Icons.BackIcon/>
+        </TouchableOpacity>
         <Text style={styles.title}>Setting</Text>
-        </View>
+      </View>
 
       <View style={styles.settingItem}>
         <Text style={styles.settingText}>Push Notification</Text>

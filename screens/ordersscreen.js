@@ -10,7 +10,6 @@ const OrdersScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState('');
   const [orderCount, setOrderCount] = useState( AsyncStorage.getItem('orderCount'))
-  
 
   useEffect(() => {
     const initialize = async () => {

@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { ScrollView, Alert, View, StyleSheet, TextInput, Image, TouchableOpacity } from 'react-native';
-import { Button, Card, Text, ToggleButton, FAB, Menu, PaperProvider, Icon, Checkbox  } from 'react-native-paper';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState } from 'react';
+import { ScrollView, View, StyleSheet, TextInput, Image, TouchableOpacity } from 'react-native';
+import { Button, Card, Text, PaperProvider, Checkbox  } from 'react-native-paper';
 import { useCart } from '../context/CartContext';
 import { FontAwesome5, AntDesign } from '@expo/vector-icons';
 import CustomButton from '../components/CustomButton';
@@ -11,54 +9,15 @@ import Header from '../components/Header';
 const CartScreen = ({ navigation }) => {
   const { cartItems, removeFromCart, updateItemQuantity, clearCart } = useCart();
   console.log('cartItems', cartItems);
-  const deliveryFee = 5.00; // Example fee
+  const deliveryFee = 5.00;
   const discount = 10.00;
-  const [orderType, setOrderType] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState(null);
-  const [paymentMethods, setPaymentMethods] = useState([]); // State to hold payment methods
-  const [visible, setVisible] = useState(false);
-  // const [discount, setDiscount] = useState(0); // Add discount logic
-  // const [extraOptions, setExtraOptions] = useState([]);
   const [extraChecked, setExtraChecked] = useState(false);
-  // const [deliveryFee, setDeliveryFee] = useState(null);
-  const [displayMessage, setDisplayMessage] = useState("Your cart is empty!");
   const [extraOptions, setExtraOptions] = useState([
     { productName: 'Extra Chess', price: '1$' },
     { productName: 'Extra Vegan Chess', price: '0.15$' },
     { productName: 'Extra Sause', price: '0.5$' },
     { productName: 'Extra Garlic Sause', price: '0.75$' },
   ]);
-
-
-  const openMenu = () => setVisible(true);
-  const closeMenu = () => setVisible(false);
-
-  // useEffect(() => {
-  //   fetchPaymentMethods(); // Fetch payment methods on load
-  // }, []);
-
-  // const fetchPaymentMethods = async () => {
-  //   try {
-  //     const token = await AsyncStorage.getItem('userToken');
-  //     const response = await axios.get(`${base_url}api/v1/payments/get_payment_methods`, {
-  //       headers: {
-  //         'Authorization': `Bearer ${token}`
-  //       }
-  //     });
-
-  //     // Add cash payment option to the fetched payment methods
-  //     const cashPaymentOption = {
-  //       id: 'cash',
-  //       brand: 'Cash',
-  //       last4: 'N/A'
-  //     };
-
-  //     setPaymentMethods([cashPaymentOption, ...response.data]); // Add cash as the first option
-  //   } catch (error) {
-  //     console.error('Error fetching payment methods:', error);
-  //     Alert.alert('Error', 'Failed to fetch payment methods');
-  //   }
-  // };
 
   const incrementQuantity = itemId => {
     const item = cartItems.find(item => item.id === itemId);
@@ -69,55 +28,6 @@ const CartScreen = ({ navigation }) => {
     const item = cartItems.find(item => item.id === itemId);
     updateItemQuantity(itemId, Math.max(item.quantity - 1, 1));
   };
-
-  // const submitOrder = async () => {
-  //   if (!orderType || !paymentMethod) {
-  //     Alert.alert('Error', 'Please select an order type and payment method');
-  //     return;
-  //   }
-
-  //   console.log('payment method', paymentMethod)
-  //   try {
-  //     const token = await AsyncStorage.getItem('userToken');
-
-  //     const storedRestaurantId = await AsyncStorage.getItem('selectedRestaurantId');
-  //     if (!storedRestaurantId) {
-  //       Alert.alert('Error', 'No associated restaurant found');
-  //       return;
-  //     }
-
-  //     const orderData = {
-  //       order: {
-  //         restaurant_id: parseInt(storedRestaurantId),
-  //         delivery_address: orderType === 'delivery' ? '209 Aspen Leaf Dr, Big Sky, MT 59716' : '',
-  //         total_price: calculateTotalPrice(cartItems),
-  //         address_id: 1, // fetch address from customer and then send that address
-  //         order_type: orderType,
-  //         payment_method: paymentMethod.brand === 'Cash' ? 'cash' : 'other',
-  //         order_items_attributes: cartItems.map(item => ({
-  //           menu_item_id: item.id,
-  //           quantity: item.quantity,
-  //           order_item_modifiers_attributes: item.selectedModifiers.map(modifier => ({
-  //             modifier_option_id: modifier.modifierId
-  //           }))
-  //         }))
-  //       }
-  //     };
-
-  //     const response = await axios.post('http://localhost:3000/api/v1/orders/create_order', {order: orderData.order, payment_method_id: paymentMethod.id}, {
-  //       headers: {
-  //         'Authorization': `Bearer ${token}`
-  //       }
-  //     });
-
-  //     clearCart();
-  //     setOrderType(null);
-  //     setDisplayMessage('your order has been placed! ✅')
-  //   } catch (error) {
-  //     console.error('Order submission error:', error.response.data.message);
-  //     Alert.alert('Error', error.response.data.message);
-  //   }
-  // };
 
   const calculateCartTotal = () => {
     return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
@@ -287,11 +197,8 @@ const CartScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   scrollViewContent: {
-    // paddingBottom: 20,
-    // paddingHorizontal: 10,
     padding: 20,
     flex:1,
-    // padding:40
   },
   locationContainer: {
     marginTop: 10,
@@ -373,11 +280,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   extraInputContainer: {
-    flex: 2, // Make this wider
+    flex: 2,
     marginRight: 10,
   },
   priceInputContainer: {
-    flex: 1, // Make this smaller
+    flex: 1,
   },
   inputLabel: {
     fontSize: 14,
