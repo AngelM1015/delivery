@@ -112,9 +112,6 @@ const MenuAboutScreen = ({ route, navigation }) => {
     });
   };
 
-
-
-
   const renderRecommendedItem = ({ item }) => {
     const imageUrl = item.image_url || 'https://via.placeholder.com/150';
     const price = item.item_prices?.length > 0 ? item.item_prices[0] : 'Not Available';
@@ -259,7 +256,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 15,
     paddingVertical: 10,
-    // backgroundColor: '#f9f9f9',
   },
   headerTitle: {
     fontSize: 18,
@@ -359,7 +355,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 15,
-    // backgroundColor: '#f9f9f9',
     borderTopWidth: 1,
     borderTopColor: '#ccc',
   },
@@ -367,9 +362,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: '5',
-    // borderWidth: 1,
-    // borderColor: '#ccc',
-    // borderRadius: 5,
     padding: 5,
   },
   quantityIcon: {

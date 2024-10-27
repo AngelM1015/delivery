@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AddPaymentMethodScreen = ({ navigation }) => {
   const [cardDetails, setCardDetails] = useState({});
-  const { createToken } = useStripe(); // Stripe hook to create a token
+  const { createToken } = useStripe();
 
   const handleCardDetailsChange = (details) => {
     setCardDetails(details);
@@ -93,11 +93,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#F5F5F5', // Light background color
+    backgroundColor: '#F5F5F5',
   },
   card: {
     borderRadius: 10,
-    elevation: 5, // Shadow effect
+    elevation: 5,
     backgroundColor: '#eeeee4',
   },
   cardTitle: {
