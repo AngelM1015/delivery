@@ -11,14 +11,24 @@ import { UserProvider } from './context/UserContext';
 
 import SplashScreen from './screens/splashscreen';
 import LoginScreen from './screens/loginscreen';
+import SignupScreen from './screens/SignupScreen';
+// import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
+// import EmailVerificationScreen from './screens/EmailVerificationScreen';
 import OnboardingComponent from './components/OnboardingComponent';
 import RestaurantMenuScreen from './screens/RestaurantMenuScreen';
 import MenuItemDetailScreen from './screens/MenuItemDetailScreen';
+import MenuAboutScreen from './screens/MenuAboutScreen';
 import MainTabNavigator from './routes/MainTabNavigator';
 import SettingScreen from './screens/SettingScreen';
+import PersonalData from './screens/PersonalData';
+import SettingEdit from './screens/SettingsEdit';
+import MenuCheckoutScreen from './screens/MenuCheckoutScreen';
 import cable from './cable';
 import Toast from 'react-native-toast-message';
 import { StripeProvider } from '@stripe/stripe-react-native';
+import AddPaymentMethodScreen from './screens/AddPaymentMethodScreen';
+import OrdersScreen from './screens/ordersscreen';
+import OrderDetailScreen from './screens/OrderDetailScreen';
 
 const themeColors = {
   activeTintColor: '#e23744',
@@ -83,7 +93,7 @@ function App() {
         const userId = await AsyncStorage.getItem('userId');
         console.log('aunthenticated', isAuthenticated);
         console.log('userRole', userRole);
-        
+
 
         if (userRole === 'partner'){
           if (cable.connection.isOpen()) {
@@ -92,7 +102,7 @@ function App() {
             console.log("WebSocket connection is not open.");
           }
           console.log('user id', userId);
-  
+
           const subscription = await cable.subscriptions.create(
             { channel: 'PartnerChannel', id: userId },
             {
@@ -114,14 +124,14 @@ function App() {
             }
           );
           console.log('subscription', subscription)
-  
+
           const intervalId = setInterval(() => sendLocationToBackend(subscription), 4000);
           window.intervalId = intervalId
           return () => {
             subscription.unsubscribe();
           };
         }
-        
+
         // Check for active orders here
         // const activeOrders = await checkActiveOrders();
         // if (activeOrders) {
@@ -136,7 +146,7 @@ function App() {
         }, 2000);
       }
 
-      
+
     };
 
     fetchUserData_CheckActiveOrder();
@@ -169,7 +179,7 @@ function App() {
     try {
       const currentLocation = await Location.getCurrentPositionAsync();
       console.log('location fetched: ', currentLocation.coords);
-  
+
       if (subscription && typeof subscription.sendLocation === 'function') {
         subscription.sendLocation({ location: currentLocation.coords });
         console.log('location sent: ', currentLocation.coords);
@@ -224,20 +234,30 @@ function App() {
       <NavigationContainer theme={paperTheme}>
         <UserProvider>
           <CartProvider>
-            <Stack.Navigator initialRouteName={isAuthenticated ? "Main" : (hasOnboarded ? "Login" : "Onboarding")}>
+            <Stack.Navigator  screenOptions={{ headerShown: false }}  initialRouteName={isAuthenticated ? "Main" : (hasOnboarded ? "Login" : "Onboarding")}>
               <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
               <Stack.Screen name="Onboarding" component={OnboardingComponent} options={{ headerShown: false }} />
+              <Stack.Screen name="SignupScreen" component={SignupScreen} options={{ headerShown: false }}/>
+              {/* <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} options={{ headerShown: false }}/>
+              <Stack.Screen name="EmailVerificationScreen" component={ EmailVerificationScreen} options={{ headerShown: false }}/> */}
               <Stack.Screen initialParams={{setIsRoleChanged: setIsRoleChanged ,isRoleChanged: isRoleChanged}} name="Login" component={LoginScreen} options={{ headerShown: false }} />
               <Stack.Screen name="Main" options={{ headerShown: false }}>
                 {props => <MainTabNavigator {...props} role={userRole} />}
               </Stack.Screen>
               <Stack.Screen initialParams={{setIsRoleChanged,isRoleChanged}} name="SettingScreen" component={SettingScreen} />
+              <Stack.Screen initialParams={{setIsRoleChanged,isRoleChanged}} name="PersonalData" component={PersonalData} />
+              <Stack.Screen name="SettingEdit" component={SettingEdit} />
               <Stack.Screen name="RestaurantMenuScreen" component={RestaurantMenuScreen} />
               <Stack.Screen name="MenuItemDetailScreen" component={MenuItemDetailScreen} />
+              <Stack.Screen name="MenuAboutScreen" component={ MenuAboutScreen} options={{ headerShown: false }}/>
+              <Stack.Screen name="MenuCheckoutScreen" component={ MenuCheckoutScreen} options={{ headerShown: false }}/>
+              <Stack.Screen name="AddPaymentMethod" component={ AddPaymentMethodScreen } />
+              <Stack.Screen name="Orders" component={ OrdersScreen } />
+              <Stack.Screen name="OrderDetails" component={ OrderDetailScreen } />
             </Stack.Navigator>
           </CartProvider>
         </UserProvider>
-        <Toast ref={(ref) => Toast.setRef(ref)} /> 
+        <Toast ref={(ref) => Toast.setRef(ref)} />
       </NavigationContainer>
     </PaperProvider>
     </StripeProvider>

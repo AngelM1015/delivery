@@ -3,7 +3,7 @@ import { FlatList } from 'react-native';
 import { Card, Title, Paragraph, Searchbar } from 'react-native-paper';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { base_url } from '../constants/api';
 const RestaurantMenuScreen = ({ route, navigation }) => {
   const { restaurantId } = route.params;
   const [menuItems, setMenuItems] = useState([]);
@@ -16,7 +16,8 @@ const RestaurantMenuScreen = ({ route, navigation }) => {
       try {
         const token = await AsyncStorage.getItem('userToken');
         const headers = { 'Authorization': `Bearer ${token}` };
-        const response = await axios.get(`http://localhost:3000/api/v1/restaurants/${restaurantId}/menu_items/`, { headers });
+        const url = `${base_url}api/v1/restaurants/${restaurantId}/menu_items/`;
+        const response = await axios.get(url, { headers });
         setMenuItems(response.data);
       } catch (error) {
         console.error('Error fetching menu items:', error);

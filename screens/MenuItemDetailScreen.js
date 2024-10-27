@@ -6,10 +6,10 @@ import { useCart } from '../context/CartContext';
 import { UserContext } from '../context/UserContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'http://localhost:3000';
+import { base_url } from '../constants/api';
 
 const MenuItemImage = ({ menuItemDetails }) => {
-  const imageUrl = `${BASE_URL}${menuItemDetails.image_url}`;
+  const imageUrl = `${base_url}${menuItemDetails.image_url}`;
   return menuItemDetails.image_url ? (
     <Image source={{ uri: imageUrl }} style={styles.image} />
   ) : null;
@@ -28,7 +28,7 @@ const MenuItemDetailScreen = ({ route }) => {
   useEffect(() => {
     const fetchMenuItem = async () => {
       try {
-        const url = `${BASE_URL}/api/v1/restaurants/${restaurantId}/menu_items/${menuItemId}`;
+        const url = `${base_url}api/v1/restaurants/${restaurantId}/menu_items/${menuItemId}`;
         console.log(`Fetching menu item from: ${url}`);
         const response = await axios.get(url);
         console.log('Response data:', response.data);
@@ -58,8 +58,6 @@ const MenuItemDetailScreen = ({ route }) => {
 
   const handleAddToCart = () => {
     AsyncStorage.setItem('selectedRestaurantId', `${restaurantId}`);
-    console.log('Modifier Counts:', modifierCounts);
-    console.log('Menu Item Details:', menuItemDetails);
     const selectedModifiers = Object.entries(modifierCounts)
       .map(([modifierId, optionsCounts]) => ({
         modifierId,
@@ -74,18 +72,27 @@ const MenuItemDetailScreen = ({ route }) => {
       }))
       .filter(modifier => modifier.options.length > 0);
 
-    const price = menuItemDetails.item_prices.length > 0 ? parseFloat(menuItemDetails.item_prices[0]) : '0.0'
+    const price = menuItemDetails.item_prices.length > 0 ? parseFloat(menuItemDetails.item_prices[0]) : '0.0';
+
+    // Ensure the imageUrl is correctly set
+    const imageUrl = menuItemDetails.image_url ? `${base_url}${menuItemDetails.image_url}` : null;
+    console.log('Image URL:', imageUrl); // Log the image URL before adding
 
     const itemForCart = {
       id: menuItemId,
       name: menuItemDetails.name,
-      price: price + selectedModifiers.reduce((w,x)=> w + x.options.reduce((a,b) => a + parseFloat(b.additional_price * b.count), 0), 0),
+      price: price + selectedModifiers.reduce((w, x) => w + x.options.reduce((a, b) => a + parseFloat(b.additional_price * b.count), 0), 0),
+      imageUrl, // Include the imageUrl here
       selectedModifiers,
-      quantity: 1
+      quantity: 1,
     };
 
+    console.log('Item being added to cart:', itemForCart); // Log the entire item object
     addToCart(itemForCart);
   };
+
+
+
 
   const handleQuantityChange = (modifierId, optionId, increment) => {
     setModifierCounts(prevCounts => {

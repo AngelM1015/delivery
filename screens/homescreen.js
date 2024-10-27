@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, FlatList, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, FlatList, Animated, Easing, SafeAreaView, Image } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const HomeScreen = ({ navigation }) => {
+import { base_url, restuarants } from '../constants/api';
+import { Icons } from '../constants/Icons';
+import { COLORS } from '../constants/colors';
+import { Card, Title, Paragraph, Searchbar } from 'react-native-paper';
+import { FontAwesome } from '@expo/vector-icons';
+const HomeScreen = ({navigation}) => {
   const [restaurants, setRestaurants] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -19,15 +26,21 @@ const HomeScreen = ({ navigation }) => {
       try {
         const token = await AsyncStorage.getItem('userToken');
         const headers = {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         };
-        const response = await axios.get('http://localhost:3000/api/v1/restaurants', { headers });
+        const response = await axios.get(`${base_url}${restuarants.restuarant}`, { headers });
+        console.log('resturant=================', response)
         const restaurantsWithImages = response.data.map((restaurant, index) => ({
           ...restaurant,
           image: { url: `https://source.unsplash.com/random/800x600?restaurant&sig=${index}` },
         }));
-        console.log('restaurants', response.data);
         setRestaurants(restaurantsWithImages);
+
+        // Select the first restaurant by default
+        if (restaurantsWithImages.length > 0) {
+          fetchMenuItems(restaurantsWithImages[0].id);
+          setSelectedRestaurant(restaurantsWithImages[0].id);
+        }
       } catch (error) {
         console.error('Error fetching restaurants:', error);
       }
@@ -40,14 +53,14 @@ const HomeScreen = ({ navigation }) => {
         toValue: 0,
         duration: 2000,
         useNativeDriver: true,
-        easing: Easing.ease
+        easing: Easing.ease,
       }).start(() => {
         setBackgroundIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 2000,
           useNativeDriver: true,
-          easing: Easing.ease
+          easing: Easing.ease,
         }).start();
       });
     };
@@ -63,51 +76,134 @@ const HomeScreen = ({ navigation }) => {
     return () => clearInterval(intervalId);
   }, [fadeAnim]);
 
+  // Fetch menu items for the selected restaurant
+  const fetchMenuItems = async (restaurantId) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const headers = { Authorization: `Bearer ${token}` };
+      const url = `${base_url}api/v1/restaurants/${restaurantId}/menu_items/`;
+      const response = await axios.get(url, { headers });
+      setMenuItems(response.data);
+      console.log('menu item:', response.data)
+      setSelectedRestaurant(restaurantId); // Set the selected restaurant ID
+    } catch (error) {
+      console.error('Error fetching menu items:', error);
+    }
+  };
+
   const renderRestaurant = ({ item: restaurant }) => {
+    const isSelected = selectedRestaurant === restaurant.id;
     return (
       <TouchableOpacity
-        style={styles.restaurantContainer}
-        onPress={() => navigation.navigate('RestaurantMenuScreen', { restaurantId: restaurant.id })}
+        onPress={() => fetchMenuItems(restaurant.id)} // Load menu items and mark as selected
       >
-        <ImageBackground
-          source={{ uri: restaurant.image.url }}
-          style={styles.restaurantImage}
+        <Card
+          style={[
+            styles.restaurantCard,
+            { backgroundColor: isSelected ? '#F09B00' : 'white', justifyContent:'center',alignItems:'center' }, // Change background when selected
+          ]}
         >
-          <View style={styles.restaurantOverlay}>
-            <Text style={styles.restaurantTitle}>{restaurant.name}</Text>
-            <Text style={styles.restaurantSubtitle}>{restaurant.address}</Text>
-          </View>
-        </ImageBackground>
+          <Image source={{ uri: restaurant.image_url}} style={styles.restaurantImage} />
+          <Text numberOfLines={1} style={styles.restaurantTitle}>{restaurant.name}</Text>
+          <Text style={styles.restaurantSubtitle}>{restaurant.address}</Text>
+        </Card>
       </TouchableOpacity>
     );
   };
 
+  const renderMenuItem = ({ item }) => {
+    const price = item.item_prices?.length > 0 ? item.item_prices[0] : 'Not Available';
+    const imageUrl = item.image_url || 'https://via.placeholder.com/150'; // Use placeholder if no image_url
+    const rating = '4.9'; // Static rating for now, can be dynamic
+    const distance = '190m'; // Static distance for now
+
+    return (
+      <TouchableOpacity onPress={() => navigation.navigate('MenuAboutScreen', { menuItemId: item.id, restaurantId: item.restaurant_id })}>
+        <Card style={styles.menuCard}>
+          <View style={styles.innerCardContainer}>
+            <View style={styles.menuCardTop}>
+              <Image source={{ uri: imageUrl }} style={styles.menuImage} />
+              <FontAwesome name="heart-o" size={24} color="white" style={styles.heartIcon} />
+            </View>
+            <View style={styles.menuDetails}>
+              <Text style={styles.menuTitle} numberOfLines={1}>{item.name}</Text>
+              <View style={styles.menuInfo}>
+                <View style={styles.ratingContainer}>
+                  <FontAwesome name="star" size={14} color="gold" />
+                  <Text style={styles.ratingText}>{rating}</Text>
+                </View>
+                <View style={styles.distanceContainer}>
+                  <FontAwesome name="map-marker" size={14} color="gray" />
+                  <Text style={styles.distanceText}>{distance}</Text>
+                </View>
+              </View>
+              <Text style={styles.priceText}>${price}</Text>
+            </View>
+          </View>
+        </Card>
+      </TouchableOpacity>
+    );
+  };
+
+
+
   return (
-    <FlatList
-      data={restaurants}
-      renderItem={renderRestaurant}
-      keyExtractor={(item) => item.id.toString()}
-      ListHeaderComponent={
-        <Animated.View style={{ ...styles.backgroundImage, opacity: fadeAnim }}>
-          <ImageBackground
-            source={backgroundImages[backgroundIndex]}
-            style={styles.backgroundImage}
-          >
-            <View style={styles.titleOverlay}>
-              <Text style={styles.title}>BigSkyEats</Text>
-              <Text style={styles.subtitle}>Delicious meals delivered to your door, snow or shine.</Text>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => navigation.navigate('RestaurantMenuScreen')}
-              >
-                <Text style={styles.buttonText}>Order Now</Text>
+    <SafeAreaView style={styles.container}>
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <ImageBackground
+          source={require('../assets/images/homeImage.png')}
+          style={styles.backgroundImage}
+        >
+          {/* <Searchbar
+            placeholder="Search Menu Items"
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={styles.searchBar}
+          /> */}
+          <View style={styles.titleOverlay}>
+            <View style={styles.notification}>
+              <View>
+                <TouchableOpacity style={styles.locationContainer}>
+                  <Text style={styles.locationText}>Your Location</Text>
+                  <Icons.DownwardArrow />
+                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Icons.LocationIcon />
+                  <Text style={styles.locationSubtext}>Your Location</Text>
+                </View>
+              </View>
+              <TouchableOpacity>
+                <Icons.NotificationIcon />
               </TouchableOpacity>
             </View>
-          </ImageBackground>
-        </Animated.View>
-      }
-      ListHeaderComponentStyle={styles.backgroundImage}
-    />
+            <Text style={styles.subtitle}>Provide the best {'\n'}food for you</Text>
+          </View>
+        </ImageBackground>
+      </Animated.View>
+
+      <View style={{ flex: 1, marginTop: 10 }}>
+        <FlatList
+          data={restaurants}
+          renderItem={renderRestaurant}
+          keyExtractor={(item) => item.id.toString()}
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.horizontalListContainer}
+        />
+
+        <FlatList
+          data={menuItems.filter((item) =>
+            item.name.toLowerCase().includes(searchQuery.toLowerCase())
+          )}
+          renderItem={renderMenuItem}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2} // Display two columns of menu items
+          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          ListEmptyComponent={<Text>No menu items available</Text>}
+        />
+
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -117,64 +213,148 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     width: '100%',
-    height: 250, 
-    justifyContent: 'flex-end',
-    paddingBottom: 20,
+    height: 230,
   },
   titleOverlay: {
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    alignItems: 'center',
     padding: 20,
+    top: 50,
   },
-  restaurantContainer: {
-    height: 200, 
-    marginBottom: 10,
+  notification: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  restaurantImage: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'flex-end',
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
   },
-  restaurantOverlay: {
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    padding: 10,
+  locationText: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: COLORS.white,
+    //fontFamily: 'Lato-Regular',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+  dropdownArrow: {
+    fontSize: 18,
     color: '#FFFFFF',
-    textAlign: 'center',
+    marginLeft: 5,
+  },
+  locationSubtext: {
+    fontSize: 16,
+    color: COLORS.white,
+    marginLeft: 5,
+    //fontFamily: 'Lato-Regular',
   },
   subtitle: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 12,
+    fontSize: 32,
+    color: COLORS.white,
+    top: 25,
+    //fontFamily: 'Lato-Bold',
   },
-  button: {
-    backgroundColor: '#ff3366',
-    borderRadius: 25,
+  horizontalListContainer: {
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    alignSelf: 'center',
-    marginBottom: 20,
+    paddingHorizontal: 10,
+    paddingBottom: 60
   },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  restaurantCard: {
+    width: 120,
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 8,
+  },
+  restaurantImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginBottom: 10,
+    alignSelf:'center'
   },
   restaurantTitle: {
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#333',
     textAlign: 'center',
   },
   restaurantSubtitle: {
-    fontSize: 14,
-    color: '#FFFFFF',
+    fontSize: 12,
+    color: '#666',
     textAlign: 'center',
+  },
+  searchBar: {
+    marginVertical: 10,
+    marginHorizontal: 15,
+  },
+  card: {
+    margin: 8,
+    elevation: 4,
+  },
+  menuCard: {
+    flex: 1,
+    margin: 10,
+    padding: 6,
+    borderRadius: 10,
+    borderWidth: 0.1,
+    shadowOpacity: 0,
+    backgroundColor: '#fff',
+    elevation: 3,
+    width: 180,
+  },
+  innerCardContainer: {
+    overflow: 'hidden',
+    borderRadius: 10,
+    gap: 8
+  },
+  menuCardTop: {
+    position: 'relative',
+  },
+  menuImage: {
+    width: '100%',
+    height: 100,
+  },
+  heartIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  menuDetails: {
+    padding: 2,
+    gap: 4
+  },
+  menuTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  menuInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 5,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingText: {
+    marginLeft: 5,
+    fontSize: 12,
+    color: '#000',
+  },
+  distanceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  distanceText: {
+    marginLeft: 5,
+    fontSize: 12,
+    color: '#000',
+  },
+  priceText: {
+    marginTop: 10,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#F09B00',
   },
 });
 
