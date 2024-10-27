@@ -51,7 +51,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
         );
 
         console.log('subscription', subscription);
-        const response = await axios.get(`https://6f5c-182-185-190-152.ngrok-free.app/api/v1/orders/${route.params.id}`, {
+        const response = await axios.get(`http://localhost:3000/api/v1/orders/${route.params.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
   
@@ -79,7 +79,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
       }
 
       try {
-        await axios.patch(`https://6f5c-182-185-190-152.ngrok-free.app/api/v1/orders/${order.id}/pick_up_order`, order, {
+        await axios.patch(`https://localhost:3000/api/v1/orders/${order.id}/pick_up_order`, order, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -101,7 +101,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
       }
 
       try {
-        await axios.patch(`https://6f5c-182-185-190-152.ngrok-free.app/api/v1/orders/${order.id}/deliver_order`, order, {
+        await axios.patch(`https://localhost:3000/api/v1/orders/${order.id}/deliver_order`, order, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 

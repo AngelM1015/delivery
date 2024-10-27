@@ -32,7 +32,7 @@ const SettingScreen = ({route}) => {
       });
       setOrdersData(response.data);
       setFilteredOrders(response.data);
-      console.log('orders=========', response.data)
+      console.log('orders=========', filteredOrders[0])
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -63,19 +63,24 @@ const SettingScreen = ({route}) => {
       <View style={styles.orderItem}>
         <View style={{flexDirection:'row', alignItems:'center', justifyContent:'space-between'}} >
           <Text style={styles.orderTitle}>Order ID {item.id}</Text>
-          <View style={{backgroundColor:'#F09B00', padding: 10, borderRadius: 16}}>
-            <Text style={styles.statusText }>{statusText}</Text>
+          <View style={{backgroundColor: '#f0f0f0', padding: 10, borderRadius: 16, width: '30%'}}>
+            <Text style={{color: statusColor, textAlign: 'center'}}>{statusText}</Text>
           </View>
         </View>
         <View style={{flexDirection:'row', alignItems:'center', justifyContent:'space-between'}}>
           <View style={{flexDirection:'row', alignItems:'center', marginTop: 15}}>
-            <Image source={require('../assets/images/icon.png')} style={{width: 45,height: 45}}/>
-            <View style={{marginLeft: 15, gap: 10}}>
-              <Text style={{color:COLORS.black, fontSize: 16, fontWeight:'700'}}>Burger</Text>
-              <Text style={{color:'#F09B00', fontSize: 14, fontWeight:'400'}}>$12.23</Text>
+            <Image source={require('../assets/images/icon.png')} style={{width: 60,height: 60}}/>
+            <View style={{ marginLeft: 15, gap: 10 }}>
+              <Text style={{ color: COLORS.black, fontSize: 20, fontWeight: 'bold' }}>{item.restaurant_name}</Text>
+              <Text style={{ color: COLORS.black, fontSize: 14 }}>
+                {item.order_items.map(orderItem => orderItem.menu_item).join(', ')}
+              </Text>
+              <Text style={{ color: '#F09B00', fontSize: 14, fontWeight: '400' }}>
+                ${item.total_price}
+              </Text>
             </View>
           </View>
-          <Text style={{color:COLORS.black, fontWeight:'400', fontSize:12}}>14 Items</Text>
+          <Text style={{color:COLORS.black, fontWeight:'400', fontSize:12}}>{item.order_items.length} item</Text>
         </View>
       </View>
     );
@@ -143,14 +148,19 @@ const SettingScreen = ({route}) => {
   const profileOptions = [
     { icon: <Icons.PersonalData/>, text: 'Personal Data',navigateTo: 'PersonalData'  },
     { icon:  <Icons.SettingsIcon/>, text: 'Settings',navigateTo: 'SettingEdit' },
-    { icon:  <Icons.ExtraCard/>, text: 'Extra Card' },
+    { icon:  <Icons.ExtraCard/>, text: 'Extra Card', navigateTo: 'AddPaymentMethod' },
+  ];
+
+  const supprt = [
     { icon:  <Icons.HelpCenter/>, text: 'Help Center' },
     { icon:  <Icons.DeleteIcon/>, text: 'Request Account Deletion' },
     { icon:  <Icons.AdduserIcon/>, text: 'Add another account' },
-  ];
+  ]
 
   return (
     <View style={styles.container}>
+      <ScrollView contentContainerStyle={{paddingBottom: 15, flexGrow: 1}}>
+
       {/* {userRole === 'guest' ? (
         <GuestModeSignUpComponent navigation={navigation} />
       ) : (
@@ -185,16 +195,15 @@ const SettingScreen = ({route}) => {
           <Text style={styles.email}>abcd1234@gmail.com</Text>
         </View>
       </View>
-      <ScrollView contentContainerStyle={{paddingBottom: 15, flexGrow: 1}}>
         <View style={styles.ordersContainer}>
           <View style={styles.ordersHeader}>
             <Text style={styles.ordersHeaderText}>My Orders</Text>
-            <TouchableOpacity onPress={()=>navigation.navigate('MenuOfRestaurantsScreen')}>
+            <TouchableOpacity onPress={()=>navigation.navigate('Orders')}>
               <Text style={styles.ordersToggleText}>See All</Text>
             </TouchableOpacity>
           </View>
           <FlatList
-            data={filteredOrders}
+            data={filteredOrders.slice(0, 1)}  // Only display the first order
             renderItem={renderOrderItem}
             keyExtractor={(item) => item.id.toString()}
             ListEmptyComponent={<Text>No orders available</Text>}
@@ -202,8 +211,28 @@ const SettingScreen = ({route}) => {
           />
         </View>
 
+        <View style={styles.separator}></View>
+
+        <Text style={{marginLeft: 20, paddingTop: 10}}>Profile</Text>
         <View style={styles.profileOptionsContainer}>
           {profileOptions.map((option) => (
+            <TouchableOpacity 
+              key={option.text} 
+              style={styles.profileOption}
+              onPress={() => navigation.navigate(option.navigateTo)}
+            >
+              {option.icon}
+              <View style={{flexDirection:'row', justifyContent:'space-between', width:'90%', alignItems:'center'}}>
+                <Text style={styles.profileOptionText}>{option.text}</Text>
+                <Icons.GotoIcon/>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={{marginLeft: 20, paddingTop: 10}}>Support</Text>
+        <View style={styles.profileOptionsContainer}>
+          {supprt.map((option) => (
             <TouchableOpacity 
               key={option.text} 
               style={styles.profileOption}
@@ -262,7 +291,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   orderTitle: {
-    color:COLORS.black, 
+    color: '#F09B00', 
     fontSize: 14,
     fontWeight: '400'
   },
@@ -271,8 +300,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 10,
-    // borderBottomWidth: 1,
-    // borderBottomColor: '#ccc',
   },
   text: {
     fontSize: 18,
@@ -336,17 +363,13 @@ const styles = StyleSheet.create({
   ordersContainer: {
     padding: 15,
     backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#dddddd',
-    borderRadius:8,
     width: '90%',
     alignSelf: 'center',
     ...Platform.select({
       ios: {
         shadowColor: '#000', 
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
       },
       android: {
         elevation: 2,
@@ -372,7 +395,11 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   orderItem: {
-    padding: 5,
+    marginVertical: 8,
+    marginHorizontal: 4,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    shadowRadius: 4,
   },
   orderName: {
     fontSize: 16,
@@ -385,6 +412,11 @@ const styles = StyleSheet.create({
   orderStatus: {
     fontSize: 16,
     color: '#666',
+  },
+  separator: {
+    borderBottomColor: 'gray',
+    borderBottomWidth: 0.2,
+    margin: 20,
   },
   profileOptionsContainer: {
     padding: 10,

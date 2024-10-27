@@ -26,6 +26,9 @@ import MenuCheckoutScreen from './screens/MenuCheckoutScreen';
 import cable from './cable';
 import Toast from 'react-native-toast-message';
 import { StripeProvider } from '@stripe/stripe-react-native';
+import AddPaymentMethodScreen from './screens/AddPaymentMethodScreen';
+import OrdersScreen from './screens/ordersscreen';
+import OrderDetailScreen from './screens/OrderDetailScreen';
 
 const themeColors = {
   activeTintColor: '#e23744',
@@ -248,6 +251,9 @@ function App() {
               <Stack.Screen name="MenuItemDetailScreen" component={MenuItemDetailScreen} />
               <Stack.Screen name="MenuAboutScreen" component={ MenuAboutScreen} options={{ headerShown: false }}/>
               <Stack.Screen name="MenuCheckoutScreen" component={ MenuCheckoutScreen} options={{ headerShown: false }}/>
+              <Stack.Screen name="AddPaymentMethod" component={ AddPaymentMethodScreen } />
+              <Stack.Screen name="Orders" component={ OrdersScreen } />
+              <Stack.Screen name="OrderDetails" component={ OrderDetailScreen } />
             </Stack.Navigator>
           </CartProvider>
         </UserProvider>

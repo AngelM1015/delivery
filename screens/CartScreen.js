@@ -4,7 +4,7 @@ import { Button, Card, Text, ToggleButton, FAB, Menu, PaperProvider, Icon, Check
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart } from '../context/CartContext';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome5, AntDesign } from '@expo/vector-icons';
 import CustomButton from '../components/CustomButton';
 import Header from '../components/Header';
 
@@ -165,23 +165,23 @@ const CartScreen = ({ navigation }) => {
             {cartItems.map((item, index) => (
               <Card key={index} style={styles.cartCard}>
                 <View style={styles.cartItemContainer}>
-                  <Image source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }} style={styles.cartImage} />
+                  <Image source={{ uri: item.imageUrl || '../assets/images/homeImage.png' }} style={styles.cartImage} />
                   <View style={styles.cartItemDetails}>
                     <Text style={styles.itemTitle}>{item.name}</Text>
                     <Text style={styles.itemPrice}>${item.price}</Text>
                     <View style={styles.quantityControls}>
-                      <TouchableOpacity onPress={() => decrementQuantity(item.id)}>
-                        <FontAwesome name="minus" size={20} color="black" />
+                      <TouchableOpacity style={styles.quantityIcon} onPress={() => decrementQuantity(item.id)}>
+                      <AntDesign name="minus" size={20} />
                       </TouchableOpacity>
                       <Text style={styles.quantityText}>{item.quantity}</Text>
-                      <TouchableOpacity onPress={() => incrementQuantity(item.id)}>
-                        <FontAwesome name="plus" size={20} color="black" />
+                      <TouchableOpacity style={styles.quantityIcon} onPress={() => incrementQuantity(item.id)}>
+                      <AntDesign name="plus" size={20} />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => removeFromCart(item.id)}>
+                        <FontAwesome5 name="trash-alt" size={20} color="red" />
                       </TouchableOpacity>
                     </View>
                   </View>
-                  <TouchableOpacity onPress={() => removeFromCart(item.id)}>
-                    <FontAwesome name="trash" size={24} color="red" />
-                  </TouchableOpacity>
                 </View>
               </Card>
             ))}
@@ -233,25 +233,25 @@ const CartScreen = ({ navigation }) => {
               {/* Total Items Row */}
               <View style={styles.summaryRow}>
                 <Text>Total Items:</Text>
-                <Text>${calculateCartTotal().toFixed(2)}</Text>
+                <Text style={styles.summaryValue}>${calculateCartTotal().toFixed(2)}</Text>
               </View>
 
               {/* Delivery Fee Row */}
               <View style={styles.summaryRow}>
                 <Text>Delivery Fee:</Text>
-                <Text>{deliveryFee === 0 || deliveryFee === null ? 'Free' : `$${(deliveryFee || 0).toFixed(2)}`}</Text>
+                <Text style={styles.summaryValue}>{deliveryFee === 0 || deliveryFee === null ? 'Free' : `$${(deliveryFee || 0).toFixed(2)}`}</Text>
               </View>
 
               {/* Discount Row */}
               <View style={styles.summaryRow}>
                 <Text>Discount:</Text>
-                <Text>-${discount.toFixed(2)}</Text>
+                <Text style={styles.summaryValue}>-${discount.toFixed(2)}</Text>
               </View>
 
               {/* Total Row */}
               <View style={styles.summaryRow}>
                 <Text>Total:</Text>
-                <Text>${calculateFinalTotal().toFixed(2)}</Text>
+                <Text style={styles.summaryValue}>${calculateFinalTotal().toFixed(2)}</Text>
               </View>
             </View>
           </>
@@ -259,22 +259,26 @@ const CartScreen = ({ navigation }) => {
       </ScrollView>
 
       {/* Order Now Button */}
-        <CustomButton
-          text="Order Now"
-          onPress={() =>
-            navigation.navigate('MenuCheckoutScreen', {
-              cartItems,  // Passing cartItems to CheckoutScreen
-              orderDetails: {
-                deliveryFee: deliveryFee || 0,
-                discount: discount || 0,
-                totalPrice: calculateFinalTotal(),
-                imageUrl: cartItems[0].imageUrl, // Assuming the first item's image for simplicity
-                itemName: cartItems[0].name, // Passing name
-                itemPrice: cartItems[0].price, // Passing price
-                quantity: cartItems[0].quantity, // Passing quantity
-              },
-            })
-          }
+      <CustomButton
+        text="Order Now"
+        onPress={() => {
+          if (cartItems.length === 0) {
+            navigation.navigate('Home');
+          } else {
+              navigation.navigate('MenuCheckoutScreen', {
+                cartItems,
+                orderDetails: {
+                  deliveryFee: deliveryFee || 0,
+                  discount: discount || 0,
+                  totalPrice: calculateFinalTotal(),
+                  imageUrl: cartItems[0].imageUrl,
+                  itemName: cartItems[0].name,
+                  itemPrice: cartItems[0].price,
+                  quantity: cartItems[0].quantity,
+                },
+              });
+            }
+          }}
         />
       </View>
      </PaperProvider>
@@ -310,6 +314,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     padding: 10,
     borderRadius: 10,
+    backgroundColor: '#fff',
   },
   cartItemContainer: {
     flexDirection: 'row',
@@ -324,6 +329,7 @@ const styles = StyleSheet.create({
   cartItemDetails: {
     flex: 1,
     paddingLeft: 10,
+    gap: 8
   },
   itemTitle: {
     fontSize: 16,
@@ -337,10 +343,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 5,
+    gap: 5
   },
   quantityText: {
     marginHorizontal: 10,
     fontSize: 16,
+  },
+  quantityIcon: {
+    borderRadius: '50',
+    borderColor: '#C0C0C0',
+    borderWidth: '0.5',
+    padding: '30'
   },
   extraSection: {
     marginTop: 20,
@@ -386,8 +399,10 @@ const styles = StyleSheet.create({
   paymentSummary: {
     marginTop: 20,
     padding: 15,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 5,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 0.2,
+    borderColor: '#C0C0C0'
   },
   summaryText: {
     fontSize: 16,
@@ -398,6 +413,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
+  },
+  summaryValue: {
+    fontWeight: 'bold'
   },
   orderButton: {
     backgroundColor: '#F09B00',

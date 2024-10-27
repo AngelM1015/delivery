@@ -2,12 +2,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import BackIcon from '../assets/svgs/backIcon.svg';
 
 const Header = ({ title, navigation, showShareIcon = false }) => {
   return (
     <View style={styles.header}>
       <TouchableOpacity onPress={() => navigation.goBack()}>
-        <FontAwesome name="arrow-left" size={24} color="black" />
+        <BackIcon size={34} />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>{title}</Text>
       {showShareIcon && (

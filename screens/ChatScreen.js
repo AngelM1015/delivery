@@ -40,7 +40,7 @@ const ChatScreen = ({navigation}) => {
 
       console.log('subscription', subscription);
   
-      const response = await axios.get(`https://6f5c-182-185-190-152.ngrok-free.app/api/v1/conversations/${conversationId}`,
+      const response = await axios.get(`http://localhost:3000/api/v1/conversations/${conversationId}`,
         { headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } }
       );
 
@@ -61,7 +61,7 @@ const ChatScreen = ({navigation}) => {
     const token = await AsyncStorage.getItem('userToken');
 
     try {
-      const response = await fetch('https://6f5c-182-185-190-152.ngrok-free.app/api/v1/messages', {
+      const response = await fetch('http://localhost:3000/api/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

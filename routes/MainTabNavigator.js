@@ -15,7 +15,7 @@ import ChatScreen from '../screens/ChatScreen';
 import CartScreen from '../screens/CartScreen';
 import MenuCheckoutScreen from '../screens/MenuCheckoutScreen';
 import OngoingOrderScreen from '../screens/OngoingOrderScreen';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import OrderDetailScreen from '../screens/OrderDetailScreen';
 
 const themeColors = {
@@ -27,6 +27,18 @@ const themeColors = {
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: themeColors.backgroundColor,
+    borderRadius: 40,
+    marginBottom: 24,
+    marginHorizontal: 15,
+    height: 56,
+    paddingBottom: 0
+  },
+  icon: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
@@ -93,12 +105,30 @@ const MainTabNavigator = ({ role = 'guest' }) => {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName = getTabBarIcon(role, route, focused);
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return (
+            <View
+              style={[
+                styles.icon,
+                {
+                  backgroundColor: focused
+                    ? themeColors.activeTintColor
+                    : "transparent",
+                },
+              ]}
+            >
+              <Ionicons
+                name={iconName}
+                size={size}
+                color={focused ? "#FFF" : color}
+              />
+            </View>
+          );
         },
         tabBarActiveTintColor: themeColors.activeTintColor,
         tabBarInactiveTintColor: themeColors.inactiveTintColor,
         tabBarStyle: styles.tabBar,
-        headerShown: false
+        headerShown: false,
+        tabBarShowLabel: false,
       })}
     >
       {['partner', 'restaurant_owner', 'admin'].includes(role) ? (

@@ -294,14 +294,18 @@ const styles = StyleSheet.create({
   menuCard: {
     flex: 1,
     margin: 10,
+    padding: 6,
     borderRadius: 10,
+    borderWidth: 0.1,
+    shadowOpacity: 0,
     backgroundColor: '#fff',
     elevation: 3,
-    width: 170, // Adjust based on your design requirements
+    width: 180,
   },
   innerCardContainer: {
-    overflow: 'hidden', // Apply overflow to the inner container
-    borderRadius: 10, // Match the border radius of the card
+    overflow: 'hidden',
+    borderRadius: 10,
+    gap: 8
   },
   menuCardTop: {
     position: 'relative',
@@ -316,7 +320,8 @@ const styles = StyleSheet.create({
     right: 10,
   },
   menuDetails: {
-    padding: 10,
+    padding: 2,
+    gap: 4
   },
   menuTitle: {
     fontSize: 14,

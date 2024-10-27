@@ -1,4 +1,4 @@
-export const base_url = 'https://de4a-2400-adc5-18a-ff00-fdfb-b8b5-d09b-b1c7.ngrok-free.app/'
+export const base_url = 'http://localhost:3000/'
 
 export const auth = {
     login: 'api/v1/auth/login',

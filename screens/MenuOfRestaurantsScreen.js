@@ -188,7 +188,9 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
     setSearchQuery(query);
   
     const filtered = ordersData.filter(order =>
-      order.id.toString().includes(query) || order.status.toLowerCase().includes(query.toLowerCase())
+      order.order_items.some(item => 
+        item.menu_item && item.menu_item.includes(query)
+      ) || order.status.toLowerCase().includes(query.toLowerCase())
     );
     setFilteredOrders(filtered);
   
@@ -261,8 +263,17 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
 
     return (
       <TouchableOpacity style={styles.orderItem} onPress={() => navigation.navigate('OngoingOrderScreen', { id: item.id })}>
-        <Text style={styles.orderTitle}>Order #{item.id}</Text>
-        <Text style={[styles.statusText, { color: statusColor }]}>{statusText}</Text>
+        <View style={{flexDirection:'row', alignItems:'center', justifyContent:'space-between'}}>
+          <View style={{flexDirection:'row', alignItems:'center', marginTop: 15}}>
+            <Image source={require('../assets/images/icon.png')} style={{width: 60, height: 60}}/>
+            <View style={{ marginLeft: 15, gap: 10 }}>
+              <Text style={{ color: COLORS.black, fontSize: 20 }}>
+                {item.order_items.map(orderItem => orderItem.menu_item).join(', ')}
+              </Text>
+              <Text style={{ color: 'grey', fontSize: 14 }}>{item.restaurant_name}</Text>
+            </View>
+          </View>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -344,7 +355,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border
   },
   horizontalList: {
-    maxHeight: 120,
+    minHeight: 250,
   },
   restaurantCard: {
     width: 120,

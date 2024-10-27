@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, ScrollView, SafeAreaView, ActivityIndicator } from 'react-native';
-import { Card } from 'react-native-paper';
+import { Card, Icon } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { base_url } from '../constants/api';
 import { useCart } from '../context/CartContext';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, EvilIcons, AntDesign } from '@expo/vector-icons';
 import Header from '../components/Header';
 import Toast from 'react-native-toast-message';
 
@@ -75,7 +75,7 @@ const MenuAboutScreen = ({ route, navigation }) => {
     const price = menuItem.item_prices?.length > 0 ? parseFloat(menuItem.item_prices[0]) : '0.0';
 
     // Ensure the imageUrl is correctly set
-    const imageUrl = menuItem.image_url.startsWith('http')
+    const imageUrl = menuItem.image_url
       ? menuItem.image_url
       : `${base_url}${menuItem.image_url}`;
     console.log('Image URL:', imageUrl); // Log the image URL before adding
@@ -175,9 +175,9 @@ const MenuAboutScreen = ({ route, navigation }) => {
             <Text style={styles.menuTitle}>{menuItem.name}</Text>
             <Text style={styles.priceText}>${menuItem.item_prices ? menuItem.item_prices[0] : 0}</Text>
             <View style={styles.metaDetails}>
-              <Text>Free Delivery</Text>
-              <Text>Cook Time: {menuItem.cook_time} mins</Text>
-              <Text>Rating: 4.9</Text>
+              <Text><FontAwesome name='bicycle' color='#F09B00'/> Free Delivery</Text>
+              <Text><FontAwesome name='clock-o' color='#F09B00'/> {menuItem.cook_time} mins</Text>
+              <Text><FontAwesome name='star' color='#F09B00'/> 4.9</Text>
             </View>
             <View style={styles.separator} />
             <Text>Description</Text>
@@ -196,11 +196,11 @@ const MenuAboutScreen = ({ route, navigation }) => {
                     <Text>{option.name} (+${option.additional_price || '0.00'})</Text>
                     <View style={styles.counterContainer}>
                       <TouchableOpacity onPress={() => handleQuantityChange(modifier.id, option.id, false)}>
-                        <FontAwesome name="minus" size={20} color="black" />
+                      <AntDesign name="minus" size={20} />
                       </TouchableOpacity>
                       <Text style={styles.countText}>{modifierCounts[modifier.id]?.[option.id] || 0}</Text>
                       <TouchableOpacity onPress={() => handleQuantityChange(modifier.id, option.id, true)}>
-                        <FontAwesome name="plus" size={20} color="black" />
+                      <AntDesign name="plus" size={20} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -226,16 +226,16 @@ const MenuAboutScreen = ({ route, navigation }) => {
       {/* Footer - Quantity and Add to Cart */}
       <View style={styles.footer}>
         <View style={styles.quantityContainer}>
-          <TouchableOpacity onPress={decrementQuantity}>
-            <FontAwesome name="minus" size={20} color="black" />
+          <TouchableOpacity style={styles.quantityIcon} onPress={decrementQuantity}>
+            <AntDesign name="minus" size={30} />
           </TouchableOpacity>
           <Text style={styles.quantityText}>{quantity}</Text>
-          <TouchableOpacity onPress={incrementQuantity}>
-            <FontAwesome name="plus" size={20} color="black" />
+          <TouchableOpacity style={styles.quantityIcon} onPress={incrementQuantity}>
+            <AntDesign name="plus" size={30} />
           </TouchableOpacity>
         </View>
         <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
-          <Text style={styles.addToCartText}>Add To Cart</Text>
+          <Text style={styles.addToCartText}><FontAwesome name="shopping-cart" size={20} color='white'/>  Add To Cart</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -366,25 +366,22 @@ const styles = StyleSheet.create({
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
+    gap: '5',
+    // borderWidth: 1,
+    // borderColor: '#ccc',
+    // borderRadius: 5,
     padding: 5,
   },
+  quantityIcon: {
+    borderRadius: '50',
+    borderColor: '#C0C0C0',
+    borderWidth: '0.5',
+    padding: '30'
+  },
   quantityText: {
-    fontSize: 18,
-    marginHorizontal: 15,
-  },
-  addToCartButton: {
-    backgroundColor: '#F09B00',
-    borderRadius: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 25,
-  },
-  addToCartText: {
-    fontSize: 16,
-    color: '#fff',
+    fontSize: 24,
     fontWeight: 'bold',
+    marginHorizontal: 15,
   },
   modifiersTitle: {
     fontSize: 20,
@@ -417,12 +414,12 @@ const styles = StyleSheet.create({
   },
   addToCartButton: {
     backgroundColor: '#F09B00',
-    borderRadius: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 25,
+    borderRadius: 30,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
   },
   addToCartText: {
-    fontSize: 16,
+    fontSize: 20,
     color: '#fff',
     fontWeight: 'bold',
   },
