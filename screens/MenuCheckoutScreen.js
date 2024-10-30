@@ -5,8 +5,10 @@ import Header from '../components/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
-import { base_url, restuarants } from '../constants/api';
+import { base_url, restaurants } from '../constants/api';
 import { ToggleButton } from 'react-native-paper';
+import Toast from 'react-native-toast-message';
+
 
 const MenuCheckoutScreen = ({ navigation, route }) => {
   const { clearCart } = useCart();
@@ -75,7 +77,6 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           address_id: 1, // fetch address from customer and then send that address
           order_type: orderType,
           payment_method: paymentMethod.brand === 'Cash' ? 'cash' : 'other',
-          
           order_items_attributes: cartItems.map(item => ({
             menu_item_id: item.id,
             quantity: item.quantity,
@@ -86,7 +87,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         }
       };
 
-      const response = await axios.post('http://localhost:3000/api/v1/orders/create_order',
+      const response = await axios.post('http://192.168.150.220:3000/api/v1/orders/create_order',
         { order: orderData.order, payment_method_id: paymentMethod.id },
         {
           headers: {
@@ -96,8 +97,14 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 
       clearCart();
       setOrderType(null);
+      Toast.show({
+        type: 'success',
+        text1: 'Success!',
+        text2: 'Order has been placed! 👋',
+        position: 'top',
+        visibilityTime: 1500
+      });
       navigation.navigate('Orders');
-      setDisplayMessage('your order has been placed! ✅')
     } catch (error) {
       console.error('Order submission error:', error.response.data.message);
       Alert.alert('Error', error.response.data.message);
@@ -140,7 +147,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
             </View>
             <View style={styles.transactionRow}>
               <Text style={styles.detailText}>Driver</Text>
-              <Text style={styles.detailAmount}>${orderDetails.driverFee || '0.00'}</Text>
+              <Text style={styles.detailAmount}>$20.00</Text>
             </View>
             <View style={styles.transactionRow}>
               <Text style={styles.detailText}>Tax 10%</Text>

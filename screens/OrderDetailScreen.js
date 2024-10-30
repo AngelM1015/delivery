@@ -14,7 +14,7 @@ const OrderDetailScreen = ({ route }) => {
             try {
                 const token = await AsyncStorage.getItem('userToken');
                 const headers = { 'Authorization': `Bearer ${token}` };
-                const response = await axios.get(`http://localhost:3000/api/v1/orders/${orderId}`, { headers });
+                const response = await axios.get(`http://192.168.150.220:3000/api/v1/orders/${orderId}`, { headers });
                 console.log(response.data);
                 setOrderDetails(response.data);
             } catch (error) {

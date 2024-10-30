@@ -36,7 +36,7 @@ const RestaurantOrderScreen = () => {
   const fetchOrders = async (token, role) => {
     try {
       setLoading(true);
-      let url = 'http://localhost:3000/api/v1/orders/partner_pending_orders';
+      let url = 'http://192.168.150.220:3000/api/v1/orders/partner_pending_orders';
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -57,7 +57,7 @@ const RestaurantOrderScreen = () => {
       }
       const token = await AsyncStorage.getItem('userToken');
       await axios.post(
-        `http://localhost:3000/api/v1/orders/accept_order`,
+        `http://192.168.150.220:3000/api/v1/orders/accept_order`,
         { order_id: orderId },
         { headers: { Authorization: `Bearer ${token}` } }
       );

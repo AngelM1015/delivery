@@ -1,26 +1,29 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, Button, Alert, TouchableOpacity, Image, FlatList, ScrollView, Platform, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, Image, FlatList, ScrollView, Platform, Modal } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { UserContext } from '../context/UserContext';
-import GuestModeSignUpComponent from '../components/GuestModeSignUpComponent';
 import { Icons } from '../constants/Icons';
 import { COLORS } from '../constants/colors';
 import { base_url, orders } from '../constants/api';
+import useUser from '../hooks/useUser';
+
 const SettingScreen = ({route}) => {
 
   const navigation = useNavigation();
 
+  const { role, token } = useUser();
   const [isActivityActive, setIsActivityActive] = useState(false);
   const [statusPopupVisible, setStatusPopupVisible] = useState(false);
-  const { userRole, setUserRole } = useContext(UserContext);
   const [ordersData, setOrdersData] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false); 
   useEffect(() => {
-    fetchOrders();
+    if(role !== 'customer')
+    {
+      fetchOrders();
+    }
   }, []);
 
   const fetchOrders = async () => {
@@ -69,7 +72,7 @@ const SettingScreen = ({route}) => {
         </View>
         <View style={{flexDirection:'row', alignItems:'center', justifyContent:'space-between'}}>
           <View style={{flexDirection:'row', alignItems:'center', marginTop: 15}}>
-            <Image source={require('../assets/images/icon.png')} style={{width: 60,height: 60}}/>
+            <Image source={{ uri: item.image_url ? base_url + item.image_url : '../assets/images/icon.png'}} style={{ width: 80, height: 80, borderRadius: 10 }}/>
             <View style={{ marginLeft: 15, gap: 10 }}>
               <Text style={{ color: COLORS.black, fontSize: 20, fontWeight: 'bold' }}>{item.restaurant_name}</Text>
               <Text style={{ color: COLORS.black, fontSize: 14 }}>
@@ -98,19 +101,6 @@ const SettingScreen = ({route}) => {
     }
   };
 
-  // const handleLogout = async () => {
-  //   try {
-  //     await AsyncStorage.removeItem('userToken');
-  //     await AsyncStorage.removeItem('userRole');
-  //     await AsyncStorage.removeItem('userId');
-  //     await AsyncStorage.removeItem('hasOnBoarded');
-
-  //     navigation.navigate('Login');
-  //     console.log('Logged out successfully');
-  //   } catch (error) {
-  //     console.error('Error logging out:', error);
-  //   }
-  // };
   const handleLogout = () => {
     setModalVisible(true);
   };
@@ -143,8 +133,6 @@ const SettingScreen = ({route}) => {
     );
   };
 
-
-  
   const profileOptions = [
     { icon: <Icons.PersonalData/>, text: 'Personal Data',navigateTo: 'PersonalData'  },
     { icon:  <Icons.SettingsIcon/>, text: 'Settings',navigateTo: 'SettingEdit' },
@@ -195,7 +183,8 @@ const SettingScreen = ({route}) => {
           <Text style={styles.email}>abcd1234@gmail.com</Text>
         </View>
       </View>
-        <View style={styles.ordersContainer}>
+        {role === 'customer' && (
+          <View style={styles.ordersContainer}>
           <View style={styles.ordersHeader}>
             <Text style={styles.ordersHeaderText}>My Orders</Text>
             <TouchableOpacity onPress={()=>navigation.navigate('Orders')}>
@@ -210,6 +199,8 @@ const SettingScreen = ({route}) => {
             refreshing={loading}
           />
         </View>
+        )}
+        
 
         <View style={styles.separator}></View>
 

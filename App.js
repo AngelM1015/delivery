@@ -30,6 +30,8 @@ import AddPaymentMethodScreen from './screens/AddPaymentMethodScreen';
 import OrdersScreen from './screens/ordersscreen';
 import OrderDetailScreen from './screens/OrderDetailScreen';
 import OngoingOrderScreen from './screens/OngoingOrderScreen';
+import { LogBox } from 'react-native';
+import ChatScreen from './screens/ChatScreen';
 
 const themeColors = {
   activeTintColor: '#e23744',
@@ -68,10 +70,10 @@ function App() {
   const [hasOnboarded, setHasOnboarded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const appState = useRef(AppState.currentState);
-  const timeoutRef = useRef(null);
   const [showNotification, setShowNotification] = useState({});
   const [newOrder, setNewOrder] = useState('false');
   const [isRoleChanged, setIsRoleChanged] = useState(false);
+  LogBox.ignoreAllLogs(true);
 
   useEffect(() => {
     const fetchUserData_CheckActiveOrder = async () => {
@@ -197,7 +199,7 @@ function App() {
     try {
       const token = await AsyncStorage.getItem('userToken');
       const response = await axios.post(
-        `http://localhost:3000/api/v1/orders/${showNotification.order_id}/accept`,
+        `http://192.168.150.220:3000/api/v1/orders/${showNotification.order_id}/accept`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -256,6 +258,7 @@ function App() {
               <Stack.Screen name="Orders" component={ OrdersScreen } />
               <Stack.Screen name="OrderDetails" component={ OrderDetailScreen } />
               <Stack.Screen name="OngoingOrder" component={ OngoingOrderScreen } />
+              <Stack.Screen name="Chat" component={ChatScreen} />
             </Stack.Navigator>
           </CartProvider>
         </UserProvider>

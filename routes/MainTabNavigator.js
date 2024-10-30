@@ -17,6 +17,8 @@ import MenuCheckoutScreen from '../screens/MenuCheckoutScreen';
 import OngoingOrderScreen from '../screens/OngoingOrderScreen';
 import { StyleSheet, View } from 'react-native';
 import OrderDetailScreen from '../screens/OrderDetailScreen';
+import { Badge } from 'react-native-paper';
+import { useCart } from '../context/CartContext';
 
 const themeColors = {
   activeTintColor: "#F09B00", // Tomato red for active
@@ -100,6 +102,8 @@ const getTabBarIcon = (role, route, focused) => {
 };
 
 const MainTabNavigator = ({ role = 'guest' }) => {
+  const { cartItems } = useCart();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -120,7 +124,13 @@ const MainTabNavigator = ({ role = 'guest' }) => {
                 name={iconName}
                 size={size}
                 color={focused ? "#FFF" : color}
-              />
+              >
+                {iconName === 'cart' || iconName === 'cart-outline' && (
+                  <Badge size={34} style={{ backgroundColor: 'orange', position: 'relative', left:-8, top:-10 }}>
+                    {cartItems.length}
+                  </Badge>)
+                }
+              </Ionicons>
             </View>
           );
         },

@@ -9,8 +9,8 @@ import Header from '../components/Header';
 const CartScreen = ({ navigation }) => {
   const { cartItems, removeFromCart, updateItemQuantity, clearCart } = useCart();
   console.log('cartItems', cartItems);
-  const deliveryFee = 5.00;
-  const discount = 10.00;
+  const deliveryFee = 20.00;
+  const discount = 0.00;
   const [extraChecked, setExtraChecked] = useState(false);
   const [extraOptions, setExtraOptions] = useState([
     { productName: 'Extra Chess', price: '1$' },
@@ -229,8 +229,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cartImage: {
-    width: 60,
-    height: 60,
+    width: 100,
+    height: 100,
     borderRadius: 5,
   },
   cartItemDetails: {

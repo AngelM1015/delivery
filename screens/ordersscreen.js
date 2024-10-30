@@ -1,72 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, FlatList, Button, ActivityIndicator, TouchableOpacity, RefreshControl, SafeAreaView, Image } from 'react-native';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {base_url, orders} from '../constants/api';
 import { COLORS } from '../constants/colors';
+import useOrders from '../hooks/useOrders';
+import { base_url } from '../constants/api';
 
 const OrdersScreen = ({ navigation }) => {
-  const [ordersData, setOrdersData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [userRole, setUserRole] = useState('');
-  const [orderCount, setOrderCount] = useState( AsyncStorage.getItem('orderCount'))
-
-  useEffect(() => {
-    const initialize = async () => {
-      const token = await AsyncStorage.getItem('userToken');
-      const role = await AsyncStorage.getItem('userRole');
-
-      setUserRole(role);
-      if (token && role === 'customer') {
-        fetchOrders(token, role);
-      }
-    };
-
-    initialize();
-  }, [orderCount]);
-  
-  const fetchOrders = async (token, role) => {
-    setLoading(true);
-    try {
-      let url = `${base_url}${orders.order}`;
-    
-      if (role === 'customer') {
-        const response = await axios.get(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setOrdersData(response.data);
-      } else {
-        setOrdersData([]);
-      }
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onRefresh = async () => {
-    const token = await AsyncStorage.getItem('userToken');
-    const role = await AsyncStorage.getItem('userRole');
-    fetchOrders(token, role);
-  };
-  
-  const handleOrderAction = async (orderId, action) => {
-    const token = await AsyncStorage.getItem('userToken');
-    try {
-      const url = `https:/localhost:3000/api/v1/orders/${orderId}/${action}`;
-      await axios.patch(url, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchOrders(token, userRole);
-    } catch (error) {
-      console.error('Error updating order:', error);
-    }
-  };
+  const {
+    role,
+    orders,
+    loading,
+    fetchOrders,
+    cancelOrder,
+    pickUpOrder,
+    deliverOrder 
+  } = useOrders()
 
   const handleOrderClick = (order) => {
-    console.log('Navigating to OngoingOrderScreen with order ID:', order.id);
-    console.log('Available Navigators:', navigation.getState().routeNames);
     if (order.status !== 'delivered' && order.status !== 'canceled') {
       navigation.navigate('OngoingOrder', { id: order.id });
     } else {
@@ -74,12 +23,12 @@ const OrdersScreen = ({ navigation }) => {
     }
   };
 
-  const renderOrderItem = ({ item }) => {
+  const renderOrderItem = ({ item: order }) => {
 
     let statusText = '';
     let statusColor = '';
-  
-    switch (item.status) {
+
+    switch (order.status) {
       case 'delivered':
         statusText = 'Completed';
         statusColor = 'black';
@@ -93,42 +42,42 @@ const OrdersScreen = ({ navigation }) => {
         statusColor = 'green';
         break;
     }
-  
+
     return (
-      <TouchableOpacity onPress={() => handleOrderClick(item)} style={{paddingHorizontal: 10}}>
+      <TouchableOpacity onPress={() => handleOrderClick(order)} style={{ paddingHorizontal: 10 }}>
         <View style={styles.orderItem}>
-          <View style={{flexDirection:'row', alignItems:'center', justifyContent:'space-between'}} >
-            <Text style={styles.orderTitle}>Order ID {item.id}</Text>
-            <View style={{backgroundColor: '#f0f0f0', padding: 10, borderRadius: 16, width: '30%'}}>
-              <Text style={{color: statusColor, textAlign: 'center'}}>{statusText}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }} >
+            <Text style={styles.orderTitle}>Order ID {order.id}</Text>
+            <View style={{ backgroundColor: '#f0f0f0', padding: 10, borderRadius: 16, width: '30%' }}>
+              <Text style={{ color: statusColor, textAlign: 'center' }}>{statusText}</Text>
             </View>
           </View>
-          <View style={{flexDirection:'row', alignItems:'center', justifyContent:'space-between'}}>
-            <View style={{flexDirection:'row', alignItems:'center', marginTop: 15}}>
-              <Image source={require('../assets/images/icon.png')} style={{width: 60, height: 60}}/>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 15 }}>
+              <Image source={{ uri: order.image_url ? base_url + order.image_url : '../assets/images/icon.png'}} style={{ width: 80, height: 80, borderRadius: 10 }} />
               <View style={{ marginLeft: 15, gap: 10 }}>
-                <Text style={{ color: COLORS.black, fontSize: 20, fontWeight: 'bold' }}>{item.restaurant_name}</Text>
-                <Text style={{ color: 'grey', fontSize: 14 }}>
-                  {item.order_items.map(orderItem => orderItem.menu_item).join(', ')}
+                <Text style={{ color: COLORS.black, fontSize: 20, fontWeight: 'bold' }}>{order.restaurant_name}</Text>
+                <Text style={{ color: 'grey', fontSize: 14, maxWidth: '70%' }}>
+                  {order.order_items.map(item => item.menu_item).join(', ')}
                 </Text>
                 <Text style={{ color: '#F09B00', fontSize: 14 }}>
-                  ${item.total_price}
+                  ${order.total_price}
                 </Text>
               </View>
             </View>
-            <Text style={{color: COLORS.black, fontWeight: '400', fontSize: 12}}>{item.order_items.length} item</Text>
+            <Text style={{ color: COLORS.black, fontWeight: '400', fontSize: 12 }}>{order.order_items.length} item</Text>
           </View>
-          {userRole === 'customer' && item.status !== 'canceled' && item.status !== 'delivered' && item.status !== 'picked_up' && (
-            <TouchableOpacity style={styles.cancelButton} onPress={() => handleOrderAction(item.id, 'cancel_order')}>
-              <Text style={{color: 'white'}}>Cancel Order</Text>
+          {role === 'customer' && order.status !== 'canceled' && order.status !== 'delivered' && order.status !== 'picked_up' && (
+            <TouchableOpacity style={styles.cancelButton} onPress={() => cancelOrder(order.id)}>
+              <Text style={{ color: 'white' }}>Cancel Order</Text>
             </TouchableOpacity>
           )}
         </View>
 
-        {userRole === 'partner' && (
+        {role === 'partner' && (
           <View>
-            <Button title="Pick Up Order" onPress={() => handleOrderAction(item.id, 'start_delivery')} />
-            <Button title="Deliver Order" onPress={() => handleOrderAction(item.id, 'partner_deliver_order')} />
+            <Button title="Pick Up Order" onPress={() => pickUpOrder(order.id)} />
+            <Button title="Deliver Order" onPress={() => deliverOrder(order.id)} />
           </View>
         )}
       </TouchableOpacity>
@@ -136,17 +85,17 @@ const OrdersScreen = ({ navigation }) => {
   };
 
   if (loading) {
-    return<View style={styles.centered}><ActivityIndicator size="large" /></View>;
+    return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
   }
 
   return (
     <SafeAreaView>
       <Text style={{ color: COLORS.black, fontSize: 20, fontWeight: 'bold', margin: 10 }}>Past orders</Text>
-      <FlatList data={ordersData}renderItem={renderOrderItem}keyExtractor={item => item.id.toString()}
+      <FlatList data={orders} renderItem={renderOrderItem} keyExtractor={item => item.id.toString()}
         ListEmptyComponent={<Text>No orders available</Text>}
         refreshControl={
-                      <RefreshControl loading={loading} onRefresh={onRefresh} />
-                    }
+          <RefreshControl loading={loading} onRefresh={fetchOrders} />
+        }
       />
     </SafeAreaView>
   );
@@ -186,7 +135,7 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
     marginTop: 20,
-    width:'30%',
+    width: '30%',
   }
 });
 

@@ -54,7 +54,7 @@ const MetricScreen = ({ navigation }) => {
     useEffect(() => {
       const fetchToken = async () => {
         const token = await AsyncStorage.getItem('userToken');
-        const cableUrl = `ws://localhost:3000/cable?token=${token}`;
+        const cableUrl = `ws://192.168.150.220:3000/cable?token=${token}`;
       };
       fetchToken();
       fetchUserRoleAndOrders();
@@ -66,7 +66,7 @@ const MetricScreen = ({ navigation }) => {
     const role = await AsyncStorage.getItem('userRole');
     setUserRole(role);
     const headers = { 'Authorization': `Bearer ${token}` };
-    let apiUrl = 'http://localhost:3000/api/v1/orders';
+    let apiUrl = 'http://192.168.150.220:3000/api/v1/orders';
     apiUrl += role === 'restaurant_owner' ? '/restaurant_orders' : role === 'admin' ? '/all_orders' : '/partner_orders';
     try {
         const response = await axios.get(apiUrl, { headers });
@@ -126,7 +126,7 @@ const MetricScreen = ({ navigation }) => {
 
     const token = await AsyncStorage.getItem('userToken');
 
-    const response = await axios.put(`http://localhost:3000/api/v1/orders/${id}/update_status`,
+    const response = await axios.put(`http://192.168.150.220:3000/api/v1/orders/${id}/update_status`,
       { status: selectedStatus },
       {
         headers: { 'Authorization': `Bearer ${token}`}

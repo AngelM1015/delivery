@@ -1,25 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, TextInput, FlatList, StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView, TouchableOpacity, Linking } from 'react-native';
 import cable from '../cable';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import { useRoute } from '@react-navigation/native';
 import { Icons } from '../constants/Icons';
-import { FAB } from 'react-native-paper'; 
-import { FontAwesome } from '@expo/vector-icons'; 
 import { COLORS } from '../constants/colors';
-const ChatScreen = ({navigation}) => {
-  const [messages, setMessages] = useState([]);
+import useConversation from '../hooks/useConversation';
+import useUser from '../hooks/useUser';
+
+const ChatScreen = ({ navigation }) => {
+  const { messages, conversation, setMessages, setConversation, createMessage } = useConversation();
+  const { userId } = useUser();
   const [newMessage, setNewMessage] = useState('');
-  const [currentUserId, setCurrentUserId] = useState(null);
   const route = useRoute();
   const [conversationId, setConversationId] = useState(route.params.conversationId);
 
   useEffect(() => {
+    setConversation(route.params.conversationId);
+
     const initialize = async () => {
-      const token = await AsyncStorage.getItem('userToken');
-      const userId = await AsyncStorage.getItem('userId');
-      setCurrentUserId(userId);
+      // const token = await AsyncStorage.getItem('userToken');
+      // const userId = await AsyncStorage.getItem('userId');
+      // setuserId(userId);
 
       if (cable.connection.isOpen()) {
         console.log("WebSocket connection is open.");
@@ -39,14 +40,6 @@ const ChatScreen = ({navigation}) => {
       );
 
       console.log('subscription', subscription);
-  
-      const response = await axios.get(`http://localhost:3000/api/v1/conversations/${conversationId}`,
-        { headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } }
-      );
-
-      console.log('messages', response.data);
-
-      setMessages(response.data.messages);
 
       return () => {
         subscription.unsubscribe();
@@ -58,32 +51,13 @@ const ChatScreen = ({navigation}) => {
   
 
   const handleSendMessage = async () => {
-    const token = await AsyncStorage.getItem('userToken');
-
-    try {
-      const response = await fetch('http://localhost:3000/api/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          message: {
-            text: newMessage,
-            conversation_id: conversationId,
-          },
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setNewMessage('');
-      } else {
-        console.error('Failed to send message');
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
+    const body = {
+      message: {
+        text: newMessage,
+        conversation_id: conversation,
+      },
     }
+    createMessage(body)
   };
 
   const handleCall = () => {
@@ -98,7 +72,7 @@ const ChatScreen = ({navigation}) => {
   };
 
   const renderItem = ({ item }) => {
-    const isCurrentUser = item.user_id === parseInt(currentUserId);
+    const isCurrentUser = item.user_id === parseInt(userId);
     
     return (
       <View style={styles.messageWrapper}>

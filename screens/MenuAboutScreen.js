@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, ScrollView, SafeAreaView, ActivityIndicator } from 'react-native';
-import { Card, Icon } from 'react-native-paper';
+import { Card } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { base_url } from '../constants/api';
 import { useCart } from '../context/CartContext';
-import { FontAwesome, EvilIcons, AntDesign } from '@expo/vector-icons';
+import { FontAwesome, AntDesign } from '@expo/vector-icons';
 import Header from '../components/Header';
 import Toast from 'react-native-toast-message';
 
@@ -14,8 +14,6 @@ const MenuAboutScreen = ({ route, navigation }) => {
   const [menuItem, setMenuItem] = useState(null);
   const [recommendedItems, setRecommendedItems] = useState([]);
   const [modifierCounts, setModifierCounts] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
 
@@ -76,8 +74,8 @@ const MenuAboutScreen = ({ route, navigation }) => {
 
     // Ensure the imageUrl is correctly set
     const imageUrl = menuItem.image_url
-      ? menuItem.image_url
-      : `${base_url}${menuItem.image_url}`;
+      ? base_url + menuItem.image_url
+      : 'https://via.placeholder.com/150';
     console.log('Image URL:', imageUrl); // Log the image URL before adding
 
     const itemForCart = {
@@ -95,8 +93,8 @@ const MenuAboutScreen = ({ route, navigation }) => {
       type: 'success',
       text1: 'Success!',
       text2: 'Item added to the cart 👋',
-      position: 'bottom',
-      visibilityTime: 3000, // 3 seconds
+      position: 'top',
+      visibilityTime: 1000, // 3 seconds
     });
   };
 
@@ -113,10 +111,12 @@ const MenuAboutScreen = ({ route, navigation }) => {
   };
 
   const renderRecommendedItem = ({ item }) => {
-    const imageUrl = item.image_url || 'https://via.placeholder.com/150';
+    const imageUrl = menuItem.image_url
+    ? base_url + menuItem.image_url
+    : 'https://via.placeholder.com/150';
     const price = item.item_prices?.length > 0 ? item.item_prices[0] : 'Not Available';
     const rating = '4.9';
-    const distance = '190m';
+    const distance = '2km';
 
     return (
       <TouchableOpacity onPress={() => navigation.navigate('MenuItemDetailScreen', { menuItemId: item.id, restaurantId: item.restaurant_id })}>
@@ -166,7 +166,7 @@ const MenuAboutScreen = ({ route, navigation }) => {
       <ScrollView>
         <View style={styles.topSection}>
           <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-            <Image source={{ uri: menuItem.image_url || 'https://via.placeholder.com/300' }} style={styles.menuImage} />
+            <Image source={{ uri: menuItem.image_url ? base_url + menuItem.image_url : 'https://via.placeholder.com/300' }} style={styles.menuImage} />
           </View>
           <View style={styles.menuDetails}>
             <Text style={styles.menuTitle}>{menuItem.name}</Text>

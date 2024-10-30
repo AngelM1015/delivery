@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, FlatList, Animated, Easing, SafeAreaView, Image } from 'react-native';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { base_url, restuarants } from '../constants/api';
+import { base_url } from '../constants/api';
 import { Icons } from '../constants/Icons';
 import { COLORS } from '../constants/colors';
-import { Card, Title, Paragraph, Searchbar } from 'react-native-paper';
+import { Card } from 'react-native-paper';
 import { FontAwesome } from '@expo/vector-icons';
+import useRestaurants from '../hooks/useRestaurants';
+
 const HomeScreen = ({navigation}) => {
-  const [restaurants, setRestaurants] = useState([]);
-  const [menuItems, setMenuItems] = useState([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const { loading, restaurants, menuItems, selectedRestaurant, setSelectedRestaurant, fetchRestaurants, fetchMenuItems } = useRestaurants();
   const [searchQuery, setSearchQuery] = useState('');
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -22,32 +20,8 @@ const HomeScreen = ({navigation}) => {
   ];
 
   useEffect(() => {
-    const fetchRestaurants = async () => {
-      try {
-        const token = await AsyncStorage.getItem('userToken');
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
-        const response = await axios.get(`${base_url}${restuarants.restuarant}`, { headers });
-        console.log('resturant=================', response)
-        const restaurantsWithImages = response.data.map((restaurant, index) => ({
-          ...restaurant,
-          image: { url: `https://source.unsplash.com/random/800x600?restaurant&sig=${index}` },
-        }));
-        setRestaurants(restaurantsWithImages);
-
-        // Select the first restaurant by default
-        if (restaurantsWithImages.length > 0) {
-          fetchMenuItems(restaurantsWithImages[0].id);
-          setSelectedRestaurant(restaurantsWithImages[0].id);
-        }
-      } catch (error) {
-        console.error('Error fetching restaurants:', error);
-      }
-    };
-
-    fetchRestaurants();
-
+    console.log('restaurant', restaurants);
+  
     const changeBackgroundImage = () => {
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -76,26 +50,13 @@ const HomeScreen = ({navigation}) => {
     return () => clearInterval(intervalId);
   }, [fadeAnim]);
 
-  // Fetch menu items for the selected restaurant
-  const fetchMenuItems = async (restaurantId) => {
-    try {
-      const token = await AsyncStorage.getItem('userToken');
-      const headers = { Authorization: `Bearer ${token}` };
-      const url = `${base_url}api/v1/restaurants/${restaurantId}/menu_items/`;
-      const response = await axios.get(url, { headers });
-      setMenuItems(response.data);
-      console.log('menu item:', response.data)
-      setSelectedRestaurant(restaurantId); // Set the selected restaurant ID
-    } catch (error) {
-      console.error('Error fetching menu items:', error);
-    }
-  };
-
   const renderRestaurant = ({ item: restaurant }) => {
     const isSelected = selectedRestaurant === restaurant.id;
+    const image_url = base_url + restaurant.image_url;
+    console.log('image url', image_url);
     return (
       <TouchableOpacity
-        onPress={() => fetchMenuItems(restaurant.id)} // Load menu items and mark as selected
+        onPress={() => setSelectedRestaurant(restaurant.id)} // Load menu items and mark as selected
       >
         <Card
           style={[
@@ -103,7 +64,7 @@ const HomeScreen = ({navigation}) => {
             { backgroundColor: isSelected ? '#F09B00' : 'white', justifyContent:'center',alignItems:'center' }, // Change background when selected
           ]}
         >
-          <Image source={{ uri: restaurant.image_url}} style={styles.restaurantImage} />
+          <Image source={{ uri: image_url}} style={styles.restaurantImage} />
           <Text numberOfLines={1} style={styles.restaurantTitle}>{restaurant.name}</Text>
           <Text style={styles.restaurantSubtitle}>{restaurant.address}</Text>
         </Card>
@@ -113,9 +74,9 @@ const HomeScreen = ({navigation}) => {
 
   const renderMenuItem = ({ item }) => {
     const price = item.item_prices?.length > 0 ? item.item_prices[0] : 'Not Available';
-    const imageUrl = item.image_url || 'https://via.placeholder.com/150'; // Use placeholder if no image_url
+    const imageUrl = item.image_url ? base_url + item.image_url : 'https://via.placeholder.com/150'
     const rating = '4.9'; // Static rating for now, can be dynamic
-    const distance = '190m'; // Static distance for now
+    const distance = '2km'; // Static distance for now
 
     return (
       <TouchableOpacity onPress={() => navigation.navigate('MenuAboutScreen', { menuItemId: item.id, restaurantId: item.restaurant_id })}>
@@ -144,8 +105,6 @@ const HomeScreen = ({navigation}) => {
       </TouchableOpacity>
     );
   };
-
-
 
   return (
     <SafeAreaView style={styles.container}>
@@ -233,7 +192,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '400',
     color: COLORS.white,
-    //fontFamily: 'Lato-Regular',
   },
   dropdownArrow: {
     fontSize: 18,
@@ -244,13 +202,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.white,
     marginLeft: 5,
-    //fontFamily: 'Lato-Regular',
   },
   subtitle: {
     fontSize: 32,
     color: COLORS.white,
     top: 25,
-    //fontFamily: 'Lato-Bold',
   },
   horizontalListContainer: {
     paddingVertical: 10,
@@ -266,9 +222,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   restaurantImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 100,
+    height: 80,
+    borderRadius: 10,
     marginBottom: 10,
     alignSelf:'center'
   },
