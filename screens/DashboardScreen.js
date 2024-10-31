@@ -3,6 +3,7 @@ import { Text, ScrollView, StyleSheet, Dimensions } from "react-native";
 import { BarChart, PieChart } from "react-native-chart-kit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { base_url } from "../constants/api";
 
 const colorPalette = [
   "#FF6384",
@@ -39,9 +40,7 @@ const DashboardScreen = () => {
           role === "partner"
             ? "analytics/peak_business_hours"
             : "analytics/menu_item_performance";
-        const response = await axios.get(
-          `http://localhost:3000/api/v1/${endpoint}`
-        );
+        const response = await axios.get(`${base_url}api/v1/${endpoint}`);
         setData(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);

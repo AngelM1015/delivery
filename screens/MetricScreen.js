@@ -21,6 +21,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BarChart } from "react-native-chart-kit";
 import cable from "../cable";
+import { base_url, cable_url } from "../constants/api";
 
 const formatStatus = (status) => {
   return status
@@ -68,7 +69,7 @@ const MetricScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchToken = async () => {
       const token = await AsyncStorage.getItem("userToken");
-      const cableUrl = `ws://localhost:3000/cable?token=${token}`;
+      const cableUrl = `${cable_url}?token=${token}`;
     };
     fetchToken();
     fetchUserRoleAndOrders();
@@ -80,7 +81,7 @@ const MetricScreen = ({ navigation }) => {
     const role = await AsyncStorage.getItem("userRole");
     setUserRole(role);
     const headers = { Authorization: `Bearer ${token}` };
-    let apiUrl = "http://localhost:3000/api/v1/orders";
+    let apiUrl = `${base_url}api/v1/orders`;
     apiUrl +=
       role === "restaurant_owner"
         ? "/restaurant_orders"
@@ -152,7 +153,7 @@ const MetricScreen = ({ navigation }) => {
     const token = await AsyncStorage.getItem("userToken");
 
     const response = await axios.put(
-      `http://localhost:3000/api/v1/orders/${id}/update_status`,
+      `${base_url}api/v1/orders/${id}/update_status`,
       { status: selectedStatus },
       {
         headers: { Authorization: `Bearer ${token}` },

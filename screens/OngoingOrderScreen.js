@@ -13,6 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import cable from "../cable";
 import { FAB } from "react-native-paper";
+import { base_url } from "../constants/api";
 
 const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
   const [slideAnim] = useState(new Animated.Value(0));
@@ -36,7 +37,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
 
       try {
         const response = await axios.get(
-          `http://localhost:3000/api/v1/orders/${route.params.id}`,
+          `${base_url}api/v1/orders/${route.params.id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -91,7 +92,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
 
     try {
       await axios.patch(
-        `https://localhost:3000/api/v1/orders/${order.id}/pick_up_order`,
+        `${base_url}api/v1/orders/${order.id}/pick_up_order`,
         order,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -117,7 +118,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
 
     try {
       await axios.patch(
-        `https://localhost:3000/api/v1/orders/${order.id}/deliver_order`,
+        `${base_url}api/v1/orders/${order.id}/deliver_order`,
         order,
         {
           headers: { Authorization: `Bearer ${token}` },

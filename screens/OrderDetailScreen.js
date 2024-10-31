@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, FlatList } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { base_url } from "../constants/api";
 
 const OrderDetailScreen = ({ route }) => {
   const { orderId } = route.params;
@@ -15,7 +16,7 @@ const OrderDetailScreen = ({ route }) => {
         const token = await AsyncStorage.getItem("userToken");
         const headers = { Authorization: `Bearer ${token}` };
         const response = await axios.get(
-          `http://localhost:3000/api/v1/orders/${orderId}`,
+          `${base_url}api/v1/orders/${orderId}`,
           { headers }
         );
         console.log(response.data);

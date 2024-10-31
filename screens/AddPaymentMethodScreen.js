@@ -4,6 +4,7 @@ import { Button, Card } from "react-native-paper";
 import { CardField, useStripe } from "@stripe/stripe-react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { base_url } from "../constants/api";
 
 const AddPaymentMethodScreen = ({ navigation }) => {
   const [cardDetails, setCardDetails] = useState({});
@@ -42,7 +43,7 @@ const AddPaymentMethodScreen = ({ navigation }) => {
 
       // Send the payment token to the backend
       const response = await axios.post(
-        "http://localhost:3000/api/v1/payments/add_payment_method",
+        `${base_url}api/v1/payments/add_payment_method`,
         {
           payment_method_token: paymentToken.id, // Send the token ID to the backend
         },
