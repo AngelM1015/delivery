@@ -1,24 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { base_url } from '../constants/api';
-import axios from 'axios';
-import useUser from '../hooks/useUser';
-import { Ionicons } from '@expo/vector-icons';
-import CustomButton from './CustomButton';
-import MapView, { Marker } from 'react-native-maps';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  Button,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { base_url } from "../constants/api";
+import axios from "axios";
+import useUser from "../hooks/useUser";
+import { Ionicons } from "@expo/vector-icons";
+import CustomButton from "./CustomButton";
+import MapView, { Marker } from "react-native-maps";
 
 const Locations = ({ isVisible, onClose, onSelectLocation }) => {
   const { token } = useUser();
   const [locations, setLocations] = useState([]);
-  const [newLocation, setNewLocation] = useState('');
+  const [newLocation, setNewLocation] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
   // Set initial region for Big Sky, Montana
   const bigSkyRegion = {
     latitude: 45.2614,
-    longitude: -111.3080,
+    longitude: -111.308,
     latitudeDelta: 0.1,
     longitudeDelta: 0.1,
   };
@@ -32,43 +41,49 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
   const fetchLocations = async () => {
     try {
       const response = await axios.get(`${base_url}api/v1/addresses`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setLocations(response.data);
-      console.log('Fetched locations:', response.data);
+      console.log("Fetched locations:", response.data);
     } catch (error) {
-      console.error('Error fetching locations:', error);
+      console.error("Error fetching locations:", error);
     }
   };
 
   const saveSelectedLocation = async (location) => {
     try {
-      await AsyncStorage.setItem('location', JSON.stringify(location));
-      console.log('Location saved successfully');
+      await AsyncStorage.setItem("location", JSON.stringify(location));
+      console.log("Location saved successfully");
     } catch (error) {
-      console.error('Error saving location:', error);
+      console.error("Error saving location:", error);
     }
   };
 
   const handleAddLocation = async () => {
     if (!newLocation && !selectedLocation) return;
 
-    const locationData = selectedLocation ? {
-      latitude: selectedLocation.latitude,
-      longitude: selectedLocation.longitude,
-      location_name: "Big Sky"
-    } : { location: newLocation };
+    const locationData = selectedLocation
+      ? {
+          latitude: selectedLocation.latitude,
+          longitude: selectedLocation.longitude,
+          location_name: "Big Sky",
+        }
+      : { location: newLocation };
 
     try {
-      const response = await axios.post(`${base_url}api/v1/addresses`, locationData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.post(
+        `${base_url}api/v1/addresses`,
+        locationData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setLocations([...locations, response.data]);
-      setNewLocation('');
+      setNewLocation("");
       setSelectedLocation(null);
       setIsAdding(false);
     } catch (error) {
-      console.error('Error adding new location:', error);
+      console.error("Error adding new location:", error);
     }
   };
 
@@ -84,7 +99,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
           <Ionicons name="close" size={32} color="black" onPress={onClose} />
           <Text style={styles.header}>Select Location</Text>
         </View>
-        
+
         {/* Map View centered on Big Sky */}
         <MapView
           style={styles.map}
@@ -115,7 +130,10 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
               <Button title="Save" onPress={handleAddLocation} />
             </View>
           ) : (
-            <CustomButton text="Add New Location" onPress={() => setIsAdding(true)} />
+            <CustomButton
+              text="Add New Location"
+              onPress={() => setIsAdding(true)}
+            />
           )}
 
           <FlatList
@@ -145,23 +163,23 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   headerContainer: {
     marginVertical: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 15,
     paddingTop: 20,
   },
   header: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 10,
   },
   map: {
-    height: '40%',
-    width: '100%',
+    height: "40%",
+    width: "100%",
   },
   controlsContainer: {
     flex: 1,
@@ -171,22 +189,22 @@ const styles = StyleSheet.create({
   locationItem: {
     padding: 15,
     borderBottomWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
   },
   locationText: {
     fontSize: 16,
   },
   addLocationContainer: {
-    flexDirection: 'column',
-    alignItems: 'center',
+    flexDirection: "column",
+    alignItems: "center",
     marginVertical: 10,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     padding: 10,
     marginBottom: 10,
-    width: '100%',
+    width: "100%",
   },
 });
 

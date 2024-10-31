@@ -1,8 +1,8 @@
 // Header.js
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import BackIcon from '../assets/svgs/backIcon.svg';
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import BackIcon from "../assets/svgs/backIcon.svg";
 
 const Header = ({ title, navigation, showShareIcon = false }) => {
   return (
@@ -22,16 +22,16 @@ const Header = ({ title, navigation, showShareIcon = false }) => {
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 15,
     paddingVertical: 10,
     // backgroundColor: '#f9f9f9',
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 

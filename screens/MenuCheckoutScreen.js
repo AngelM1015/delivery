@@ -1,28 +1,41 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, FlatList, Alert} from 'react-native';
-import CustomButton from '../components/CustomButton';
-import Header from '../components/Header';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { base_url } from '../constants/api';
-import { ToggleButton } from 'react-native-paper';
-import useOrder from '../hooks/useOrder';
-
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+} from "react-native";
+import CustomButton from "../components/CustomButton";
+import Header from "../components/Header";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { base_url } from "../constants/api";
+import { ToggleButton } from "react-native-paper";
+import useOrder from "../hooks/useOrder";
 
 const MenuCheckoutScreen = ({ navigation, route }) => {
   const { createOrder } = useOrder();
   const { cartItems = [], orderDetails = {} } = route.params || {};
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentMethod, setPaymentMethod] = useState("cash");
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [orderType, setOrderType] = useState(null);
   const [deliveryFee, setDeliveryFee] = useState(null);
-  const [address, setAddress] = useState({ id: 0, location_name: '', latitude: 0, longitude: 0 });
+  const [address, setAddress] = useState({
+    id: 0,
+    location_name: "",
+    latitude: 0,
+    longitude: 0,
+  });
 
   const deliveryDetails = {
-    name: 'Albert Stevano',
-    phone: '+12 8347 2838 28',
-    address: address.location_name
+    name: "Albert Stevano",
+    phone: "+12 8347 2838 28",
+    address: address.location_name,
   };
 
   useEffect(() => {
@@ -30,7 +43,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 
     const getLocation = async () => {
       try {
-        const location = await AsyncStorage.getItem('location');
+        const location = await AsyncStorage.getItem("location");
         if (location) {
           const parsedLocation = JSON.parse(location);
           setAddress(parsedLocation);
@@ -44,59 +57,69 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 
   const fetchPaymentMethods = async () => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
-      const response = await axios.get(`${base_url}api/v1/payments/get_payment_methods`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const token = await AsyncStorage.getItem("userToken");
+      const response = await axios.get(
+        `${base_url}api/v1/payments/get_payment_methods`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       const cashPaymentOption = {
-        id: 'cash',
-        brand: 'Cash',
-        last4: 'N/A'
+        id: "cash",
+        brand: "Cash",
+        last4: "N/A",
       };
 
       setPaymentMethods([cashPaymentOption, ...response.data]);
     } catch (error) {
-      console.error('Error fetching payment methods:', error);
-      Alert.alert('Error', 'Failed to fetch payment methods');
+      console.error("Error fetching payment methods:", error);
+      Alert.alert("Error", "Failed to fetch payment methods");
     }
   };
 
   const submitOrder = async () => {
     if (!orderType || !paymentMethod) {
-      Alert.alert('Error', 'Please select an order type and payment method');
+      Alert.alert("Error", "Please select an order type and payment method");
       return;
     }
 
-    console.log('payment method', paymentMethod)
+    console.log("payment method", paymentMethod);
 
-    const storedRestaurantId = await AsyncStorage.getItem('selectedRestaurantId');
+    const storedRestaurantId = await AsyncStorage.getItem(
+      "selectedRestaurantId"
+    );
     if (!storedRestaurantId) {
-      Alert.alert('Error', 'No associated restaurant found');
+      Alert.alert("Error", "No associated restaurant found");
       return;
     }
 
     const orderData = {
       order: {
         restaurant_id: storedRestaurantId,
-        delivery_address: orderType === 'delivery' ? '209 Aspen Leaf Dr, Big Sky, MT 59716' : '',
+        delivery_address:
+          orderType === "delivery"
+            ? "209 Aspen Leaf Dr, Big Sky, MT 59716"
+            : "",
         total_price: orderDetails.totalPrice,
         address_id: address.id, // fetch address from customer and then send that address
         order_type: orderType,
-        payment_method: paymentMethod.brand === 'Cash' ? 'cash' : 'other',
-        order_items_attributes: cartItems.map(item => ({
+        payment_method: paymentMethod.brand === "Cash" ? "cash" : "other",
+        order_items_attributes: cartItems.map((item) => ({
           menu_item_id: item.id,
           quantity: item.quantity,
-          order_item_modifiers_attributes: item.selectedModifiers.map(modifier => ({
-            modifier_option_id: modifier.modifierId
-          }))
-        }))
-      }
+          order_item_modifiers_attributes: item.selectedModifiers.map(
+            (modifier) => ({
+              modifier_option_id: modifier.modifierId,
+            })
+          ),
+        })),
+      },
     };
 
-    await createOrder(navigation, orderData.order, paymentMethod.id)
+    await createOrder(navigation, orderData.order, paymentMethod.id);
     setOrderType(null);
   };
 
@@ -114,12 +137,19 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           {cartItems.length > 0 ? (
             cartItems.map((item, index) => (
               <View key={index} style={styles.itemContainer}>
-                <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  style={styles.itemImage}
+                />
                 <View style={styles.itemInfo}>
-                  <Text style={styles.itemName}>{item.name || 'Unknown Item'}</Text>
-                  <Text style={styles.itemPrice}>${item.price || '0.00'}</Text>
+                  <Text style={styles.itemName}>
+                    {item.name || "Unknown Item"}
+                  </Text>
+                  <Text style={styles.itemPrice}>${item.price || "0.00"}</Text>
                 </View>
-                <Text style={styles.itemQuantity}>{item.quantity || 1} items</Text>
+                <Text style={styles.itemQuantity}>
+                  {item.quantity || 1} items
+                </Text>
               </View>
             ))
           ) : (
@@ -132,7 +162,9 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           <View style={styles.transactionDetails}>
             <View style={styles.transactionRow}>
               <Text style={styles.detailText}>Cherry Healthy</Text>
-              <Text style={styles.detailAmount}>${orderDetails.cherryHealthyPrice || '0.00'}</Text>
+              <Text style={styles.detailAmount}>
+                ${orderDetails.cherryHealthyPrice || "0.00"}
+              </Text>
             </View>
             <View style={styles.transactionRow}>
               <Text style={styles.detailText}>Driver</Text>
@@ -140,11 +172,15 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
             </View>
             <View style={styles.transactionRow}>
               <Text style={styles.detailText}>Tax 10%</Text>
-              <Text style={styles.detailAmount}>${orderDetails.tax || '0.00'}</Text>
+              <Text style={styles.detailAmount}>
+                ${orderDetails.tax || "0.00"}
+              </Text>
             </View>
             <View style={styles.transactionRow}>
               <Text style={styles.totalText}>Total Price</Text>
-              <Text style={styles.totalAmount}>${orderDetails.totalPrice || '0.00'}</Text>
+              <Text style={styles.totalAmount}>
+                ${orderDetails.totalPrice || "0.00"}
+              </Text>
             </View>
           </View>
         </View>
@@ -156,40 +192,44 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           <View style={styles.deliverySection}>
             {Object.entries(deliveryDetails).map(([label, value], index) => (
               <View key={index} style={styles.deliveryRow}>
-                <Text style={styles.deliveryLabel}>{label.charAt(0).toUpperCase() + label.slice(1)}:</Text>
+                <Text style={styles.deliveryLabel}>
+                  {label.charAt(0).toUpperCase() + label.slice(1)}:
+                </Text>
                 <Text style={styles.deliveryDetail}>{value}</Text>
               </View>
             ))}
           </View>
         </View>
         {/* Order Type Selection */}
-        <Text style={{ fontSize: 16, marginBottom: 10, paddingLeft: 10 }}>Select Order Type:</Text>
-          <View style={styles.orderTypeContainer}>
-            <View style={styles.orderTypeWrapper}>
-              <ToggleButton.Group
-                style={styles.orderTypeGroup}
-                onValueChange={value => {
-                  setOrderType(value);
-                  if (value === 'delivery') {
-                    setDeliveryFee(15);  // Set delivery fee for delivery option
-                  } else {
-                    setDeliveryFee(0);    // Set delivery fee for pickup option
-                  }
-                }}
-                value={orderType}
-              >
-                <View style={styles.orderTypeItem}>
-                  <ToggleButton icon="bike" value="delivery"/>
-                  <Text style={styles.orderTypeLabel}>Delivery</Text>
-                </View>
+        <Text style={{ fontSize: 16, marginBottom: 10, paddingLeft: 10 }}>
+          Select Order Type:
+        </Text>
+        <View style={styles.orderTypeContainer}>
+          <View style={styles.orderTypeWrapper}>
+            <ToggleButton.Group
+              style={styles.orderTypeGroup}
+              onValueChange={(value) => {
+                setOrderType(value);
+                if (value === "delivery") {
+                  setDeliveryFee(15); // Set delivery fee for delivery option
+                } else {
+                  setDeliveryFee(0); // Set delivery fee for pickup option
+                }
+              }}
+              value={orderType}
+            >
+              <View style={styles.orderTypeItem}>
+                <ToggleButton icon="bike" value="delivery" />
+                <Text style={styles.orderTypeLabel}>Delivery</Text>
+              </View>
 
-                <View style={styles.orderTypeItem}>
-                  <ToggleButton icon="storefront" value="pickup"/>
-                  <Text style={styles.orderTypeLabel}>Pick-Up</Text>
-                </View>
-              </ToggleButton.Group>
-            </View>
+              <View style={styles.orderTypeItem}>
+                <ToggleButton icon="storefront" value="pickup" />
+                <Text style={styles.orderTypeLabel}>Pick-Up</Text>
+              </View>
+            </ToggleButton.Group>
           </View>
+        </View>
 
         {/* Payment Method Section */}
         <View style={styles.section}>
@@ -198,8 +238,14 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
             style={styles.paymentSelector}
             onPress={() => setShowPaymentMethods(!showPaymentMethods)}
           >
-            <Text style={styles.selectedPaymentMethod}>{paymentMethod === 'cash' ? 'Cash' : `**** ${paymentMethod.last4}`}</Text>
-            <Text style={styles.expandText}>{showPaymentMethods ? '▲' : '▼'}</Text>
+            <Text style={styles.selectedPaymentMethod}>
+              {paymentMethod === "cash"
+                ? "Cash"
+                : `**** ${paymentMethod.last4}`}
+            </Text>
+            <Text style={styles.expandText}>
+              {showPaymentMethods ? "▲" : "▼"}
+            </Text>
           </TouchableOpacity>
 
           {showPaymentMethods && (
@@ -210,14 +256,18 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
                 <TouchableOpacity
                   style={[
                     styles.paymentMethodItem,
-                    paymentMethod === item.id && styles.selectedPaymentMethodItem
+                    paymentMethod === item.id &&
+                      styles.selectedPaymentMethodItem,
                   ]}
                   onPress={() => {
                     setPaymentMethod(item);
                     setShowPaymentMethods(false);
                   }}
                 >
-                  <Text style={styles.paymentMethodText}>{item.brand} {item.last4 !== 'N/A' ? `**** ${item.last4}` : ''}</Text>
+                  <Text style={styles.paymentMethodText}>
+                    {item.brand}{" "}
+                    {item.last4 !== "N/A" ? `**** ${item.last4}` : ""}
+                  </Text>
                 </TouchableOpacity>
               )}
             />
@@ -228,7 +278,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           <CustomButton
             text="Checkout Now"
             onPress={() => {
-              submitOrder()
+              submitOrder();
             }}
           />
         </View>
@@ -240,7 +290,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   headerContainer: {
     paddingTop: 50,
@@ -249,9 +299,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   subtext: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 16,
-    color: '#a0a0a0',
+    color: "#a0a0a0",
     marginVertical: 10,
   },
   section: {
@@ -259,13 +309,13 @@ const styles = StyleSheet.create({
   },
   subHeader: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
-    color: '#000',
+    color: "#000",
   },
   itemContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
   },
   itemImage: {
@@ -275,7 +325,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   separator: {
-    borderBottomColor: 'gray',
+    borderBottomColor: "gray",
     borderBottomWidth: 1,
     marginVertical: 10,
   },
@@ -284,112 +334,112 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   itemPrice: {
     fontSize: 16,
-    color: '#F09B00',
+    color: "#F09B00",
     marginTop: 15,
   },
   itemQuantity: {
     fontSize: 14,
-    color: '#888',
+    color: "#888",
     marginTop: 4,
   },
   transactionDetails: {
     fontSize: 14,
   },
   transactionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 10,
   },
   detailText: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   detailAmount: {
     fontSize: 16,
-    color: '#000',
+    color: "#000",
   },
   totalText: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 18,
   },
   totalAmount: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 18,
-    color: '#F09B00',
+    color: "#F09B00",
   },
   deliverySection: {
     marginTop: 10,
   },
   deliveryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 5,
   },
   deliveryLabel: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   deliveryDetail: {
     fontSize: 16,
-    color: '#666',
-    maxWidth: '50%',
-    textAlign: 'right'
+    color: "#666",
+    maxWidth: "50%",
+    textAlign: "right",
   },
   buttonContainer: {
     marginTop: 20,
   },
   paymentSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 8,
     marginTop: 10,
   },
   selectedPaymentMethod: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   expandText: {
     fontSize: 16,
-    color: '#888',
+    color: "#888",
   },
   paymentMethodItem: {
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   selectedPaymentMethodItem: {
-    backgroundColor: '#e0f7fa',
+    backgroundColor: "#e0f7fa",
   },
   paymentMethodText: {
     fontSize: 16,
   },
   orderTypeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     margin: 10,
   },
   orderTypeWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
   },
   orderTypeGroup: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
   },
   orderTypeItem: {
-    alignItems: 'center',
+    alignItems: "center",
     marginHorizontal: 10,
   },
   orderTypeLabel: {

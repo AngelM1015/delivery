@@ -1,33 +1,52 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, FlatList, Animated, Easing, SafeAreaView, Image } from 'react-native';
-import { base_url } from '../constants/api';
-import { Icons } from '../constants/Icons';
-import { COLORS } from '../constants/colors';
-import { Card } from 'react-native-paper';
-import { FontAwesome } from '@expo/vector-icons';
-import useRestaurants from '../hooks/useRestaurants';
-import Locations from '../components/Locations';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ImageBackground,
+  TouchableOpacity,
+  FlatList,
+  Animated,
+  Easing,
+  SafeAreaView,
+  Image,
+} from "react-native";
+import { base_url } from "../constants/api";
+import { Icons } from "../constants/Icons";
+import { COLORS } from "../constants/colors";
+import { Card } from "react-native-paper";
+import { FontAwesome } from "@expo/vector-icons";
+import useRestaurants from "../hooks/useRestaurants";
+import Locations from "../components/Locations";
 
-const HomeScreen = ({navigation}) => {
-  const { loading, restaurants, menuItems, selectedRestaurant, setSelectedRestaurant, fetchRestaurants, fetchMenuItems } = useRestaurants();
-  const [searchQuery, setSearchQuery] = useState('');
+const HomeScreen = ({ navigation }) => {
+  const {
+    loading,
+    restaurants,
+    menuItems,
+    selectedRestaurant,
+    setSelectedRestaurant,
+    fetchRestaurants,
+    fetchMenuItems,
+  } = useRestaurants();
+  const [searchQuery, setSearchQuery] = useState("");
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const backgroundImages = [
-    require('../assets/images/Big_Sky_Resort.webp'),
-    require('../assets/images/mountain.webp'),
-    require('../assets/images/Big_Sky_Resort.webp'),
+    require("../assets/images/Big_Sky_Resort.webp"),
+    require("../assets/images/mountain.webp"),
+    require("../assets/images/Big_Sky_Resort.webp"),
   ];
 
   useEffect(() => {
-    console.log('restaurant', restaurants);
-    if(selectedRestaurant === null){
-      fetchRestaurants
+    console.log("restaurant", restaurants);
+    if (selectedRestaurant === null) {
+      fetchRestaurants;
     }
-  
+
     const changeBackgroundImage = () => {
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -35,7 +54,9 @@ const HomeScreen = ({navigation}) => {
         useNativeDriver: true,
         easing: Easing.ease,
       }).start(() => {
-        setBackgroundIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
+        setBackgroundIndex(
+          (prevIndex) => (prevIndex + 1) % backgroundImages.length
+        );
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 2000,
@@ -48,7 +69,10 @@ const HomeScreen = ({navigation}) => {
     const randomInterval = () => {
       const minInterval = 120000; // 2 minutes in milliseconds
       const maxInterval = 600000; // 10 minutes in milliseconds
-      return Math.floor(Math.random() * (maxInterval - minInterval + 1)) + minInterval;
+      return (
+        Math.floor(Math.random() * (maxInterval - minInterval + 1)) +
+        minInterval
+      );
     };
 
     const intervalId = setInterval(changeBackgroundImage, randomInterval());
@@ -57,7 +81,7 @@ const HomeScreen = ({navigation}) => {
   }, [fadeAnim]);
 
   const handleSelectLocation = (location) => {
-    console.log('location', location);
+    console.log("location", location);
     setSelectedLocation(location);
     setLocationModalVisible(false);
   };
@@ -65,7 +89,7 @@ const HomeScreen = ({navigation}) => {
   const renderRestaurant = ({ item: restaurant }) => {
     const isSelected = selectedRestaurant === restaurant.id;
     const image_url = base_url + restaurant.image_url;
-    console.log('image url', image_url);
+    console.log("image url", image_url);
     return (
       <TouchableOpacity
         onPress={() => setSelectedRestaurant(restaurant.id)} // Load menu items and mark as selected
@@ -73,11 +97,17 @@ const HomeScreen = ({navigation}) => {
         <Card
           style={[
             styles.restaurantCard,
-            { backgroundColor: isSelected ? '#F09B00' : 'white', justifyContent:'center',alignItems:'center' }, // Change background when selected
+            {
+              backgroundColor: isSelected ? "#F09B00" : "white",
+              justifyContent: "center",
+              alignItems: "center",
+            }, // Change background when selected
           ]}
         >
-          <Image source={{ uri: image_url}} style={styles.restaurantImage} />
-          <Text numberOfLines={1} style={styles.restaurantTitle}>{restaurant.name}</Text>
+          <Image source={{ uri: image_url }} style={styles.restaurantImage} />
+          <Text numberOfLines={1} style={styles.restaurantTitle}>
+            {restaurant.name}
+          </Text>
           <Text style={styles.restaurantSubtitle}>{restaurant.address}</Text>
         </Card>
       </TouchableOpacity>
@@ -85,21 +115,38 @@ const HomeScreen = ({navigation}) => {
   };
 
   const renderMenuItem = ({ item }) => {
-    const price = item.item_prices?.length > 0 ? item.item_prices[0] : 'Not Available';
-    const imageUrl = item.image_url ? base_url + item.image_url : 'https://via.placeholder.com/150'
-    const rating = '4.9'; // Static rating for now, can be dynamic
-    const distance = '2km'; // Static distance for now
+    const price =
+      item.item_prices?.length > 0 ? item.item_prices[0] : "Not Available";
+    const imageUrl = item.image_url
+      ? base_url + item.image_url
+      : "https://via.placeholder.com/150";
+    const rating = "4.9"; // Static rating for now, can be dynamic
+    const distance = "2km"; // Static distance for now
 
     return (
-      <TouchableOpacity onPress={() => navigation.navigate('MenuAboutScreen', { menuItemId: item.id, restaurantId: item.restaurant_id })}>
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("MenuAboutScreen", {
+            menuItemId: item.id,
+            restaurantId: item.restaurant_id,
+          })
+        }
+      >
         <Card style={styles.menuCard}>
           <View style={styles.innerCardContainer}>
             <View style={styles.menuCardTop}>
               <Image source={{ uri: imageUrl }} style={styles.menuImage} />
-              <FontAwesome name="heart-o" size={24} color="white" style={styles.heartIcon} />
+              <FontAwesome
+                name="heart-o"
+                size={24}
+                color="white"
+                style={styles.heartIcon}
+              />
             </View>
             <View style={styles.menuDetails}>
-              <Text style={styles.menuTitle} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.menuTitle} numberOfLines={1}>
+                {item.name}
+              </Text>
               <View style={styles.menuInfo}>
                 <View style={styles.ratingContainer}>
                   <FontAwesome name="star" size={14} color="gold" />
@@ -122,7 +169,7 @@ const HomeScreen = ({navigation}) => {
     <SafeAreaView style={styles.container}>
       <Animated.View style={{ opacity: fadeAnim }}>
         <ImageBackground
-          source={require('../assets/images/homeImage.png')}
+          source={require("../assets/images/homeImage.png")}
           style={styles.backgroundImage}
         >
           {/* <Searchbar
@@ -134,9 +181,16 @@ const HomeScreen = ({navigation}) => {
           <View style={styles.titleOverlay}>
             <View style={styles.notification}>
               <View>
-                <TouchableOpacity style={styles.locationContainer} onPress={() => setLocationModalVisible(true)}>
-                <Icons.LocationIcon />
-                  <Text style={styles.locationText}>{selectedLocation ? selectedLocation.location_name : 'Your Location'}</Text>
+                <TouchableOpacity
+                  style={styles.locationContainer}
+                  onPress={() => setLocationModalVisible(true)}
+                >
+                  <Icons.LocationIcon />
+                  <Text style={styles.locationText}>
+                    {selectedLocation
+                      ? selectedLocation.location_name
+                      : "Your Location"}
+                  </Text>
                   <Icons.DownwardArrow />
                 </TouchableOpacity>
                 {/* <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -148,7 +202,9 @@ const HomeScreen = ({navigation}) => {
                 <Icons.NotificationIcon />
               </TouchableOpacity>
             </View>
-            <Text style={styles.subtitle}>Provide the best {'\n'}food for you</Text>
+            <Text style={styles.subtitle}>
+              Provide the best {"\n"}food for you
+            </Text>
           </View>
         </ImageBackground>
       </Animated.View>
@@ -158,8 +214,8 @@ const HomeScreen = ({navigation}) => {
           data={restaurants}
           renderItem={renderRestaurant}
           keyExtractor={(item) => item.id.toString()}
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
+          horizontal
+          showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.horizontalListContainer}
         />
 
@@ -170,7 +226,7 @@ const HomeScreen = ({navigation}) => {
           renderItem={renderMenuItem}
           keyExtractor={(item) => item.id.toString()}
           numColumns={2} // Display two columns of menu items
-          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
           ListEmptyComponent={<Text>No menu items available</Text>}
         />
       </View>
@@ -188,7 +244,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backgroundImage: {
-    width: '100%',
+    width: "100%",
     height: 230,
   },
   titleOverlay: {
@@ -196,23 +252,23 @@ const styles = StyleSheet.create({
     top: 50,
   },
   notification: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 5,
   },
   locationText: {
     fontSize: 16,
-    fontWeight: '400',
+    fontWeight: "400",
     color: COLORS.white,
   },
   dropdownArrow: {
     fontSize: 18,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     marginLeft: 5,
   },
   locationSubtext: {
@@ -228,13 +284,13 @@ const styles = StyleSheet.create({
   horizontalListContainer: {
     paddingVertical: 10,
     paddingHorizontal: 10,
-    paddingBottom: 60
+    paddingBottom: 60,
   },
   restaurantCard: {
     width: 120,
     marginRight: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 10,
     borderRadius: 8,
   },
@@ -243,18 +299,18 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 10,
     marginBottom: 10,
-    alignSelf:'center'
+    alignSelf: "center",
   },
   restaurantTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
   },
   restaurantSubtitle: {
     fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
   searchBar: {
     marginVertical: 10,
@@ -271,63 +327,63 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 0.1,
     shadowOpacity: 0,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     elevation: 3,
     width: 180,
   },
   innerCardContainer: {
-    overflow: 'hidden',
+    overflow: "hidden",
     borderRadius: 10,
-    gap: 8
+    gap: 8,
   },
   menuCardTop: {
-    position: 'relative',
+    position: "relative",
   },
   menuImage: {
-    width: '100%',
+    width: "100%",
     height: 100,
   },
   heartIcon: {
-    position: 'absolute',
+    position: "absolute",
     top: 10,
     right: 10,
   },
   menuDetails: {
     padding: 2,
-    gap: 4
+    gap: 4,
   },
   menuTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   menuInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 5,
   },
   ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   ratingText: {
     marginLeft: 5,
     fontSize: 12,
-    color: '#000',
+    color: "#000",
   },
   distanceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   distanceText: {
     marginLeft: 5,
     fontSize: 12,
-    color: '#000',
+    color: "#000",
   },
   priceText: {
     marginTop: 10,
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#F09B00',
+    fontWeight: "bold",
+    color: "#F09B00",
   },
 });
 

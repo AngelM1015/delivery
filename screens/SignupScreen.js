@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,31 +8,31 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
-} from 'react-native';
-import CustomInput from '../components/CustomInput';
-import CustomButton from '../components/CustomButton';
+} from "react-native";
+import CustomInput from "../components/CustomInput";
+import CustomButton from "../components/CustomButton";
 
 const SignupScreen = ({ navigation }) => {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSignup = () => {
     // Handle the sign-up logic here, such as calling an API
-    console.log('Full Name:', fullName);
-    console.log('Email:', email);
-    console.log('Password:', password);
+    console.log("Full Name:", fullName);
+    console.log("Email:", email);
+    console.log("Password:", password);
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.inner}>
-          <View style={{ paddingTop: '40%' }}>
-            <Text style={styles.title}>Create your new {'\n'}account</Text>
+          <View style={{ paddingTop: "40%" }}>
+            <Text style={styles.title}>Create your new {"\n"}account</Text>
             <Text style={styles.subtitle}>
               Create an account to start looking for the food you like
             </Text>
@@ -61,7 +61,7 @@ const SignupScreen = ({ navigation }) => {
 
             <View style={styles.footer}>
               <Text style={styles.footerText}>I have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <TouchableOpacity onPress={() => navigation.navigate("Login")}>
                 <Text style={styles.signInText}>Sign in</Text>
               </TouchableOpacity>
             </View>
@@ -75,7 +75,7 @@ const SignupScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   inner: {
     flex: 1,
@@ -83,35 +83,35 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: '800',
+    fontWeight: "800",
     lineHeight: 41.6,
-    color: '#000000',
+    color: "#000000",
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
-    color: '#8F90A6',
-    fontWeight: '400',
+    color: "#8F90A6",
+    fontWeight: "400",
     marginBottom: 30,
-    width: '80%',
+    width: "80%",
   },
   inputContainer: {
-    width: '100%',
+    width: "100%",
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 40,
   },
   footerText: {
     fontSize: 14,
-    color: '#000',
+    color: "#000",
   },
   signInText: {
     fontSize: 14,
-    color: '#F09B00',
-    fontWeight: '600',
+    color: "#F09B00",
+    fontWeight: "600",
   },
 });
 
