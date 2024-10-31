@@ -9,17 +9,17 @@ const useRestaurants = () => {
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
 
   const RestaurantServiceClient = useMemo(() => {
-      return new RestaurantService()
-  })
+    return new RestaurantService();
+  });
 
   const fetchRestaurants = async () => {
     setLoading(true);
     try {
       const Restaurants = await RestaurantServiceClient.fetchRestaurants();
       setRestaurants(Restaurants);
-      setSelectedRestaurant(Restaurants[0].id)
+      setSelectedRestaurant(Restaurants[0].id);
     } catch (error) {
-      console.error('Error fetching restaurants:', error);
+      console.error("Error fetching restaurants:", error);
     } finally {
       setLoading(false);
     }
@@ -32,17 +32,17 @@ const useRestaurants = () => {
 
       setMenuItems(response.data);
     } catch (error) {
-      console.error('Error fetching menu items:', error);
+      console.error("Error fetching menu items:", error);
     }
   };
 
   useEffect(() => {
-    if(selectedRestaurant === null){
-      fetchRestaurants()
+    if (selectedRestaurant === null) {
+      fetchRestaurants();
     } else {
-      fetchMenuItems(selectedRestaurant)
+      fetchMenuItems(selectedRestaurant);
     }
-  }, [selectedRestaurant])
+  }, [selectedRestaurant]);
 
   return {
     restaurants,
@@ -51,8 +51,8 @@ const useRestaurants = () => {
     selectedRestaurant,
     setSelectedRestaurant,
     fetchRestaurants,
-    fetchMenuItems
-  }
-}
+    fetchMenuItems,
+  };
+};
 
-export default useRestaurants
+export default useRestaurants;

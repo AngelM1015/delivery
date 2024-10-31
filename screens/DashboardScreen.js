@@ -1,121 +1,152 @@
 import React, { useState, useEffect } from "react";
-import { Text, ScrollView, StyleSheet, Dimensions } from "react-native";
-import { BarChart, PieChart } from "react-native-chart-kit";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  SafeAreaView,
+  Switch,
+} from "react-native";
+import { Card } from "react-native-paper";
+import { FontAwesome } from "@expo/vector-icons";
 import { base_url } from "../constants/api";
+import useRestaurants from "../hooks/useRestaurants";
 
-const colorPalette = [
-  "#FF6384",
-  "#36A2EB",
-  "#FFCE56",
-  "#4BC0C0",
-  "#9966FF",
-  "#FF9F40",
-  "#FFCD56",
-  "#4BC0C2",
-  "#C9CBFF",
-  "#FF6386",
-];
-
-const DashboardScreen = () => {
-  const [role, setRole] = useState(null);
-  const [data, setData] = useState({});
-  const [loading, setLoading] = useState(true);
+const DashboardScreen = ({ navigation }) => {
+  const { fetchMenuItems, menuItems, loading } = useRestaurants();
+  const [error, setError] = useState(null);
+  const [isEnabled, setIsEnabled] = useState(false);
 
   useEffect(() => {
-    const fetchRoleAndData = async () => {
-      try {
-        const storedRole = await AsyncStorage.getItem("userRole");
-        setRole(storedRole);
-        await fetchData(storedRole);
-      } catch (error) {
-        console.error("Error initializing dashboard:", error);
-      }
-    };
-
-    const fetchData = async (role) => {
-      try {
-        const endpoint =
-          role === "partner"
-            ? "analytics/peak_business_hours"
-            : "analytics/menu_item_performance";
-        const response = await axios.get(`${base_url}api/v1/${endpoint}`);
-        setData(response.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRoleAndData();
+    fetchMenuItems(10);
   }, []);
 
-  const chartConfig = {
-    backgroundGradientFrom: "#fff",
-    backgroundGradientTo: "#fff",
-    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-    barPercentage: 0.5,
-    useShadowColorFromDataset: false,
-    propsForLabels: {
-      fontSize: "12",
-    },
+  const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
+
+  const renderMenuItem = ({ item }) => {
+    const price =
+      item.item_prices?.length > 0 ? item.item_prices[0] : "Not Available";
+    const imageUrl = item.image_url
+      ? base_url + item.image_url
+      : "https://via.placeholder.com/150";
+    const rating = "4.9"; // Static rating for now, can be dynamic
+    const distance = "2km"; // Static distance for now
+
+    return (
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("MenuAboutScreen", {
+            menuItemId: item.id,
+            restaurantId: item.restaurant_id,
+          })
+        }
+      >
+        <Card style={styles.menuCard}>
+          <View style={styles.innerCardContainer}>
+            <View style={styles.menuCardTop}>
+              <Image source={{ uri: imageUrl }} style={styles.menuImage} />
+              <View style={styles.switchContainer}>
+                <Switch
+                  trackColor={{ false: "#767577", true: "#F09B00" }}
+                  thumbColor={isEnabled ? "#ffffff" : "#f4f3f4"}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={toggleSwitch}
+                  value={isEnabled}
+                  style={styles.switch}
+                />
+              </View>
+              <View style={styles.iconContainer}>
+                <FontAwesome
+                  name="edit"
+                  size={24}
+                  color="#F09B00"
+                  style={styles.editIcon}
+                />
+              </View>
+            </View>
+            <View style={styles.menuDetails}>
+              <Text style={styles.menuTitle} numberOfLines={1}>
+                {item.name}
+              </Text>
+              <View style={styles.menuInfo}>
+                <View style={styles.ratingContainer}>
+                  <FontAwesome name="star" size={14} color="gold" />
+                  <Text style={styles.ratingText}>{rating}</Text>
+                </View>
+                <View style={styles.distanceContainer}>
+                  <FontAwesome name="map-marker" size={14} color="gray" />
+                  <Text style={styles.distanceText}>{distance}</Text>
+                </View>
+              </View>
+              <Text style={styles.priceText}>${price}</Text>
+            </View>
+          </View>
+        </Card>
+      </TouchableOpacity>
+    );
   };
 
-  const screenWidth = Dimensions.get("window").width;
-  const chartHeight = 250; // Increased height for better readability
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
-  const renderDashboard = () => {
-    if (loading) {
-      return <Text>Loading...</Text>;
-    }
-
-    if (role === "partner") {
-      return (
-        <BarChart
-          data={{
-            labels: Object.keys(data.peak_hours),
-            datasets: [{ data: Object.values(data.peak_hours) }],
-          }}
-          width={screenWidth}
-          height={chartHeight}
-          chartConfig={chartConfig}
-          verticalLabelRotation={30} // Rotate labels to avoid squishing
-          style={styles.chartContainer}
-        />
-      );
-    } else if (role === "restaurant_owner") {
-      return (
-        <PieChart
-          data={data.performance_data.map((item, index) => ({
-            name: item.name,
-            population: item.total_quantity,
-            color: colorPalette[index % colorPalette.length],
-            legendFontColor: "#7F7F7F",
-            legendFontSize: 15,
-          }))}
-          width={screenWidth}
-          height={chartHeight}
-          chartConfig={chartConfig}
-          accessor={"population"}
-          backgroundColor={"transparent"}
-          paddingLeft={"15"}
-          style={styles.chartContainer}
-        />
-      );
-    } else if (role === "admin") {
-      return <Text>Hi Admin</Text>;
-    } else {
-      return <Text>Role-specific data not available.</Text>;
-    }
-  };
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text>{error}</Text>
+      </View>
+    );
+  }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Dashboard</Text>
-      {renderDashboard()}
-    </ScrollView>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.addNewProduct}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("AddMenuScreen")}
+          style={{
+            backgroundColor: "#F09B00",
+            padding: 10,
+            borderRadius: 15,
+          }}
+        >
+          <FontAwesome name="plus" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text
+          style={{
+            color: "#000",
+            marginLeft: 10,
+            fontWeight: "500",
+          }}
+        >
+          Add Product
+        </Text>
+      </View>
+      <View
+        style={{
+          padding: 10,
+          borderRadius: 10,
+          margin: 10,
+          alignItems: "start",
+        }}
+      >
+        <Text style={{ color: "#000", fontSize: 15 }}>Product List</Text>
+      </View>
+
+      <FlatList
+        data={menuItems}
+        renderItem={renderMenuItem}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2} // Display two columns of menu items
+        columnWrapperStyle={{ justifyContent: "space-between" }}
+        ListEmptyComponent={<Text>No menu items available</Text>}
+      />
+    </SafeAreaView>
   );
 };
 
@@ -123,18 +154,100 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 20,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#fff",
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  chartContainer: {
+  centered: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
-    borderRadius: 8,
+  },
+  menuCard: {
+    flex: 1,
+    margin: 10,
+    padding: 6,
+    borderRadius: 10,
+    borderWidth: 0.1,
+    shadowOpacity: 0,
+    backgroundColor: "#fff",
+    elevation: 3,
+    width: 180,
+  },
+  innerCardContainer: {
+    overflow: "hidden",
+    borderRadius: 10,
+    gap: 8,
+  },
+  menuCardTop: {
+    position: "relative",
+  },
+  menuImage: {
+    width: "100%",
+    height: 100,
+  },
+  heartIcon: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
+  menuDetails: {
+    padding: 2,
+    gap: 4,
+  },
+  menuTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  menuInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 5,
+  },
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  ratingText: {
+    marginLeft: 5,
+    fontSize: 12,
+    color: "#000",
+  },
+  distanceContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  distanceText: {
+    marginLeft: 5,
+    fontSize: 12,
+    color: "#000",
+  },
+  priceText: {
+    marginTop: 10,
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#F09B00",
+  },
+  iconContainer: {
+    backgroundColor: "white",
+    borderRadius: 24, // Half of the size to make it circular
+    padding: 5, // Adjust padding as needed
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+    right: 10,
+    top: 10,
+  },
+  editIcon: {},
+  switchContainer: {
+    alignItems: "center",
+    position: "absolute",
+  },
+  addNewProduct: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    padding: 20,
+    marginTop: 20,
   },
 });
 

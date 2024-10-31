@@ -43,7 +43,6 @@ import OrderDetailScreen from "./screens/OrderDetailScreen";
 import OngoingOrderScreen from "./screens/OngoingOrderScreen";
 import { LogBox } from "react-native";
 import ChatScreen from "./screens/ChatScreen";
-import { API_URL } from "./config";
 import { base_url } from "./constants/api";
 
 const themeColors = {
