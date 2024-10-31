@@ -6,7 +6,6 @@ import DashboardScreen from '../screens/DashboardScreen';
 import HomeScreen from '../screens/homescreen';
 import MenuOfRestaurantsScreen from '../screens/MenuOfRestaurantsScreen';
 import MenuStackNavigator from '../screens/MenuStackNavigator';
-import OrdersScreen from '../screens/ordersscreen';
 import PartnerOrderScreen from '../screens/PartnerOrderScreen';
 import MetricScreen from '../screens/MetricScreen';
 import AdminScreen from '../screens/AdminScreen';
@@ -21,9 +20,9 @@ import { Badge } from 'react-native-paper';
 import { useCart } from '../context/CartContext';
 
 const themeColors = {
-  activeTintColor: "#F09B00", // Tomato red for active
-  inactiveTintColor: "#B0C4DE", // Light steel blue for inactive
-  backgroundColor: "#F2F2F5", // Alice blue background
+  activeTintColor: "#F09B00",
+  inactiveTintColor: "#B0C4DE",
+  backgroundColor: "#F2F2F5",
 };
 
 const styles = StyleSheet.create({
@@ -42,6 +41,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  cartBadge: {
+    top: -10,
+    left: -30,
+    backgroundColor: 'orange'
+  }
 });
 
 const Tab = createBottomTabNavigator();
@@ -126,10 +130,14 @@ const MainTabNavigator = ({ role = 'guest' }) => {
                 color={focused ? "#FFF" : color}
               >
                 {iconName === 'cart' || iconName === 'cart-outline' && (
-                  <Badge size={34} style={{ backgroundColor: 'orange', position: 'relative', left:-8, top:-10 }}>
-                    {cartItems.length}
-                  </Badge>)
-                }
+                  <View style={{  bottom: 20, right: 20, margin: 0 }}>
+                    {cartItems.length > 0 && (
+                      <Badge size={16} style={styles.cartBadge}>
+                        {cartItems.length}
+                      </Badge>
+                    )}
+                  </View>
+                )}
               </Ionicons>
             </View>
           );

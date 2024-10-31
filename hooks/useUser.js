@@ -24,7 +24,7 @@ const useUser = () => {
     role,
     loading,
     token,
-    userId
+    userId,
   }
 
 }

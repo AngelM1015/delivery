@@ -29,7 +29,7 @@ const DashboardScreen = () => {
         const fetchData = async (role) => {
             try {
                 const endpoint = role === 'partner' ? 'analytics/peak_business_hours' : 'analytics/menu_item_performance';
-                const response = await axios.get(`http://192.168.150.220:3000/api/v1/${endpoint}`);
+                const response = await axios.get(`http://localhost:3000/api/v1/${endpoint}`);
                 setData(response.data);
             } catch (error) {
                 console.error('Error fetching data:', error);

@@ -1,55 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, TouchableOpacity, RefreshControl } from 'react-native';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import useOrders from '../hooks/useOrders';
 
 const PartnerOrderScreen = ({ navigation }) => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { loading, partnerOrders, fetchPartnerOrders} = useOrders();
   const [error, setError] = useState('');
-  const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
-    const initialize = async () => {
-      try {
-        const token = await AsyncStorage.getItem('userToken');
-        const role = await AsyncStorage.getItem('userRole');
-        setUserRole(role);
-        if (!token) {
-          setError('User token not found.');
-          Alert.alert('Authentication Error', 'User token not found.');
-          return;
-        }
-        fetchOrders(token, role);
-      } catch (err) {
-        console.error('Error during initialization:', err);
-        setError(err.message);
-      }
-    };
-
-    initialize();
+    fetchPartnerOrders();
   }, []);
 
-  const fetchOrders = async (token, role) => {
-    try {
-      setLoading(true);
-      let url = 'http://192.168.150.220:3000/api/v1/orders/partner_pending_orders';
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setOrders(response.data);
-    } catch (err) {
-      console.error('Error fetching orders:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchPartnerOrders = async (token) => {
+  //   try {
+  //     setLoading(true);
+  //     let url = 'api/v1/orders/partner_pending_orders';
+  //     const response = await client.get(url, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     setOrders(response.data);
+  //   } catch (err) {
+  //     console.error('Error fetching orders:', err);
+  //     setError(err.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const onRefresh = async () => {
-    const token = await AsyncStorage.getItem('userToken');
-    const role = await AsyncStorage.getItem('userRole');
-    fetchOrders(token, role);
+    fetchPartnerOrders();
   };
 
   const handleOrderClick = (order) => {
@@ -64,16 +42,15 @@ const PartnerOrderScreen = ({ navigation }) => {
       <Text>Delivery Address: {item.delivery_address}</Text>
       <Text>Restaurant Address: {item.restaurant_address}</Text>
       <Text>Pick Up at:  {item.pick_up_time}</Text>
-
     </View>
     </TouchableOpacity>
   );
 
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#0000ff" /><Text style={styles.loadingText}>Loading orders...</Text></View>;
   if (error) return <View style={styles.centered}><Text style={styles.errorText}>Error: {error}</Text></View>;
-  if (orders.length === 0) return <View style={styles.centered}><Text>No orders available</Text></View>;
+  if (partnerOrders.length === 0) return <View style={styles.centered}><Text>No orders available</Text></View>;
 
-  return <FlatList data={orders} renderItem={renderItem} keyExtractor={item => item.id.toString()} 
+  return <FlatList data={partnerOrders} renderItem={renderItem} keyExtractor={item => item.id.toString()} 
   refreshControl={
     <RefreshControl loading={loading} onRefresh={onRefresh} />
   }/>;

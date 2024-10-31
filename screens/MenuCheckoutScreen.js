@@ -4,31 +4,42 @@ import CustomButton from '../components/CustomButton';
 import Header from '../components/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { useCart } from '../context/CartContext';
-import { base_url, restaurants } from '../constants/api';
+import { base_url } from '../constants/api';
 import { ToggleButton } from 'react-native-paper';
-import Toast from 'react-native-toast-message';
+import useOrder from '../hooks/useOrder';
 
 
 const MenuCheckoutScreen = ({ navigation, route }) => {
-  const { clearCart } = useCart();
+  const { createOrder } = useOrder();
   const { cartItems = [], orderDetails = {} } = route.params || {};
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [orderType, setOrderType] = useState(null);
   const [deliveryFee, setDeliveryFee] = useState(null);
+  const [address, setAddress] = useState({ id: 0, location_name: '', latitude: 0, longitude: 0 });
 
   const deliveryDetails = {
     name: 'Albert Stevano',
     phone: '+12 8347 2838 28',
-    address: 'New York',
-    houseNo: 'BC54 Berlin',
-    city: 'New York City',
+    address: address.location_name
   };
 
   useEffect(() => {
     fetchPaymentMethods();
+
+    const getLocation = async () => {
+      try {
+        const location = await AsyncStorage.getItem('location');
+        if (location) {
+          const parsedLocation = JSON.parse(location);
+          setAddress(parsedLocation);
+        }
+      } catch (error) {
+        console.log("Error fetching location:", error);
+      }
+    };
+    getLocation();
   }, []);
 
   const fetchPaymentMethods = async () => {
@@ -60,55 +71,33 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
     }
 
     console.log('payment method', paymentMethod)
-    try {
-      const token = await AsyncStorage.getItem('userToken');
 
-      const storedRestaurantId = await AsyncStorage.getItem('selectedRestaurantId');
-      if (!storedRestaurantId) {
-        Alert.alert('Error', 'No associated restaurant found');
-        return;
-      }
-
-      const orderData = {
-        order: {
-          restaurant_id: parseInt(storedRestaurantId),
-          delivery_address: orderType === 'delivery' ? '209 Aspen Leaf Dr, Big Sky, MT 59716' : '',
-          total_price: orderDetails.totalPrice,
-          address_id: 1, // fetch address from customer and then send that address
-          order_type: orderType,
-          payment_method: paymentMethod.brand === 'Cash' ? 'cash' : 'other',
-          order_items_attributes: cartItems.map(item => ({
-            menu_item_id: item.id,
-            quantity: item.quantity,
-            order_item_modifiers_attributes: item.selectedModifiers.map(modifier => ({
-              modifier_option_id: modifier.modifierId
-            }))
-          }))
-        }
-      };
-
-      const response = await axios.post('http://192.168.150.220:3000/api/v1/orders/create_order',
-        { order: orderData.order, payment_method_id: paymentMethod.id },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-      });
-
-      clearCart();
-      setOrderType(null);
-      Toast.show({
-        type: 'success',
-        text1: 'Success!',
-        text2: 'Order has been placed! 👋',
-        position: 'top',
-        visibilityTime: 1500
-      });
-      navigation.navigate('Orders');
-    } catch (error) {
-      console.error('Order submission error:', error.response.data.message);
-      Alert.alert('Error', error.response.data.message);
+    const storedRestaurantId = await AsyncStorage.getItem('selectedRestaurantId');
+    if (!storedRestaurantId) {
+      Alert.alert('Error', 'No associated restaurant found');
+      return;
     }
+
+    const orderData = {
+      order: {
+        restaurant_id: storedRestaurantId,
+        delivery_address: orderType === 'delivery' ? '209 Aspen Leaf Dr, Big Sky, MT 59716' : '',
+        total_price: orderDetails.totalPrice,
+        address_id: address.id, // fetch address from customer and then send that address
+        order_type: orderType,
+        payment_method: paymentMethod.brand === 'Cash' ? 'cash' : 'other',
+        order_items_attributes: cartItems.map(item => ({
+          menu_item_id: item.id,
+          quantity: item.quantity,
+          order_item_modifiers_attributes: item.selectedModifiers.map(modifier => ({
+            modifier_option_id: modifier.modifierId
+          }))
+        }))
+      }
+    };
+
+    await createOrder(navigation, orderData.order, paymentMethod.id)
+    setOrderType(null);
   };
 
   return (
@@ -348,6 +337,8 @@ const styles = StyleSheet.create({
   deliveryDetail: {
     fontSize: 16,
     color: '#666',
+    maxWidth: '50%',
+    textAlign: 'right'
   },
   buttonContainer: {
     marginTop: 20,

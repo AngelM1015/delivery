@@ -16,6 +16,28 @@ export class OrderService {
     const response = await client.get(orders.order, {
       headers: { Authorization: `Bearer ${this.token}` },
     });
-    return response.data
+    return response.data;
+  }
+
+  async fetchPartnerOrders() {
+    if(this.role !== 'partner') {
+      return []
+    }
+    const response = await client.get(orders.partnerOrders, {
+      headers: { Authorization: `Bearer ${this.token}` },
+    });
+    return response.data;
+  }
+
+  async createOrder(data, payment_method_id) {
+    const url = orders.order + "/create_order";
+    const response = await client.post(url,
+      {
+        order: data, payment_method_id: payment_method_id
+      },
+      {
+        headers: { Authorization: `Bearer ${this.token}` },
+      });
+      return response.data;
   }
 }

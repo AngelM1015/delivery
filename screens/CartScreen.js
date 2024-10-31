@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, View, StyleSheet, TextInput, Image, TouchableOpacity } from 'react-native';
 import { Button, Card, Text, PaperProvider, Checkbox  } from 'react-native-paper';
 import { useCart } from '../context/CartContext';
 import { FontAwesome5, AntDesign } from '@expo/vector-icons';
 import CustomButton from '../components/CustomButton';
 import Header from '../components/Header';
+import Locations from '../components/Locations';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Icons } from '../constants/Icons';
+import { Ionicons } from '@expo/vector-icons';
 
 const CartScreen = ({ navigation }) => {
-  const { cartItems, removeFromCart, updateItemQuantity, clearCart } = useCart();
-  console.log('cartItems', cartItems);
+  const { cartItems, removeFromCart, updateItemQuantity } = useCart();
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [location, setLocation] = useState(null);
+  // console.log('cartItems', cartItems);
   const deliveryFee = 20.00;
   const discount = 0.00;
   const [extraChecked, setExtraChecked] = useState(false);
@@ -18,6 +25,12 @@ const CartScreen = ({ navigation }) => {
     { productName: 'Extra Sause', price: '0.5$' },
     { productName: 'Extra Garlic Sause', price: '0.75$' },
   ]);
+
+  const handleSelectLocation = (location) => {
+    console.log('location', location);
+    setSelectedLocation(location);
+    setLocationModalVisible(false);
+  };
 
   const incrementQuantity = itemId => {
     const item = cartItems.find(item => item.id === itemId);
@@ -49,6 +62,22 @@ const CartScreen = ({ navigation }) => {
     setExtraOptions(newOptions);
   };
 
+  useEffect(() => {
+    const getLocation = async () => {
+      try {
+        const location = await AsyncStorage.getItem('location');
+        if (location) {
+          const parsedLocation = JSON.parse(location); // Parse JSON
+          setLocation(parsedLocation);
+          setSelectedLocation(parsedLocation);
+        }
+      } catch (error) {
+        console.log("Error fetching location:", error);
+      }
+    };
+    getLocation();
+  }, []);
+
   return (
     <PaperProvider>
       <View style={{flex:1}}>
@@ -56,15 +85,19 @@ const CartScreen = ({ navigation }) => {
           <Header title="About This Menu" navigation={navigation} showShareIcon={true} />
         </View>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        {/* Location Section */}
-        <View style={styles.locationContainer}>
-          <Text style={styles.locationText}>Delivery Location</Text>
-          <View style={styles.locationInnerContainer}>
-            {/* <Text style={styles.locationAddress}>{deliveryLocation}</Text> */}
-            <Button mode="text" onPress={() => setDeliveryLocation('Change Location')}>
-              Change Location
-            </Button>
-          </View>
+        <View>
+          <TouchableOpacity style={styles.locationContainer} onPress={() => setLocationModalVisible(true)}>
+          {/* <Icons.LocationIcon /> */}
+            <Text style={styles.locationText}>
+            <Ionicons name="location-sharp" size={24} color="#F09B00" />
+              {selectedLocation ? selectedLocation.location_name : 'Your Location'}
+            </Text>
+            <Icons.DownwardArrow />
+          </TouchableOpacity>
+          {/* <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Icons.LocationIcon />
+            <Text style={styles.locationSubtext}>{selectedLocation ? selectedLocation.location_name : 'Your Location'}</Text>
+          </View> */}
         </View>
 
         {/* Cart Items Section */}
@@ -191,6 +224,11 @@ const CartScreen = ({ navigation }) => {
           }}
         />
       </View>
+      <Locations
+        isVisible={locationModalVisible}
+        onClose={() => setLocationModalVisible(false)}
+        onSelectLocation={handleSelectLocation}
+      />
      </PaperProvider>
   );
 };

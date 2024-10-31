@@ -6,11 +6,14 @@ import { COLORS } from '../constants/colors';
 import { Card } from 'react-native-paper';
 import { FontAwesome } from '@expo/vector-icons';
 import useRestaurants from '../hooks/useRestaurants';
+import Locations from '../components/Locations';
 
 const HomeScreen = ({navigation}) => {
   const { loading, restaurants, menuItems, selectedRestaurant, setSelectedRestaurant, fetchRestaurants, fetchMenuItems } = useRestaurants();
   const [searchQuery, setSearchQuery] = useState('');
   const [backgroundIndex, setBackgroundIndex] = useState(0);
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const backgroundImages = [
@@ -21,6 +24,9 @@ const HomeScreen = ({navigation}) => {
 
   useEffect(() => {
     console.log('restaurant', restaurants);
+    if(selectedRestaurant === null){
+      fetchRestaurants
+    }
   
     const changeBackgroundImage = () => {
       Animated.timing(fadeAnim, {
@@ -49,6 +55,12 @@ const HomeScreen = ({navigation}) => {
 
     return () => clearInterval(intervalId);
   }, [fadeAnim]);
+
+  const handleSelectLocation = (location) => {
+    console.log('location', location);
+    setSelectedLocation(location);
+    setLocationModalVisible(false);
+  };
 
   const renderRestaurant = ({ item: restaurant }) => {
     const isSelected = selectedRestaurant === restaurant.id;
@@ -122,14 +134,15 @@ const HomeScreen = ({navigation}) => {
           <View style={styles.titleOverlay}>
             <View style={styles.notification}>
               <View>
-                <TouchableOpacity style={styles.locationContainer}>
-                  <Text style={styles.locationText}>Your Location</Text>
+                <TouchableOpacity style={styles.locationContainer} onPress={() => setLocationModalVisible(true)}>
+                <Icons.LocationIcon />
+                  <Text style={styles.locationText}>{selectedLocation ? selectedLocation.location_name : 'Your Location'}</Text>
                   <Icons.DownwardArrow />
                 </TouchableOpacity>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {/* <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Icons.LocationIcon />
-                  <Text style={styles.locationSubtext}>Your Location</Text>
-                </View>
+                  <Text style={styles.locationSubtext}>{selectedLocation ? selectedLocation.location_name : 'Your Location'}</Text>
+                </View> */}
               </View>
               <TouchableOpacity>
                 <Icons.NotificationIcon />
@@ -160,8 +173,12 @@ const HomeScreen = ({navigation}) => {
           columnWrapperStyle={{ justifyContent: 'space-between' }}
           ListEmptyComponent={<Text>No menu items available</Text>}
         />
-
       </View>
+      <Locations
+        isVisible={locationModalVisible}
+        onClose={() => setLocationModalVisible(false)}
+        onSelectLocation={handleSelectLocation}
+      />
     </SafeAreaView>
   );
 };

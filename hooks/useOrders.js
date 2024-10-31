@@ -7,6 +7,7 @@ const useOrders = () => {
   const { loading: fetchingUser, role, token } = useUser()
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [partnerOrders, setPartnerOrders] = useState([]);
 
 
   const OrderServiceClient = useMemo(() => {
@@ -27,11 +28,21 @@ const useOrders = () => {
     }
   };
 
+  const fetchPartnerOrders = async () => {
+    try {
+      const orders = await OrderServiceClient.fetchPartnerOrders();
+      setPartnerOrders(orders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleOrder = (action) => {
     return async (id) => {
       try {
-        const url = `/v1/orders/${id}/${action}`;
+        const url = `api/v1/orders/${id}/${action}`;
         await client.patch(url, {}, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -51,8 +62,10 @@ const useOrders = () => {
   return {
     role,
     orders,
+    partnerOrders,
     loading,
     fetchOrders,
+    fetchPartnerOrders,
     cancelOrder: handleOrder("cancel_order"),
     pickUpOrder: handleOrder("start_delivery"),
     deliverOrder: handleOrder("partner_deliver_order")
