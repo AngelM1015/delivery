@@ -91,8 +91,8 @@ const getTabBarIcon = (role, route, focused) => {
     },
     restaurant_owner: {
       Dashboard: focused ? "home" : "home-outline",
-      Metrics: focused ? "bar-chart" : "bar-chart-outline",
-      Admin: focused ? "people" : "people-outline",
+      Metrics: focused ? "document" : "document-outline",
+      Admin: focused ? "trending-up" : "trending-up-outline",
       Account: focused ? "person" : "person-outline",
     },
     admin: {

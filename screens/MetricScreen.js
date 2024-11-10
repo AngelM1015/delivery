@@ -5,6 +5,8 @@ import {
   FlatList,
   Dimensions,
   RefreshControl,
+  Switch,
+  Image,
 } from "react-native";
 import {
   Card,
@@ -55,6 +57,18 @@ const processChartData = (orders, userRole) => {
   };
 };
 
+const formatTime = (dateTime) => {
+  const date = new Date(dateTime);
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  const strTime =
+    hours + ":" + (minutes < 10 ? "0" + minutes : minutes) + " " + ampm;
+  return strTime;
+};
+
 const MetricScreen = ({ navigation }) => {
   const [orders, setOrders] = useState([]);
   const [userRole, setUserRole] = useState("");
@@ -65,6 +79,11 @@ const MetricScreen = ({ navigation }) => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [restaurant, setRestaurant] = useState("");
+  const [isActive, setIsActive] = useState(true);
+
+  const toggleStatus = () => {
+    setIsActive(!isActive);
+  };
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -147,84 +166,113 @@ const MetricScreen = ({ navigation }) => {
     }
   };
 
-  const updateOrderStatus = async (id) => {
-    if (!selectedOrderId) return;
-
+  const updateOrderStatus = async (id, status) => {
     const token = await AsyncStorage.getItem("userToken");
 
-    const response = await axios.put(
-      `${base_url}api/v1/orders/${id}/update_status`,
-      { status: selectedStatus },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    try {
+      await axios.put(
+        `${base_url}api/v1/orders/${id}/update_status`,
+        { status },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    setModalVisible(false);
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === id ? { ...order, status } : order
+        )
+      );
+      setSnackbarMessage(
+        `Status updated to ${status.replace(/_|-|\\. /g, " ")}`
+      );
+      setSnackbarVisible(true);
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    }
   };
 
   const chartData = processChartData(orders, userRole);
 
+  console.log(orders[0]);
+
   const renderItem = ({ item }) => (
-    <Card style={styles.menuItem}>
-      <Card.Content style={{ gap: 5 }}>
-        <View style={{ flexDirection: "row" }}>
-          <Text style={styles.orderId}> Order #{item.id}</Text>
-        </View>
-        <View style={{ flexDirection: "row", gap: 5 }}>
-          <Text style={{ fontSize: 16, fontWeight: "bold" }}> Status: </Text>
-          <Text style={styles.menuText}>{formatStatus(item.status)}</Text>
-        </View>
-        <View style={{ flexDirection: "row", gap: 5 }}>
-          <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-            {" "}
-            Restaurant:{" "}
-          </Text>
-          <Text style={styles.menuText}>{item.restaurant_name}</Text>
-        </View>
-      </Card.Content>
-      <Card.Actions>
-        <Ionicons
-          name="create-outline"
-          size={24}
-          onPress={() => {
-            setModalVisible(true);
-            setSelectedStatus(item.status);
-            setSelectedOrderId(item.id);
-          }}
-        />
-        <Ionicons
-          name="information-circle-outline"
-          size={24}
-          onPress={() =>
-            navigation.navigate("OrderDetailScreen", { orderId: item.id })
-          }
-        />
-      </Card.Actions>
-    </Card>
+    <View style={styles.menuItem}>
+      <View
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <Text style={styles.orderType}>{item.order_type}</Text>
+      </View>
+      <View
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <Text style={styles.orderId}> Order ID: {item.id}</Text>
+        <Text style={styles.remainingTime}> 1 m 30 s</Text>
+        <Text style={styles.orderTime}> {formatTime(item.created_at)}</Text>
+      </View>
+      <View
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <Text style={styles.menuItemName}>{item.order_items[0].menu_item}</Text>
+      </View>
+      <View style={{ flexDirection: "row", gap: 5 }}>
+        <Text style={{ fontSize: 16, fontWeight: "bold" }}> Status: </Text>
+        <Text style={styles.menuText}>{formatStatus(item.status)}</Text>
+      </View>
+      <View style={{ flexDirection: "row", gap: 5 }}>
+        <Text style={{ fontSize: 16, fontWeight: "bold" }}> Restaurant: </Text>
+        <Text style={styles.menuText}>{item.restaurant_name}</Text>
+      </View>
+      <View style={styles.actions}>
+        <Button
+          mode="contained"
+          onPress={() => updateOrderStatus(item.id, "canceled")}
+          style={styles.cancelButton}
+          labelStyle={styles.cancelButtonText}
+        >
+          Cancel order
+        </Button>
+        <Button
+          mode="contained"
+          onPress={() => updateOrderStatus(item.id, "restaurant_approved")}
+          style={styles.acceptButton}
+          labelStyle={styles.acceptButtonText}
+        >
+          Accept order
+        </Button>
+      </View>
+    </View>
   );
 
   return (
     <Provider>
       <View style={styles.container}>
-        <Text style={styles.title}>Metrics Screen</Text>
-        <BarChart
-          data={chartData}
-          width={Dimensions.get("window").width - 40}
-          height={220}
-          yAxisLabel=""
-          chartConfig={{
-            backgroundColor: "#e26a00",
-            backgroundGradientFrom: "#fb8c00",
-            backgroundGradientTo: "#ffa726",
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            style: { borderRadius: 16 },
-          }}
-          verticalLabelRotation={30}
-          style={{ marginVertical: 10, borderRadius: 16 }}
-        />
+        <View style={styles.activeContainer}>
+          <Text style={styles.ActiveLabel}>Active Status</Text>
+          <Switch
+            trackColor={{ false: "#767577", true: "#F09B00" }}
+            thumbColor={isActive ? "#ffffff" : "#f4f3f4"}
+            ios_backgroundColor="#3e3e3e"
+            onValueChange={toggleStatus}
+            value={isActive}
+            style={styles.switch}
+          />
+        </View>
         <FlatList
           data={orders}
           renderItem={renderItem}
@@ -235,37 +283,6 @@ const MetricScreen = ({ navigation }) => {
           }
         />
         <Portal>
-          <Modal
-            visible={modalVisible}
-            onDismiss={() => setModalVisible(false)}
-          >
-            <Card style={styles.modalContent}>
-              <Card.Title
-                title="Update Order Status"
-                right={(props) => (
-                  <Ionicons
-                    {...props}
-                    name="close"
-                    onPress={() => setModalVisible(false)}
-                  />
-                )}
-              />
-              <Card.Content>
-                <Picker
-                  selectedValue={selectedStatus}
-                  onValueChange={(itemValue) => setSelectedStatus(itemValue)}
-                >
-                  <Picker.Item label="Approved" value="restaurant_approved" />
-                  <Picker.Item label="Canceled" value="canceled" />
-                </Picker>
-              </Card.Content>
-              <Card.Actions>
-                <Button onPress={() => updateOrderStatus(selectedOrderId)}>
-                  Update Status
-                </Button>
-              </Card.Actions>
-            </Card>
-          </Modal>
           <Snackbar
             visible={snackbarVisible}
             onDismiss={() => setSnackbarVisible(false)}
@@ -275,6 +292,13 @@ const MetricScreen = ({ navigation }) => {
           </Snackbar>
         </Portal>
       </View>
+      <Button
+        mode="contained"
+        onPress={() => navigation.navigate("OrderHistory")}
+        style={styles.orderHistoryButton}
+      >
+        Order History
+      </Button>
     </Provider>
   );
 };
@@ -282,7 +306,7 @@ const MetricScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#fff", // Change background color to light gray
     paddingHorizontal: 20,
     paddingTop: 20,
   },
@@ -292,19 +316,31 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   orderId: {
-    color: "#F09B00",
-    fontSize: 24,
+    fontSize: 16,
     marginBottom: 8,
+    fontWeight: "bold",
+  },
+  orderTime: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  remainingTime: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: "#FF0B5C",
   },
   menuItem: {
     marginVertical: 8,
     marginHorizontal: 4,
     backgroundColor: "#ffffff",
     borderRadius: 8,
+    borderWidth: 1, // Add border width
+    borderColor: "#ddd", // Add border color
     shadowColor: "#000",
     shadowOffset: { width: 2, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
+    padding: 10,
   },
   menuText: {
     fontSize: 18,
@@ -320,6 +356,71 @@ const styles = StyleSheet.create({
     padding: 20,
     margin: 20,
     borderRadius: 10,
+  },
+  orderType: {
+    color: "#06C270",
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    textTransform: "capitalize",
+  },
+  activeContainer: {
+    display: "flex",
+    justifyContent: "space-between",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 3,
+    backgroundColor: "#f2f2f2",
+    borderRadius: 10,
+  },
+  ActiveLabel: {
+    marginLeft: 10,
+    fontSize: 16,
+    fontWeight: "bold",
+    marginRight: 10,
+  },
+  actions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  cancelButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    backgroundColor: "#fff",
+    borderColor: "#FF0B5C",
+    borderWidth: 1,
+  },
+  cancelButtonText: {
+    color: "#FF0B5C",
+  },
+  acceptButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    backgroundColor: "#F09B00",
+  },
+  acceptButtonText: {
+    color: "#fff",
+  },
+  menuItemName: {
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 8,
+    fontWeight: "bold",
+    fontSize: 20,
+    color: "#F09B00",
+  },
+  orderHistoryButton: {
+    width: "90%",
+    borderRadius: 10, // Make the button less rounded
+    marginBottom: 10,
+    backgroundColor: "#F09B00",
+    alignSelf: "center",
+    margin: 10,
+    padding: 10,
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
 
