@@ -68,9 +68,42 @@ const AdminScreen = () => {
     ],
   };
 
+  const metricsChartData = {
+    labels: ["Mon", "After", "Evening", "Night"],
+    datasets: [
+      {
+        data: [20, 45, 28, 80],
+      },
+    ],
+  };
+
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Admin Dashboard</Text>
+      <BarChart
+        data={metricsChartData}
+        width={Dimensions.get("window").width - 15}
+        height={220}
+        yAxisLabel=""
+        chartConfig={{
+          backgroundColor: "#e26a00",
+          backgroundGradientFrom: "#fb8c00",
+          backgroundGradientTo: "#ffa726",
+          decimalPlaces: 0,
+          color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+          labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+          fillShadowGradientFrom: "#ffffff",
+          fillShadowGradientTo: "#ffffff",
+          fillShadowGradientOpacity: 1,
+          style: { borderRadius: 16 },
+        }}
+        verticalLabelRotation={0}
+        style={{
+          fontWeight: "bold",
+          marginVertical: 10,
+          borderRadius: 16,
+          alignSelf: "center",
+        }}
+      />
 
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Restaurant Orders</Text>
@@ -78,7 +111,12 @@ const AdminScreen = () => {
           data={restaurantChartData}
           width={screenWidth - 30}
           height={220}
-          chartConfig={chartConfig}
+          chartConfig={{
+            ...chartConfig,
+            fillShadowGradient: "#ffffff",
+            fillShadowGradientOpacity: 1,
+            barPercentage: 1.0,
+          }}
           verticalLabelRotation={30}
         />
       </View>

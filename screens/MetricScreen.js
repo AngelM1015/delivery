@@ -80,6 +80,7 @@ const MetricScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [restaurant, setRestaurant] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [historyVisible, setHistoryVisible] = useState(false); // State for order history modal
 
   const toggleStatus = () => {
     setIsActive(!isActive);
@@ -194,8 +195,6 @@ const MetricScreen = ({ navigation }) => {
 
   const chartData = processChartData(orders, userRole);
 
-  console.log(orders[0]);
-
   const renderItem = ({ item }) => (
     <View style={styles.menuItem}>
       <View
@@ -231,10 +230,6 @@ const MetricScreen = ({ navigation }) => {
         <Text style={styles.menuItemName}>{item.order_items[0].menu_item}</Text>
       </View>
       <View style={{ flexDirection: "row", gap: 5 }}>
-        <Text style={{ fontSize: 16, fontWeight: "bold" }}> Status: </Text>
-        <Text style={styles.menuText}>{formatStatus(item.status)}</Text>
-      </View>
-      <View style={{ flexDirection: "row", gap: 5 }}>
         <Text style={{ fontSize: 16, fontWeight: "bold" }}> Restaurant: </Text>
         <Text style={styles.menuText}>{item.restaurant_name}</Text>
       </View>
@@ -259,6 +254,49 @@ const MetricScreen = ({ navigation }) => {
     </View>
   );
 
+  const renderHistoryItem = ({ item }) => (
+    <View style={styles.menuItem}>
+      <View
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <Text style={styles.orderType}>{item.order_type}</Text>
+      </View>
+      <View
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <Text style={styles.orderId}> Order ID: {item.id}</Text>
+      </View>
+      <View
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <Text style={styles.menuItemName}>{item.order_items[0].menu_item}</Text>
+      </View>
+      <View style={{ flexDirection: "row", gap: 5 }}>
+        <Text style={{ fontSize: 16, fontWeight: "bold" }}> Status: </Text>
+        <Text style={styles.menuText}>{formatStatus(item.status)}</Text>
+      </View>
+      <View style={{ flexDirection: "row", gap: 5 }}>
+        <Text style={{ fontSize: 16, fontWeight: "bold" }}> Restaurant: </Text>
+        <Text style={styles.menuText}>{item.restaurant_name}</Text>
+      </View>
+    </View>
+  );
+
   return (
     <Provider>
       <View style={styles.container}>
@@ -274,7 +312,9 @@ const MetricScreen = ({ navigation }) => {
           />
         </View>
         <FlatList
-          data={orders}
+          data={orders.filter(
+            (order) => order.status === "restaurant_pending_approval"
+          )}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           style={styles.flatList}
@@ -290,11 +330,25 @@ const MetricScreen = ({ navigation }) => {
           >
             {snackbarMessage}
           </Snackbar>
+          <Modal
+            visible={historyVisible}
+            onDismiss={() => setHistoryVisible(false)}
+            contentContainerStyle={styles.modalContent}
+          >
+            <FlatList
+              data={orders.filter(
+                (order) => order.status !== "restaurant_pending_approval"
+              )} // Filter orders for history
+              renderItem={renderHistoryItem}
+              keyExtractor={(item) => item.id.toString()}
+              style={styles.flatList}
+            />
+          </Modal>
         </Portal>
       </View>
       <Button
         mode="contained"
-        onPress={() => navigation.navigate("OrderHistory")}
+        onPress={() => setHistoryVisible(true)} // Show order history modal
         style={styles.orderHistoryButton}
       >
         Order History
@@ -353,6 +407,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   modalContent: {
+    backgroundColor: "white",
     padding: 20,
     margin: 20,
     borderRadius: 10,
