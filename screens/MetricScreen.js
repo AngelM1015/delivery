@@ -21,7 +21,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BarChart } from "react-native-chart-kit";
 import cable from "../cable";
-import { base_url, cable_url } from "../constants/api";
+import { base_url } from "../constants/api";
 
 const formatStatus = (status) => {
   return status
@@ -69,7 +69,7 @@ const MetricScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchToken = async () => {
       const token = await AsyncStorage.getItem("userToken");
-      const cableUrl = `${cable_url}?token=${token}`;
+      const cableUrl = `ws://192.168.150.63:3000/cable?token=${token}`;
     };
     fetchToken();
     fetchUserRoleAndOrders();
@@ -87,7 +87,7 @@ const MetricScreen = ({ navigation }) => {
         ? "/restaurant_orders"
         : role === "admin"
           ? "/all_orders"
-          : "/partner_orders";
+          : "/partner_pending_orders";
     try {
       const response = await axios.get(apiUrl, { headers });
       setOrders(response.data);
@@ -167,10 +167,21 @@ const MetricScreen = ({ navigation }) => {
 
   const renderItem = ({ item }) => (
     <Card style={styles.menuItem}>
-      <Card.Content>
-        <Text style={styles.menuText}>Order ID: {item.id}</Text>
-        <Text style={styles.menuText}>Status: {formatStatus(item.status)}</Text>
-        <Text style={styles.menuText}>Restaurant: {item.restaurant_name}</Text>
+      <Card.Content style={{ gap: 5 }}>
+        <View style={{ flexDirection: "row" }}>
+          <Text style={styles.orderId}> Order #{item.id}</Text>
+        </View>
+        <View style={{ flexDirection: "row", gap: 5 }}>
+          <Text style={{ fontSize: 16, fontWeight: "bold" }}> Status: </Text>
+          <Text style={styles.menuText}>{formatStatus(item.status)}</Text>
+        </View>
+        <View style={{ flexDirection: "row", gap: 5 }}>
+          <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+            {" "}
+            Restaurant:{" "}
+          </Text>
+          <Text style={styles.menuText}>{item.restaurant_name}</Text>
+        </View>
       </Card.Content>
       <Card.Actions>
         <Ionicons
@@ -244,17 +255,7 @@ const MetricScreen = ({ navigation }) => {
                   selectedValue={selectedStatus}
                   onValueChange={(itemValue) => setSelectedStatus(itemValue)}
                 >
-                  <Picker.Item
-                    label="Pending Approval"
-                    value="restaurant_pending_approval"
-                  />
                   <Picker.Item label="Approved" value="restaurant_approved" />
-                  <Picker.Item
-                    label="Pending Assignment"
-                    value="partner_pending_assignment"
-                  />
-                  <Picker.Item label="Assigned" value="partner_assigned" />
-                  <Picker.Item label="Delivered" value="delivered" />
                   <Picker.Item label="Canceled" value="canceled" />
                 </Picker>
               </Card.Content>
@@ -290,12 +291,24 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
   },
+  orderId: {
+    color: "#F09B00",
+    fontSize: 24,
+    marginBottom: 8,
+  },
   menuItem: {
-    marginVertical: 5,
+    marginVertical: 8,
+    marginHorizontal: 4,
+    backgroundColor: "#ffffff",
     borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   menuText: {
     fontSize: 18,
+    color: "grey",
   },
   icon: {
     marginRight: 10,

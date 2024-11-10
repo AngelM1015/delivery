@@ -36,6 +36,44 @@ const useRestaurants = () => {
     }
   };
 
+  const changeStatus = async (restaurantId, menuItemId, newStatus) => {
+    try {
+      await client.patch(
+        `api/v1/restaurants/${restaurantId}/menu_items/${menuItemId}/change_status`,
+        {
+          isenabled: newStatus,
+        }
+      );
+      // Update the local state to reflect the change
+      setMenuItems((prevMenuItems) =>
+        prevMenuItems.map((item) =>
+          item.id === menuItemId ? { ...item, isenabled: newStatus } : item
+        )
+      );
+    } catch (err) {
+      console.error("Error changing status:", err);
+    }
+  };
+
+  const getResturantByOwner = async (userId) => {
+    try {
+      setLoading(true);
+      const response = await client.get(
+        `api/v1/restaurants/get_resturant_by_owner`,
+        {
+          params: { user_id: userId },
+        }
+      );
+      setRestaurants(response.data);
+      setLoading(false);
+      return response.data;
+    } catch (error) {
+      setLoading(false);
+      console.error("Error  fetching restaurants by owner:", error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (selectedRestaurant === null) {
       fetchRestaurants();
@@ -47,11 +85,14 @@ const useRestaurants = () => {
   return {
     restaurants,
     menuItems,
+    setMenuItems,
     loading,
     selectedRestaurant,
     setSelectedRestaurant,
     fetchRestaurants,
     fetchMenuItems,
+    changeStatus,
+    getResturantByOwner,
   };
 };
 

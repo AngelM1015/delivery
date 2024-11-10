@@ -8,25 +8,24 @@ const useUser = () => {
   const [userId, setUserId] = useState();
 
   useEffect(() => {
-    fetchRole()
-  }, [])
+    fetchRole();
+  }, []);
 
   const fetchRole = async () => {
-    const token = await AsyncStorage.getItem('userToken');
-    const role = await AsyncStorage.getItem('userRole');
-    const userId = await AsyncStorage.getItem('userId');
-    setRole(role)
-    setToken(token)
-    setLoading(false)
-    setUserId(userId)
-  }
+    const token = await AsyncStorage.getItem("userToken");
+    const role = await AsyncStorage.getItem("userRole");
+    const userId = await AsyncStorage.getItem("userId");
+    setRole(role);
+    setToken(token);
+    setLoading(false);
+    setUserId(userId);
+  };
   return {
     role,
     loading,
     token,
     userId,
-  }
-
-}
+  };
+};
 
 export default useUser;

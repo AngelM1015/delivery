@@ -13,17 +13,79 @@ import { Card } from "react-native-paper";
 import { FontAwesome } from "@expo/vector-icons";
 import { base_url } from "../constants/api";
 import useRestaurants from "../hooks/useRestaurants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const DashboardScreen = ({ navigation }) => {
-  const { fetchMenuItems, menuItems, loading } = useRestaurants();
+  const {
+    fetchMenuItems,
+    changeStatus,
+    menuItems,
+    setMenuItems,
+    restaurants,
+    loading,
+    selectedRestaurant,
+    setSelectedRestaurant,
+    getResturantByOwner,
+  } = useRestaurants();
   const [error, setError] = useState(null);
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    fetchMenuItems(10);
+    const fetchUserId = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        setUserId(userId);
+      } catch (err) {
+        setError("Failed to fetch user ID");
+      }
+    };
+    fetchUserId();
   }, []);
 
-  const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
+  useEffect(() => {
+    if (userId) {
+      getResturantByOwner(userId)
+        .then((fetchedRestaurants) => {
+          if (fetchedRestaurants.length > 0) {
+            setSelectedRestaurant(fetchedRestaurants[0].id);
+          }
+        })
+        .catch((err) => {
+          setError("Failed to fetch restaurants");
+        });
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if (selectedRestaurant) {
+      fetchMenuItems(selectedRestaurant);
+    }
+  }, [selectedRestaurant]);
+
+  const renderRestaurantItem = ({ item: restaurant }) => {
+    const isSelected = selectedRestaurant === restaurant.id;
+    const image_url = base_url + restaurant.image_url;
+    return (
+      <TouchableOpacity onPress={() => setSelectedRestaurant(restaurant.id)}>
+        <Card
+          style={[
+            styles.restaurantCard,
+            {
+              backgroundColor: isSelected ? "#F09B00" : "white",
+              justifyContent: "center",
+              alignItems: "center",
+            },
+          ]}
+        >
+          <Image source={{ uri: image_url }} style={styles.restaurantImage} />
+          <Text numberOfLines={1} style={styles.restaurantTitle}>
+            {restaurant.name}
+          </Text>
+          <Text style={styles.restaurantSubtitle}>{restaurant.address}</Text>
+        </Card>
+      </TouchableOpacity>
+    );
+  };
 
   const renderMenuItem = ({ item }) => {
     const price =
@@ -33,6 +95,15 @@ const DashboardScreen = ({ navigation }) => {
       : "https://via.placeholder.com/150";
     const rating = "4.9"; // Static rating for now, can be dynamic
     const distance = "2km"; // Static distance for now
+
+    const toggleSwitch = () => {
+      changeStatus(selectedRestaurant, item.id, !item.isenabled);
+      setMenuItems((prevItems) =>
+        prevItems.map((menu) =>
+          menu.id === item.id ? { ...menu, isenabled: !menu.isenabled } : menu
+        )
+      );
+    };
 
     return (
       <TouchableOpacity
@@ -50,19 +121,11 @@ const DashboardScreen = ({ navigation }) => {
               <View style={styles.switchContainer}>
                 <Switch
                   trackColor={{ false: "#767577", true: "#F09B00" }}
-                  thumbColor={isEnabled ? "#ffffff" : "#f4f3f4"}
+                  thumbColor={item.isenabled ? "#ffffff" : "#f4f3f4"}
                   ios_backgroundColor="#3e3e3e"
                   onValueChange={toggleSwitch}
-                  value={isEnabled}
+                  value={item.isenabled}
                   style={styles.switch}
-                />
-              </View>
-              <View style={styles.iconContainer}>
-                <FontAwesome
-                  name="edit"
-                  size={24}
-                  color="#F09B00"
-                  style={styles.editIcon}
                 />
               </View>
             </View>
@@ -104,45 +167,32 @@ const DashboardScreen = ({ navigation }) => {
     );
   }
 
+  const selectedRestaurantObject = restaurants.find(
+    (restaurant) => restaurant.id === selectedRestaurant
+  );
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.addNewProduct}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("AddMenuScreen")}
-          style={{
-            backgroundColor: "#F09B00",
-            padding: 10,
-            borderRadius: 15,
-          }}
-        >
-          <FontAwesome name="plus" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text
-          style={{
-            color: "#000",
-            marginLeft: 10,
-            fontWeight: "500",
-          }}
-        >
-          Add Product
-        </Text>
-      </View>
-      <View
-        style={{
-          padding: 10,
-          borderRadius: 10,
-          margin: 10,
-          alignItems: "start",
-        }}
-      >
-        <Text style={{ color: "#000", fontSize: 15 }}>Product List</Text>
-      </View>
+      {selectedRestaurantObject && (
+        <Image
+          source={{ uri: base_url + selectedRestaurantObject.image_url }}
+          style={styles.masterImage}
+        />
+      )}
+      <FlatList
+        data={restaurants}
+        renderItem={renderRestaurantItem}
+        keyExtractor={(item) => item.id.toString()}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.horizontalListContainer}
+      />
 
       <FlatList
         data={menuItems}
         renderItem={renderMenuItem}
         keyExtractor={(item) => item.id.toString()}
-        numColumns={2} // Display two columns of menu items
+        numColumns={2}
         columnWrapperStyle={{ justifyContent: "space-between" }}
         ListEmptyComponent={<Text>No menu items available</Text>}
       />
@@ -161,12 +211,47 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  masterImage: {
+    width: "100%",
+    height: "25%",
+    resizeMode: "cover",
+  },
+  horizontalListContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    paddingBottom: 60,
+  },
+  restaurantCard: {
+    width: 120,
+    marginRight: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 8,
+  },
+  restaurantImage: {
+    width: 100,
+    height: 80,
+    borderRadius: 10,
+    marginBottom: 10,
+    alignSelf: "center",
+  },
+  restaurantTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+  },
+  restaurantSubtitle: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
+  },
   menuCard: {
     flex: 1,
     margin: 10,
     padding: 6,
     borderRadius: 10,
-    borderWidth: 0.1,
     shadowOpacity: 0,
     backgroundColor: "#fff",
     elevation: 3,
@@ -228,8 +313,8 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     backgroundColor: "white",
-    borderRadius: 24, // Half of the size to make it circular
-    padding: 5, // Adjust padding as needed
+    borderRadius: 24,
+    padding: 5,
     justifyContent: "center",
     alignItems: "center",
     position: "absolute",
