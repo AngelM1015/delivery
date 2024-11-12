@@ -20,16 +20,18 @@ const useOrder = () => {
     setLoading(true);
     try {
       const response = await OrderServiceClient.createOrder(data, payment_method_id);
-
-      clearCart();
-      Toast.show({
-        type: 'success',
-        text1: 'Success!',
-        text2: 'Order has been placed! 👋',
-        position: 'top',
-        visibilityTime: 1500
-      });
-      navigation.navigate('Orders');
+      if(response){
+        console.log('response', response.data)
+        clearCart();
+        Toast.show({
+          type: 'success',
+          text1: 'Success!',
+          text2: 'Order has been placed! 👋',
+          position: 'top',
+          visibilityTime: 1500
+        });
+        await navigation.navigate('Orders');
+      }
 
     }catch (error) {
       console.error('Order submission error:', error.response.data.message);

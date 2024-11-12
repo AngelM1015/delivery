@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, FlatList, Alert} from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import CustomButton from '../components/CustomButton';
 import Header from '../components/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -7,20 +7,23 @@ import axios from 'axios';
 import { base_url } from '../constants/api';
 import { ToggleButton } from 'react-native-paper';
 import useOrder from '../hooks/useOrder';
-
+import PaymentMethod from '../components/PaymentMethod';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import useUser from '../hooks/useUser';
 
 const MenuCheckoutScreen = ({ navigation, route }) => {
   const { createOrder } = useOrder();
+  const { userName } = useUser();
   const { cartItems = [], orderDetails = {} } = route.params || {};
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentMethod, setPaymentMethod] = useState({});
   const [paymentMethods, setPaymentMethods] = useState([]);
-  const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [orderType, setOrderType] = useState(null);
   const [deliveryFee, setDeliveryFee] = useState(null);
   const [address, setAddress] = useState({ id: 0, location_name: '', latitude: 0, longitude: 0 });
+  const [showPaymentMethodsModal, setShowPaymentMethodsModal] = useState(false);
 
   const deliveryDetails = {
-    name: 'Albert Stevano',
+    name: userName,
     phone: '+12 8347 2838 28',
     address: address.location_name
   };
@@ -51,18 +54,39 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         }
       });
 
-      const cashPaymentOption = {
-        id: 'cash',
-        brand: 'Cash',
-        last4: 'N/A'
-      };
-
-      setPaymentMethods([cashPaymentOption, ...response.data]);
+      setPaymentMethods(response.data);
     } catch (error) {
       console.error('Error fetching payment methods:', error);
       Alert.alert('Error', 'Failed to fetch payment methods');
     }
   };
+
+  const orderTypeSelection = (value) => {
+    console.log('value of order type', value);
+    if (value === 'delivery') {
+      setDeliveryFee(15);
+    } else {
+      setDeliveryFee(0);
+    }
+    setOrderType(value);
+    
+    if(value === 'pickup' && paymentMethods[0].id !== 'cash'){
+      const cashPaymentOption = {
+        id: 'cash',
+        brand: 'Cash',
+        last4: 'N/A'
+      };
+      setPaymentMethods([cashPaymentOption, ...paymentMethods]);
+    } else if(value === 'delivery' && paymentMethods[0].id === 'cash'){
+        if(paymentMethod.id === 'cash'){
+          setPaymentMethod({});
+        }
+        console.log('total price', orderDetails.totalPrice + 20)
+        setDeliveryFee(20);
+        const methods = paymentMethods.slice(1)
+        setPaymentMethods(methods);
+    }
+  }
 
   const submitOrder = async () => {
     if (!orderType || !paymentMethod) {
@@ -83,7 +107,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         restaurant_id: storedRestaurantId,
         delivery_address: orderType === 'delivery' ? '209 Aspen Leaf Dr, Big Sky, MT 59716' : '',
         total_price: orderDetails.totalPrice,
-        address_id: address.id, // fetch address from customer and then send that address
+        address_id: 1,
         order_type: orderType,
         payment_method: paymentMethod.brand === 'Cash' ? 'cash' : 'other',
         order_items_attributes: cartItems.map(item => ({
@@ -134,17 +158,20 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
               <Text style={styles.detailText}>Cherry Healthy</Text>
               <Text style={styles.detailAmount}>${orderDetails.cherryHealthyPrice || '0.00'}</Text>
             </View>
-            <View style={styles.transactionRow}>
+            {deliveryFee > 0 && (
+              <View style={styles.transactionRow}>
               <Text style={styles.detailText}>Driver</Text>
               <Text style={styles.detailAmount}>$20.00</Text>
             </View>
+            )}
+            
             <View style={styles.transactionRow}>
               <Text style={styles.detailText}>Tax 10%</Text>
               <Text style={styles.detailAmount}>${orderDetails.tax || '0.00'}</Text>
             </View>
             <View style={styles.transactionRow}>
               <Text style={styles.totalText}>Total Price</Text>
-              <Text style={styles.totalAmount}>${orderDetails.totalPrice || '0.00'}</Text>
+              <Text style={styles.totalAmount}>${orderDetails.totalPrice + deliveryFee || '0.00'}</Text>
             </View>
           </View>
         </View>
@@ -162,18 +189,19 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
             ))}
           </View>
         </View>
+
         {/* Order Type Selection */}
         <Text style={{ fontSize: 16, marginBottom: 10, paddingLeft: 10 }}>Select Order Type:</Text>
           <View style={styles.orderTypeContainer}>
             <View style={styles.orderTypeWrapper}>
-              <ToggleButton.Group
+              {/* <ToggleButton.Group
                 style={styles.orderTypeGroup}
                 onValueChange={value => {
-                  setOrderType(value);
+                  orderTypeSelection(value);
                   if (value === 'delivery') {
-                    setDeliveryFee(15);  // Set delivery fee for delivery option
+                    setDeliveryFee(15);
                   } else {
-                    setDeliveryFee(0);    // Set delivery fee for pickup option
+                    setDeliveryFee(0);
                   }
                 }}
                 value={orderType}
@@ -187,42 +215,74 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
                   <ToggleButton icon="storefront" value="pickup"/>
                   <Text style={styles.orderTypeLabel}>Pick-Up</Text>
                 </View>
-              </ToggleButton.Group>
+              </ToggleButton.Group> */}
+              <TouchableOpacity
+                style={[ styles.orderType, orderType === 'delivery' && styles.selectedOrderType ]}
+                onPress={() => orderTypeSelection("delivery")}>
+                <Image
+                  source={require('../assets/images/delivery.png')}
+                  style={{height: 50, width: 50 }}
+                  />
+                <Text>delivery</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[ styles.orderType, orderType === 'pickup' && styles.selectedOrderType]}
+                onPress={() => orderTypeSelection("pickup")}
+              >
+                <Image
+                  source={require('../assets/images/take-away.png')}
+                  style={{height: 50, width: 50 }}
+                />
+                <Text>pickup</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
         {/* Payment Method Section */}
-        <View style={styles.section}>
+        {orderType !== null && (
+          <View style={styles.section}>
           <Text style={styles.subHeader}>Payment Method</Text>
           <TouchableOpacity
             style={styles.paymentSelector}
-            onPress={() => setShowPaymentMethods(!showPaymentMethods)}
+            onPress={() => setShowPaymentMethodsModal(true)}
+            disabled={orderType === null}
           >
-            <Text style={styles.selectedPaymentMethod}>{paymentMethod === 'cash' ? 'Cash' : `**** ${paymentMethod.last4}`}</Text>
-            <Text style={styles.expandText}>{showPaymentMethods ? '▲' : '▼'}</Text>
+            {paymentMethod.id ?
+              (
+                <>
+                  <Text style={styles.selectedPaymentMethod}>
+                    {paymentMethod.id === 'cash' ? 'Cash' : `${paymentMethod.brand}    **** ${paymentMethod.last4}`}
+                  </Text>
+                  {paymentMethod.brand === 'Cash' ?
+                    (
+                      <Ionicons name="cash" size={28} color="black" />
+                    ) :
+                    (
+                      <FontAwesome name={"cc-" + paymentMethod.brand.toLowerCase()} size={24} color="black" />
+                    )
+                  }
+                </>
+              ) : (
+                <Text>
+                  Select Payment Method
+                </Text>
+              )
+            }
           </TouchableOpacity>
-
-          {showPaymentMethods && (
-            <FlatList
-              data={paymentMethods}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.paymentMethodItem,
-                    paymentMethod === item.id && styles.selectedPaymentMethodItem
-                  ]}
-                  onPress={() => {
-                    setPaymentMethod(item);
-                    setShowPaymentMethods(false);
-                  }}
-                >
-                  <Text style={styles.paymentMethodText}>{item.brand} {item.last4 !== 'N/A' ? `**** ${item.last4}` : ''}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          )}
         </View>
+        )}
+        
+
+        <PaymentMethod
+          visible={showPaymentMethodsModal}
+          onClose={() => setShowPaymentMethodsModal(false)}
+          paymentMethods={paymentMethods}
+          selectedPaymentMethod={paymentMethod}
+          onSelect={(method) => {
+            setPaymentMethod(method);
+            setShowPaymentMethodsModal(false);
+          }}
+        />
 
         <View style={styles.buttonContainer}>
           <CustomButton
@@ -230,6 +290,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
             onPress={() => {
               submitOrder()
             }}
+            disabled={orderType === null && paymentMethod.length === 0}
           />
         </View>
       </ScrollView>
@@ -275,7 +336,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   separator: {
-    borderBottomColor: 'gray',
+    borderBottomColor: '#ccc',
     borderBottomWidth: 1,
     marginVertical: 10,
   },
@@ -298,6 +359,7 @@ const styles = StyleSheet.create({
   },
   transactionDetails: {
     fontSize: 14,
+    paddingBottom: 0
   },
   transactionRow: {
     flexDirection: 'row',
@@ -340,22 +402,11 @@ const styles = StyleSheet.create({
     maxWidth: '50%',
     textAlign: 'right'
   },
+  selectedOrderType: {
+    borderColor: '#F09B00'
+  },
   buttonContainer: {
     marginTop: 20,
-  },
-  paymentSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  selectedPaymentMethod: {
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   expandText: {
     fontSize: 16,
@@ -367,8 +418,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  selectedPaymentMethodItem: {
-    backgroundColor: '#e0f7fa',
+  paymentSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderWidth: 0.5,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  selectedPaymentMethod: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   paymentMethodText: {
     fontSize: 16,
@@ -396,6 +457,15 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 12,
   },
+  orderType: {
+    gap: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    alignItems: 'center'
+  }
 });
 
 export default MenuCheckoutScreen;

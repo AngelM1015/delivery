@@ -62,6 +62,8 @@ const LoginScreen = ({ navigation,route }) => {
         await AsyncStorage.setItem('userToken', response.data.token);
         await AsyncStorage.setItem('userRole', response.data.role);
         await AsyncStorage.setItem('userId', response.data.user_id.toString());
+        await AsyncStorage.setItem('userEmail', response.data.email);
+        await AsyncStorage.setItem('userName', response.data.name);
         setIsRoleChanged(!isRoleChanged)
         navigation.replace('Main');
       } else {
@@ -123,7 +125,7 @@ const LoginScreen = ({ navigation,route }) => {
             <Text style={styles.registerText}>Register</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.quickLoginContainer}>
+        {/* <View style={styles.quickLoginContainer}>
           <Text style={styles.quickLoginText}>Role Dev-tool component, Login as:</Text>
           <TouchableOpacity style={styles.quickLoginButton} onPress={loginAsCustomer}>
             <Text style={styles.quickLoginButtonText}>Customer</Text>
@@ -140,7 +142,7 @@ const LoginScreen = ({ navigation,route }) => {
           <TouchableOpacity style={styles.quickLoginButton} onPress={loginAsAdmin}>
             <Text style={styles.quickLoginButtonText}>Admin</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
        </View>
         </View>
       </TouchableWithoutFeedback>

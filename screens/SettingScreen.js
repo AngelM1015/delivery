@@ -1,47 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, TouchableOpacity, Image, FlatList, ScrollView, Platform, Modal } from 'react-native';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { Icons } from '../constants/Icons';
 import { COLORS } from '../constants/colors';
 import { base_url, orders } from '../constants/api';
 import useUser from '../hooks/useUser';
+import useOrders from '../hooks/useOrders';
 
 const SettingScreen = ({route}) => {
-
   const navigation = useNavigation();
 
-  const { role, token } = useUser();
+  const { role, userEmail, userName } = useUser();
+  const { orders, fetchOrders } = useOrders()
   const [isActivityActive, setIsActivityActive] = useState(false);
   const [statusPopupVisible, setStatusPopupVisible] = useState(false);
-  const [ordersData, setOrdersData] = useState([]);
-  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false); 
+  const [modalVisible, setModalVisible] = useState(false);
+
   useEffect(() => {
-    if(role !== 'customer')
+    if(role === 'customer')
     {
       fetchOrders();
     }
   }, []);
-
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const token = await AsyncStorage.getItem('userToken');
-      const response = await axios.get(`${base_url}${orders.order}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setOrdersData(response.data);
-      setFilteredOrders(response.data);
-      console.log('orders=========', filteredOrders[0])
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const renderOrderItem = ({ item }) => {
     let statusText = '';
@@ -111,6 +93,7 @@ const SettingScreen = ({route}) => {
       await AsyncStorage.removeItem('userRole');
       await AsyncStorage.removeItem('userId');
       await AsyncStorage.removeItem('hasOnBoarded');
+      await AsyncStorage.removeItem('location');
   
       navigation.replace('Login');
       console.log('Logged out successfully');
@@ -134,9 +117,9 @@ const SettingScreen = ({route}) => {
   };
 
   const profileOptions = [
-    { icon: <Icons.PersonalData/>, text: 'Personal Data',navigateTo: 'PersonalData'  },
+    { icon:  <Icons.PersonalData/>, text: 'Personal Data',navigateTo: 'PersonalData'  },
     { icon:  <Icons.SettingsIcon/>, text: 'Settings',navigateTo: 'SettingEdit' },
-    { icon:  <Icons.ExtraCard/>, text: 'Extra Card', navigateTo: 'AddPaymentMethod' },
+    ...(role === 'customer' ? [{ icon: <Icons.ExtraCard />, text: 'Extra Card', navigateTo: 'AddPaymentMethod' }] : []),
   ];
 
   const supprt = [
@@ -179,8 +162,8 @@ const SettingScreen = ({route}) => {
           style={styles.profileImage}
         />
         <View style={{marginTop: 15}}>
-          <Text style={styles.name}>Albert Stevano Bajefski</Text>
-          <Text style={styles.email}>abcd1234@gmail.com</Text>
+          <Text style={styles.name}>{userName}</Text>
+          <Text style={styles.email}>{userEmail}</Text>
         </View>
       </View>
         {role === 'customer' && (
@@ -192,7 +175,7 @@ const SettingScreen = ({route}) => {
             </TouchableOpacity>
           </View>
           <FlatList
-            data={filteredOrders.slice(0, 1)}  // Only display the first order
+            data={orders.slice(0, 1)}
             renderItem={renderOrderItem}
             keyExtractor={(item) => item.id.toString()}
             ListEmptyComponent={<Text>No orders available</Text>}
@@ -200,7 +183,6 @@ const SettingScreen = ({route}) => {
           />
         </View>
         )}
-        
 
         <View style={styles.separator}></View>
 
@@ -338,12 +320,14 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     marginRight: 20,
+    // alignSelf: 'center'
   },
   name: {
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.black,
     marginBottom: 5,
+    alignSelf: 'center'
   },
   email: {
     fontSize: 14,
@@ -356,6 +340,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     width: '90%',
     alignSelf: 'center',
+    borderRadius: 10,
     ...Platform.select({
       ios: {
         shadowColor: '#000', 

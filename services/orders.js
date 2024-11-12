@@ -19,11 +19,23 @@ export class OrderService {
     return response.data;
   }
 
-  async fetchPartnerOrders() {
+  async fetchPartnerPendingOrders() {
     if(this.role !== 'partner') {
       return []
     }
     const response = await client.get(orders.partnerOrders, {
+      headers: { Authorization: `Bearer ${this.token}` },
+    });
+    return response.data;
+  }
+
+  async fetchAllPartnerOrders() {
+    if(this.role !== 'partner') {
+      return []
+    }
+    const url = orders.order + '/partner_orders'
+    console.log('in order service')
+    const response = await client.get(url, {
       headers: { Authorization: `Bearer ${this.token}` },
     });
     return response.data;

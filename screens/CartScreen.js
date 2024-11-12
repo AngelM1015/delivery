@@ -1,22 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View, StyleSheet, TextInput, Image, TouchableOpacity } from 'react-native';
-import { Button, Card, Text, PaperProvider, Checkbox  } from 'react-native-paper';
+import { Card, Text, PaperProvider, Checkbox  } from 'react-native-paper';
 import { useCart } from '../context/CartContext';
 import { FontAwesome5, AntDesign } from '@expo/vector-icons';
 import CustomButton from '../components/CustomButton';
 import Header from '../components/Header';
 import Locations from '../components/Locations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Icons } from '../constants/Icons';
-import { Ionicons } from '@expo/vector-icons';
 
 const CartScreen = ({ navigation }) => {
   const { cartItems, removeFromCart, updateItemQuantity } = useCart();
   const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [location, setLocation] = useState(null);
-  // console.log('cartItems', cartItems);
-  const deliveryFee = 20.00;
   const discount = 0.00;
   const [extraChecked, setExtraChecked] = useState(false);
   const [extraOptions, setExtraOptions] = useState([
@@ -48,8 +44,8 @@ const CartScreen = ({ navigation }) => {
 
   const calculateFinalTotal = () => {
     const cartTotal = calculateCartTotal();
-    const extrasTotal = extraOptions.reduce((total, option) => total + parseFloat(option.price || 0), 0);
-    return cartTotal + extrasTotal + deliveryFee - discount;
+    // const extrasTotal = extraOptions.reduce((total, option) => total + parseFloat(option.price || 0), 0);
+    return cartTotal - discount;
   };
 
   const addExtraOption = () => {
@@ -67,7 +63,7 @@ const CartScreen = ({ navigation }) => {
       try {
         const location = await AsyncStorage.getItem('location');
         if (location) {
-          const parsedLocation = JSON.parse(location); // Parse JSON
+          const parsedLocation = JSON.parse(location);
           setLocation(parsedLocation);
           setSelectedLocation(parsedLocation);
         }
@@ -84,25 +80,25 @@ const CartScreen = ({ navigation }) => {
         <View style={{paddingTop:50}}>
           <Header title="About This Menu" navigation={navigation} showShareIcon={true} />
         </View>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <View>
-          <TouchableOpacity style={styles.locationContainer} onPress={() => setLocationModalVisible(true)}>
-          {/* <Icons.LocationIcon /> */}
-            <Text style={styles.locationText}>
-            <Ionicons name="location-sharp" size={24} color="#F09B00" />
+        <View style={styles.locationContainer}>
+          <View style={{gap: 10}}>
+            <Text style={{color: '#8F90A6', fontSize: 14}}> Delivery Location</Text>
+            <Text style={styles.locationText} numberOfLines={2}>
               {selectedLocation ? selectedLocation.location_name : 'Your Location'}
             </Text>
-            <Icons.DownwardArrow />
+          </View>
+          <TouchableOpacity onPress={() => setLocationModalVisible(true)} style={styles.changeLocation}>
+            <Text style={{ color: '#F09B00', textAlign: 'center' }}>Change Location</Text>
           </TouchableOpacity>
-          {/* <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Icons.LocationIcon />
-            <Text style={styles.locationSubtext}>{selectedLocation ? selectedLocation.location_name : 'Your Location'}</Text>
-          </View> */}
         </View>
 
-        {/* Cart Items Section */}
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
         {cartItems.length === 0 ? (
-          <Text style={styles.displayMessage}>Your cart is empty!</Text>
+          <View style={{flexDirection: 'column', gap: 25}}>
+          <Image source={require('../assets/images/emptyCart.png')} style={{ alignSelf:'center', marginVertical: 40 }} />
+          <Text style={{fontWeight: "bold", fontSize: 26,  textAlign: 'center'}}> Ouch! Hungry</Text>
+          <Text style={styles.displayMessage}>Seems like you have not ordered any food yet</Text>
+          </View>
         ) : (
           <>
             {cartItems.map((item, index) => (
@@ -113,13 +109,15 @@ const CartScreen = ({ navigation }) => {
                     <Text style={styles.itemTitle}>{item.name}</Text>
                     <Text style={styles.itemPrice}>${item.price}</Text>
                     <View style={styles.quantityControls}>
-                      <TouchableOpacity style={styles.quantityIcon} onPress={() => decrementQuantity(item.id)}>
-                      <AntDesign name="minus" size={20} />
-                      </TouchableOpacity>
-                      <Text style={styles.quantityText}>{item.quantity}</Text>
-                      <TouchableOpacity style={styles.quantityIcon} onPress={() => incrementQuantity(item.id)}>
-                      <AntDesign name="plus" size={20} />
-                      </TouchableOpacity>
+                      <View style={{flexDirection: 'row'}}>
+                        <TouchableOpacity style={styles.quantityIcon} onPress={() => decrementQuantity(item.id)}>
+                          <AntDesign name="minus" size={20} />
+                        </TouchableOpacity>
+                        <Text style={styles.quantityText}>{item.quantity}</Text>
+                        <TouchableOpacity style={styles.quantityIcon} onPress={() => incrementQuantity(item.id)}>
+                          <AntDesign name="plus" size={20} />
+                        </TouchableOpacity>
+                      </View>
                       <TouchableOpacity onPress={() => removeFromCart(item.id)}>
                         <FontAwesome5 name="trash-alt" size={20} color="red" />
                       </TouchableOpacity>
@@ -147,20 +145,20 @@ const CartScreen = ({ navigation }) => {
                       <View style={styles.extraInputContainer}>
                         <Text style={styles.inputLabel}>Product Name</Text>
                         <TextInput
-                          style={styles.productInput} // Larger input for product name
+                          style={styles.productInput}
                           placeholder={option.productName}
                           value={option.productName}
-                          editable={false} // Fixed names as placeholders
+                          editable={false}
                         />
                       </View>
                       <View style={styles.priceInputContainer}>
                         <Text style={styles.inputLabel}>Price</Text>
                         <TextInput
-                          style={styles.priceInput} // Smaller input for price
+                          style={styles.priceInput}
                           placeholder={option.price}
                           keyboardType="numeric"
                           value={option.price}
-                          editable={false} // Fixed prices as placeholders
+                          editable={false}
                         />
                       </View>
                     </View>
@@ -173,25 +171,16 @@ const CartScreen = ({ navigation }) => {
             <View style={styles.paymentSummary}>
               <Text style={styles.summaryText}>Payment Summary</Text>
 
-              {/* Total Items Row */}
               <View style={styles.summaryRow}>
                 <Text>Total Items:</Text>
                 <Text style={styles.summaryValue}>${calculateCartTotal().toFixed(2)}</Text>
               </View>
 
-              {/* Delivery Fee Row */}
-              <View style={styles.summaryRow}>
-                <Text>Delivery Fee:</Text>
-                <Text style={styles.summaryValue}>{deliveryFee === 0 || deliveryFee === null ? 'Free' : `$${(deliveryFee || 0).toFixed(2)}`}</Text>
-              </View>
-
-              {/* Discount Row */}
               <View style={styles.summaryRow}>
                 <Text>Discount:</Text>
                 <Text style={styles.summaryValue}>-${discount.toFixed(2)}</Text>
               </View>
 
-              {/* Total Row */}
               <View style={styles.summaryRow}>
                 <Text>Total:</Text>
                 <Text style={styles.summaryValue}>${calculateFinalTotal().toFixed(2)}</Text>
@@ -203,7 +192,7 @@ const CartScreen = ({ navigation }) => {
 
       {/* Order Now Button */}
       <CustomButton
-        text="Order Now"
+        text={cartItems.length === 0 ? "Find Food" : "Order Now"}
         onPress={() => {
           if (cartItems.length === 0) {
             navigation.navigate('Home');
@@ -211,7 +200,7 @@ const CartScreen = ({ navigation }) => {
               navigation.navigate('MenuCheckoutScreen', {
                 cartItems,
                 orderDetails: {
-                  deliveryFee: deliveryFee || 0,
+                  deliveryFee: 0,
                   discount: discount || 0,
                   totalPrice: calculateFinalTotal(),
                   imageUrl: cartItems[0].imageUrl,
@@ -235,36 +224,39 @@ const CartScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   scrollViewContent: {
-    padding: 20,
-    flex:1,
+    padding: 15,
   },
   locationContainer: {
-    marginTop: 10,
-    marginBottom: 20,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    minHeight: '12%'
   },
   locationText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    marginStart: 4,
+    maxWidth: '80%',
+    fontWeight: "bold"
   },
-  locationInnerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 5,
-  },
-  locationAddress: {
-    fontSize: 16,
+  changeLocation: {
+    backgroundColor: '#f0f0f0',
+    padding: 15,
+    borderRadius: 16,
+    height: '50%',
+    marginEnd: 4
   },
   cartCard: {
     marginVertical: 10,
     padding: 10,
-    borderRadius: 10,
+    borderRadius: 16,
     backgroundColor: '#fff',
+    shadowOpacity: 0
   },
   cartItemContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8
   },
   cartImage: {
     width: 100,
@@ -287,6 +279,7 @@ const styles = StyleSheet.create({
   quantityControls: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: 5,
     gap: 5
   },
@@ -370,9 +363,11 @@ const styles = StyleSheet.create({
   },
   displayMessage: {
     textAlign: 'center',
-    marginTop: 50,
-    fontSize: 18,
+    margin: 'auto',
+    fontSize: 16,
     color: 'gray',
+    maxWidth: '70%'
+    
   },
 });
 

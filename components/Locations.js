@@ -123,16 +123,17 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={styles.locationItem}
                 onPress={() => {
                   saveSelectedLocation(item);
                   onSelectLocation(item);
                 }}
               >
-                <Text style={styles.locationText}>
-                  <Ionicons name="location-sharp" size={24} color="#F09B00" />
-                  {item.location_name}
-                </Text>
+                <View style={styles.locationItem}>
+                  <Ionicons name="location-sharp" size={24} />
+                  <Text style={styles.locationText}>
+                    {item.location_name}
+                  </Text>
+                </View>
               </TouchableOpacity>
             )}
           />
@@ -169,9 +170,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   locationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
     padding: 15,
-    borderBottomWidth: 1,
-    borderColor: '#ccc',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 0.2,
+    borderColor: '#C0C0C0'
   },
   locationText: {
     fontSize: 16,

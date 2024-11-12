@@ -15,23 +15,23 @@ const MenuAboutScreen = ({ route, navigation }) => {
   const [recommendedItems, setRecommendedItems] = useState([]);
   const [modifierCounts, setModifierCounts] = useState({});
   const [quantity, setQuantity] = useState(1);
-  const { addToCart } = useCart();
+  const [modifiers, setModifiers] = useState([]);
+  const { addToCart, clearCart, cartRestaurantId, setCartRestaurantId } = useCart();
 
-  // Fetch menu item details
   useEffect(() => {
     const fetchMenuItemDetails = async () => {
       try {
         const token = await AsyncStorage.getItem('userToken');
         const headers = { Authorization: `Bearer ${token}` };
-        const url = `${base_url}api/v1/restaurants/${restaurantId}/menu_items/`;
+        const url = `${base_url}api/v1/restaurants/${restaurantId}/menu_items/${menuItemId}`;
         const response = await axios.get(url, { headers });
+        console.log('menu item', response.data);
 
-        // Find the selected item based on menuItemId
-        const selectedItem = response.data.find(item => item.id === menuItemId);
-        setMenuItem(selectedItem);
+        setMenuItem(response.data.menu_item);
+        setModifiers(response.data.modifiers);
 
         // Initialize modifier counts
-        const initialCounts = (selectedItem.modifiers || []).reduce((counts, modifier) => {
+        const initialCounts = (response.data.modifiers || []).reduce((counts, modifier) => {
           counts[modifier.id] = {};
           (modifier.modifier_options || []).forEach(option => {
             counts[modifier.id][option.id] = 0;
@@ -41,8 +41,8 @@ const MenuAboutScreen = ({ route, navigation }) => {
         setModifierCounts(initialCounts);
 
         // Set recommended items excluding the selected item
-        const recommended = response.data.filter(item => item.id !== menuItemId);
-        setRecommendedItems(recommended);
+        // const recommended = response.data.filter(item => item.id !== menuItemId);
+        // setRecommendedItems(recommended);
       } catch (error) {
         console.error('Error fetching menu items:', error);
       }
@@ -61,7 +61,7 @@ const MenuAboutScreen = ({ route, navigation }) => {
         options: Object.entries(optionsCounts)
           .filter(([_, count]) => count > 0)
           .map(([optionId, count]) => {
-            const option = menuItem.modifiers
+            const option = modifiers
               ?.find(modifier => modifier.id === parseInt(modifierId))?.modifier_options
               ?.find(option => option.id === parseInt(optionId));
             return { ...option, count };
@@ -82,19 +82,27 @@ const MenuAboutScreen = ({ route, navigation }) => {
       id: menuItemId,
       name: menuItem.name,
       price: price + selectedModifiers.reduce((w, x) => w + x.options.reduce((a, b) => a + parseFloat(b.additional_price * b.count), 0), 0),
-      imageUrl, // Include the imageUrl here
+      imageUrl,
       selectedModifiers,
       quantity: quantity,
     };
 
-    console.log('Item being added to cart:', itemForCart); // Log the entire item object
-    addToCart(itemForCart);
+    console.log('Item being added to cart:', itemForCart);
+    if(cartRestaurantId !== menuItem.restaurant_id)
+      {
+        clearCart();
+        setCartRestaurantId(menuItem.restaurant_id);
+        addToCart(itemForCart);
+      }
+    else{
+      addToCart(itemForCart);
+    }
     Toast.show({
       type: 'success',
       text1: 'Success!',
       text2: 'Item added to the cart 👋',
       position: 'top',
-      visibilityTime: 1000, // 3 seconds
+      visibilityTime: 1000,
     });
   };
 
@@ -182,33 +190,35 @@ const MenuAboutScreen = ({ route, navigation }) => {
           </View>
         </View>
 
-        <View>
-          <Text style={styles.modifiersTitle}>Available Modifiers:</Text>
-          {(menuItem.modifiers || []).map(modifier => (
-            <Card key={modifier.id} style={styles.card}>
-              <Card.Title title={modifier.name} />
-              <Card.Content>
-                {(modifier.modifier_options || []).map(option => (
-                  <View key={option.id} style={styles.optionContainer}>
-                    <Text>{option.name} (+${option.additional_price || '0.00'})</Text>
-                    <View style={styles.counterContainer}>
-                      <TouchableOpacity onPress={() => handleQuantityChange(modifier.id, option.id, false)}>
-                      <AntDesign name="minus" size={20} />
-                      </TouchableOpacity>
-                      <Text style={styles.countText}>{modifierCounts[modifier.id]?.[option.id] || 0}</Text>
-                      <TouchableOpacity onPress={() => handleQuantityChange(modifier.id, option.id, true)}>
-                      <AntDesign name="plus" size={20} />
-                      </TouchableOpacity>
+        {modifiers.length > 0 && (
+          <View>
+            <Text style={styles.modifiersTitle}>Available Modifiers:</Text>
+            {modifiers.map(modifier => (
+              <Card key={modifier.id} style={styles.card}>
+                <Card.Title title={modifier.name} />
+                <Card.Content>
+                  {(modifier.modifier_options || []).map(option => (
+                    <View key={option.id} style={styles.optionContainer}>
+                      <Text>{option.name} (+${option.additional_price || '0.00'})</Text>
+                      <View style={styles.counterContainer}>
+                        <TouchableOpacity onPress={() => handleQuantityChange(modifier.id, option.id, false)}>
+                        <AntDesign name="minus" size={20} />
+                        </TouchableOpacity>
+                        <Text style={styles.countText}>{modifierCounts[modifier.id]?.[option.id] || 0}</Text>
+                        <TouchableOpacity onPress={() => handleQuantityChange(modifier.id, option.id, true)}>
+                        <AntDesign name="plus" size={20} />
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  </View>
-                ))}
-              </Card.Content>
-            </Card>
-          ))}
+                  ))}
+                </Card.Content>
+              </Card>
+            ))}
         </View>
+        )}
 
         {/* Recommended Section */}
-        <View style={styles.recommendedSection}>
+        {/* <View style={styles.recommendedSection}>
           <Text style={styles.sectionTitle}>Recommended For You</Text>
           <FlatList
             data={recommendedItems}
@@ -217,7 +227,7 @@ const MenuAboutScreen = ({ route, navigation }) => {
             horizontal
             showsHorizontalScrollIndicator={false}
           />
-        </View>
+        </View> */}
       </ScrollView>
 
       {/* Footer - Quantity and Add to Cart */}

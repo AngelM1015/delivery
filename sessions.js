@@ -48,7 +48,7 @@ export async function signup(name, email, password) {
 
 export async function logout() {
   const { setAuthToken } = useAuth();
-  const token = await AsyncStorage.getItem('token');
+  const token = await AsyncStorage.getItem('userToken');
 
   if (token) {
     const headers = {
@@ -73,7 +73,7 @@ async function storeToken(token) {
 
 export async function getToken() {
   try {
-    return await AsyncStorage.getItem('token');
+    return await AsyncStorage.getItem('userToken');
   } catch (error) {
     console.error('Failed to get the token:', error);
     return null;

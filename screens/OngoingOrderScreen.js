@@ -28,7 +28,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
   
       try {
 
-        const response = await axios.get(`http://localhost:3000/api/v1/orders/${route.params.id}`, {
+        const response = await axios.get(`http://192.168.150.27:3000/api/v1/orders/${route.params.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
   
@@ -80,7 +80,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
       }
 
       try {
-        await axios.patch(`https://localhost:3000/api/v1/orders/${order.id}/pick_up_order`, order, {
+        await axios.patch(`https://192.168.150.27:3000/api/v1/orders/${order.id}/pick_up_order`, order, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -94,28 +94,6 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
       }
   };
 
-  const deliverOrder = async () => {
-    const token = await AsyncStorage.getItem('userToken');
-      if (!token) {
-        Alert.alert('Error', 'you have been logged out!');
-        return;
-      }
-
-      try {
-        await axios.patch(`https://localhost:3000/api/v1/orders/${order.id}/deliver_order`, order, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (order.order_type === 'delivery'){
-          navigation.replace('Main');
-        } else {
-          Alert.alert('Error', 'something went wrong!');
-        }
-      } catch (error) {
-        Alert.alert('Error', 'something went wrong!');
-      }
-  }
-
   return (
     <SafeAreaView style={{flex: 1}}>
       <Animated.View style={[styles.container, { transform: [{ translateY: slideAnim }] }]}>
@@ -124,20 +102,9 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
         </View>
         <View style={styles.content}>
           <Text style={styles.orderText}>Order ID: {order.id}</Text>
-          {userRole === 'customer' ? (
-            <>
-              <Text>Status: {order.status}</Text>
-              <Text>Order message: {customerMessage}</Text>
-              <Text>Your order will be delivered in {order.estimated_wait_time} - {order.estimated_wait_time + 15} mins</Text>
-            </>
-          ) : (
-            <>
-            <Text>{partnerMessage}</Text>
-            <TouchableOpacity style={styles.pickupButton} onPress={() => deliverOrder()}>
-              <Text style={styles.pickupButtonText}>Deliver order</Text>
-            </TouchableOpacity>
-            </>
-          )}
+          <Text>Status: {order.status}</Text>
+          <Text>Order message: {customerMessage}</Text>
+          <Text>Your order will be delivered in {order.estimated_wait_time} - {order.estimated_wait_time + 15} mins</Text>
           {order.status === 'partner_assigned' && (
             <>
             <FAB
@@ -191,7 +158,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   pickupButton: {
-    marginTop: 20,
+    marginTop: 40,
     paddingVertical: 10,
     paddingHorizontal: 20,
     backgroundColor: 'orange',

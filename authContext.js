@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
     const bootstrapAsync = async () => {
       let userToken;
       try {
-        userToken = await AsyncStorage.getItem('token');
+        userToken = await AsyncStorage.getItem('userToken');
       } catch (e) {
         // Restoring token failed
         console.error('Restoring token failed', e);
@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
       }
     },
     logout: async () => {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem('userToken');
       if (token) {
         const headers = {
           'Authorization': `Bearer ${token}`
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }) => {
       },
         getToken: async () => {
         try {
-          return await AsyncStorage.getItem('token');
+          return await AsyncStorage.getItem('userToken');
         } catch (error) {
           console.error('Failed to get the token:', error);
           return null;

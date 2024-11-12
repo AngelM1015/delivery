@@ -7,6 +7,7 @@ import { Card } from 'react-native-paper';
 import { FontAwesome } from '@expo/vector-icons';
 import useRestaurants from '../hooks/useRestaurants';
 import Locations from '../components/Locations';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HomeScreen = ({navigation}) => {
   const { loading, restaurants, menuItems, selectedRestaurant, setSelectedRestaurant, fetchRestaurants, fetchMenuItems } = useRestaurants();
@@ -25,8 +26,23 @@ const HomeScreen = ({navigation}) => {
   useEffect(() => {
     console.log('restaurant', restaurants);
     if(selectedRestaurant === null){
+      console.log('in home screen use effetc')
       fetchRestaurants
     }
+
+    const getLocation = async () => {
+      try {
+        const location = await AsyncStorage.getItem('location');
+        if (location) {
+          const parsedLocation = JSON.parse(location);
+          setSelectedLocation(parsedLocation);
+          console.log('location', parsedLocation.location_name.toString())
+        }
+      } catch (error) {
+        console.log("Error fetching location:", error);
+      }
+    };
+    getLocation();
   
     const changeBackgroundImage = () => {
       Animated.timing(fadeAnim, {
@@ -135,10 +151,16 @@ const HomeScreen = ({navigation}) => {
             <View style={styles.notification}>
               <View>
                 <TouchableOpacity style={styles.locationContainer} onPress={() => setLocationModalVisible(true)}>
-                <Icons.LocationIcon />
-                  <Text style={styles.locationText}>{selectedLocation ? selectedLocation.location_name : 'Your Location'}</Text>
+                  <Text style={{color: 'white'}} >{selectedLocation ? 'Change Location' : 'Your Location'}</Text>
                   <Icons.DownwardArrow />
                 </TouchableOpacity>
+                <View style={{flexDirection: 'row', gap: 4}}>
+                  <Icons.LocationIcon />
+                  <Text style={styles.locationText} numberOfLines={1}>{selectedLocation ? 
+                    selectedLocation.location_name
+                    : 'Your Location'}
+                  </Text>
+                </View>
                 {/* <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Icons.LocationIcon />
                   <Text style={styles.locationSubtext}>{selectedLocation ? selectedLocation.location_name : 'Your Location'}</Text>
@@ -209,6 +231,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '400',
     color: COLORS.white,
+    maxWidth: '80%'
   },
   dropdownArrow: {
     fontSize: 18,

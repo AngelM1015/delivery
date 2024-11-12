@@ -26,7 +26,6 @@ const AddPaymentMethodScreen = ({ navigation }) => {
         return;
       }
 
-      // Create a payment method token using Stripe
       const { token: paymentToken, error } = await createToken({
         type: 'Card',
         card: cardDetails,
@@ -40,9 +39,8 @@ const AddPaymentMethodScreen = ({ navigation }) => {
 
       console.log('Payment method token:', paymentToken);
 
-      // Send the payment token to the backend
-      const response = await axios.post('http://localhost:3000/api/v1/payments/add_payment_method', {
-        payment_method_token: paymentToken.id // Send the token ID to the backend
+      const response = await axios.post('http://192.168.150.27:3000/api/v1/payments/add_payment_method', {
+        payment_method_token: paymentToken.id
       }, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -51,7 +49,7 @@ const AddPaymentMethodScreen = ({ navigation }) => {
 
       if (response.data.success) {
         Alert.alert('Success', 'Payment method added successfully');
-        navigation.goBack(); // Go back to the previous screen
+        navigation.goBack();
       } else {
         Alert.alert('Error', response.data.message);
       }
@@ -105,7 +103,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   cardField: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ccc',
     textColor: '#000000',
   },
   cardFieldContainer: {
