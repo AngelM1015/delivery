@@ -26,10 +26,11 @@ const useRestaurants = () => {
     }
 
     setLoading(true);
-    console.log('in fetch restaurant');
     try {
-      const Restaurants = await RestaurantServiceClient.fetchRestaurants();
-      console.log('restaurant in restaurant hook', Restaurants);
+      const Restaurants = role === 'restaurant_owner' ?
+        await RestaurantServiceClient.fetchOwnerRestaurants() :
+        await RestaurantServiceClient.fetchRestaurants();
+
       setRestaurants(Restaurants);
       setSelectedRestaurant(Restaurants[0]?.id || null);
     } catch (error) {
@@ -44,11 +45,13 @@ const useRestaurants = () => {
       console.error('RestaurantServiceClient is not initialized');
       return;
     }
-
     setLoading(true);
     try {
-      const Restaurants = await RestaurantServiceClient.fetchOwnerRestaurants();
-      setOwnerRestaurants(Restaurants);
+      const response = await RestaurantServiceClient.fetchOwnerRestaurants();
+      console.log('owner Restaurants', response);
+      setRestaurants(response);
+      setSelectedRestaurant(response[0].id);
+      console.log('after setting owner restaurants ')
     } catch (error) {
       console.error('Error fetching owner restaurants:', error);
     } finally {
@@ -64,6 +67,25 @@ const useRestaurants = () => {
       setMenuItems(response.data);
     } catch (error) {
       console.error('Error fetching menu items:', error);
+    }
+  };
+
+  const changeStatus = async (restaurantId, menuItemId, newStatus) => {
+    try {
+      await client.patch(
+        `api/v1/restaurants/${restaurantId}/menu_items/${menuItemId}/change_status`,
+        {
+          isenabled: newStatus,
+        }
+      );
+      // Update the local state to reflect the change
+      setMenuItems((prevMenuItems) =>
+        prevMenuItems.map((item) =>
+          item.id === menuItemId ? { ...item, isenabled: newStatus } : item
+        )
+      );
+    } catch (err) {
+      console.error("Error changing status:", err);
     }
   };
 
@@ -86,7 +108,10 @@ const useRestaurants = () => {
     setSelectedRestaurant,
     fetchRestaurants,
     fetchOwnerRestaurants,
-    fetchMenuItems
+    fetchMenuItems,
+    changeStatus,
+    setOwnerRestaurants,
+    setMenuItems
   };
 };
 

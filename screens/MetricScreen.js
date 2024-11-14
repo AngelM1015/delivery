@@ -81,12 +81,11 @@ const formatStatus = status => {
         setOrders(partnerOrders);
       }
     }, [partnerOrders]);
-    
 
   const fetchOrders = async () => {
     setRefreshing(true);
     const headers = { Authorization: `Bearer ${token}` };
-    let apiUrl = 'http://192.168.150.27:3000/api/v1/orders';
+    let apiUrl = 'http://localhost:3000/api/v1/orders';
     apiUrl += role === 'restaurant_owner' ? '/restaurant_orders' : role === 'admin' ? '/all_orders' : '/partner_orders';
     try {
         console.log('token in metric', token)
@@ -149,7 +148,7 @@ const formatStatus = status => {
 
     const token = await AsyncStorage.getItem('userToken');
 
-    const response = await axios.put(`http://192.168.150.27:3000/api/v1/orders/${id}/update_status`,
+    const response = await axios.put(`http://localhost:3000/api/v1/orders/${id}/update_status`,
       { status: selectedStatus },
       {
         headers: { 'Authorization': `Bearer ${token}`}

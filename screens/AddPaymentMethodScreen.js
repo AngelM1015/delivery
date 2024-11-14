@@ -39,7 +39,7 @@ const AddPaymentMethodScreen = ({ navigation }) => {
 
       console.log('Payment method token:', paymentToken);
 
-      const response = await axios.post('http://192.168.150.27:3000/api/v1/payments/add_payment_method', {
+      const response = await axios.post('http://localhost:3000/api/v1/payments/add_payment_method', {
         payment_method_token: paymentToken.id
       }, {
         headers: {

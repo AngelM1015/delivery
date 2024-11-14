@@ -1,21 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { base_url } from '../constants/api';
 import axios from 'axios';
 import useUser from '../hooks/useUser';
 import { Ionicons } from '@expo/vector-icons';
 import CustomButton from './CustomButton';
 import MapView, { Marker } from 'react-native-maps';
+import { GOOGLE_MAPS_API_KEY } from '@env';
 
 const Locations = ({ isVisible, onClose, onSelectLocation }) => {
   const { token } = useUser();
   const [locations, setLocations] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
   const [newLocation, setNewLocation] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
-  // Set initial region for Big Sky, Montana
+  const mapRef = useRef(null);
+
   const bigSkyRegion = {
     latitude: 45.2614,
     longitude: -111.3080,
@@ -35,18 +37,25 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setLocations(response.data);
-      console.log('Fetched locations:', response.data);
     } catch (error) {
       console.error('Error fetching locations:', error);
     }
   };
 
-  const saveSelectedLocation = async (location) => {
+  const fetchSuggestions = async (query) => {
     try {
-      await AsyncStorage.setItem('location', JSON.stringify(location));
-      console.log('Location saved successfully');
+      const response = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
+        params: {
+          input: query,
+          key: GOOGLE_MAPS_API_KEY,
+          location: `${bigSkyRegion.latitude},${bigSkyRegion.longitude}`,
+          region: 'us',
+          radius: 10000
+        },
+      });
+      setSuggestions(response.data.predictions);
     } catch (error) {
-      console.error('Error saving location:', error);
+      console.error('Error fetching suggestions:', error);
     }
   };
 
@@ -56,7 +65,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
     const locationData = selectedLocation ? {
       latitude: selectedLocation.latitude,
       longitude: selectedLocation.longitude,
-      location_name: "Big Sky"
+      location_name: newLocation
     } : { location: newLocation };
 
     try {
@@ -72,9 +81,58 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
     }
   };
 
-  const handleMapPress = (event) => {
+  const handleSuggestionSelect = async (placeId) => {
+    try {
+      const response = await axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
+        params: {
+          place_id: placeId,
+          key: GOOGLE_MAPS_API_KEY,
+        },
+      });
+      const { lat, lng } = response.data.result.geometry.location;
+      const formattedAddress = response.data.result.formatted_address;
+
+      setSelectedLocation({ latitude: lat, longitude: lng });
+      setNewLocation(formattedAddress);
+      setSuggestions([]);
+
+      if (mapRef.current) {
+        mapRef.current.animateToRegion({
+          latitude: lat,
+          longitude: lng,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching place details:', error);
+    }
+  };
+
+  const handleMapPress = async (event) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
     setSelectedLocation({ latitude, longitude });
+
+    const locationName = await fetchLocationName(latitude, longitude);
+    setNewLocation(locationName);
+  };
+
+  const fetchLocationName = async (latitude, longitude) => {
+    try {
+      const response = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json`, {
+        params: {
+          latlng: `${latitude},${longitude}`,
+          key: GOOGLE_MAPS_API_KEY,
+        },
+      });
+      if (response.data.results[0]) {
+        return response.data.results[0].formatted_address;
+      }
+      return 'Unknown Location';
+    } catch (error) {
+      console.error('Error fetching location name:', error);
+      return 'Unknown Location';
+    }
   };
 
   return (
@@ -85,34 +143,45 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
           <Text style={styles.header}>Select Location</Text>
         </View>
         
-        {/* Map View centered on Big Sky */}
-        <MapView
-          style={styles.map}
-          initialRegion={bigSkyRegion}
-          onRegionChangeComplete={(region) => {
-            // Optional: Restrict region to Big Sky area by checking the new region and resetting if needed
-          }}
-          onPress={handleMapPress}
-        >
-          {selectedLocation && (
-            <Marker
-              coordinate={selectedLocation}
-              title="Selected Location"
-              description="Big Sky"
-            />
-          )}
-        </MapView>
+        {isAdding && (
+          <MapView
+            ref={mapRef}
+            style={styles.map}
+            initialRegion={bigSkyRegion}
+            onPress={handleMapPress}
+          >
+            {selectedLocation && (
+              <Marker
+                coordinate={selectedLocation}
+                title="Selected Location"
+                description={newLocation || 'Selected Location'}
+              />
+            )}
+          </MapView>
+        )}
 
         <View style={styles.controlsContainer}>
           {isAdding ? (
             <View style={styles.addLocationContainer}>
               <TextInput
                 style={styles.input}
-                placeholder="Enter new location or select on map"
+                placeholder="Location Name"
                 value={newLocation}
-                onChangeText={setNewLocation}
+                onChangeText={(text) => {
+                  setNewLocation(text);
+                  fetchSuggestions(text);
+                }}
               />
-              <Button title="Save" onPress={handleAddLocation} />
+              <FlatList
+                data={suggestions}
+                keyExtractor={(item) => item.place_id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity onPress={() => handleSuggestionSelect(item.place_id)}>
+                    <Text style={styles.suggestionText}>{item.description}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+              <Button title="Save Location" onPress={handleAddLocation} />
             </View>
           ) : (
             <CustomButton text="Add New Location" onPress={() => setIsAdding(true)} />
@@ -146,7 +215,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: 'white'
   },
   headerContainer: {
     marginVertical: 20,
@@ -158,42 +227,46 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginLeft: 10,
+    marginLeft: 10
   },
   map: {
     height: '40%',
-    width: '100%',
+    width: '100%'
   },
   controlsContainer: {
     flex: 1,
     paddingHorizontal: 20,
-    marginTop: 10,
+    marginTop: 10
   },
   locationItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'white',
-    padding: 15,
     backgroundColor: '#fff',
+    padding: 10,
     borderRadius: 10,
     borderWidth: 0.2,
-    borderColor: '#C0C0C0'
+    borderColor: '#C0C0C0',
   },
   locationText: {
     fontSize: 16,
+    width: '90%'
   },
   addLocationContainer: {
     flexDirection: 'column',
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: 10
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     padding: 10,
     marginBottom: 10,
-    width: '100%',
+    width: '100%'
+  },
+  suggestionText: {
+    padding: 10,
+    fontSize: 16,
+    color: 'black'
   },
 });
 

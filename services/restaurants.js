@@ -15,10 +15,11 @@ export class RestaurantService {
   }
 
   async fetchOwnerRestaurants() {
-    const response = await client.get(restaurants.ownerRestaurants, {
-      headers: { Authorization: `Bearer ${this.token}` }
-    });
+    const response = await client.get(restaurants.ownerRestaurants,{
+      params: {},
+      headers: { Authorization: `Bearer ${this.token}`,
+      Accept: 'application/json' }
+    },);
     return response.data
   }
-
 }
