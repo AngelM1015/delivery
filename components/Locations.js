@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import CustomButton from './CustomButton';
 import MapView, { Marker } from 'react-native-maps';
 import { GOOGLE_MAPS_API_KEY } from '@env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Locations = ({ isVisible, onClose, onSelectLocation }) => {
   const { token } = useUser();
@@ -68,8 +69,10 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
       location_name: newLocation
     } : { location: newLocation };
 
+    console.log('location data', locationData);
+
     try {
-      const response = await axios.post(`${base_url}api/v1/addresses`, locationData, {
+      const response = await axios.post(`${base_url}api/v1/addresses`, {address: locationData}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setLocations([...locations, response.data]);
@@ -106,6 +109,15 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
       }
     } catch (error) {
       console.error('Error fetching place details:', error);
+    }
+  };
+
+  const saveSelectedLocation = async (location) => {
+    try {
+      await AsyncStorage.setItem('location', JSON.stringify(location));
+      console.log('Location saved successfully');
+    } catch (error) {
+      console.error('Error saving location:', error);
     }
   };
 
@@ -181,7 +193,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
                   </TouchableOpacity>
                 )}
               />
-              <Button title="Save Location" onPress={handleAddLocation} />
+              <CustomButton text="Save Location" onPress={handleAddLocation} />
             </View>
           ) : (
             <CustomButton text="Add New Location" onPress={() => setIsAdding(true)} />
@@ -243,8 +255,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     padding: 10,
+    marginBottom: 10,
     borderRadius: 10,
-    borderWidth: 0.2,
+    borderWidth: 0.5,
     borderColor: '#C0C0C0',
   },
   locationText: {
@@ -261,7 +274,8 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     padding: 10,
     marginBottom: 10,
-    width: '100%'
+    width: '100%',
+    borderRadius: 10
   },
   suggestionText: {
     padding: 10,

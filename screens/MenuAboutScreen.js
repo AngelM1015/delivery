@@ -182,10 +182,9 @@ const MenuAboutScreen = ({ route, navigation }) => {
             <View style={styles.metaDetails}>
               <Text><FontAwesome name='bicycle' color='#F09B00'/> Free Delivery</Text>
               <Text><FontAwesome name='clock-o' color='#F09B00'/> {menuItem.cook_time} mins</Text>
-              <Text><FontAwesome name='star' color='#F09B00'/> 4.9</Text>
             </View>
             <View style={styles.separator} />
-            <Text>Description</Text>
+            <Text style={{fontWeight: "bold"}}>Description</Text>
             <Text style={styles.menuDescription}>{menuItem.description || 'No description available'}</Text>
           </View>
         </View>
@@ -195,7 +194,7 @@ const MenuAboutScreen = ({ route, navigation }) => {
             <Text style={styles.modifiersTitle}>Available Modifiers:</Text>
             {modifiers.map(modifier => (
               <Card key={modifier.id} style={styles.card}>
-                <Card.Title title={modifier.name} />
+                <Card.Title style={styles.modifierName} title={modifier.name} />
                 <Card.Content>
                   {(modifier.modifier_options || []).map(option => (
                     <View key={option.id} style={styles.optionContainer}>
@@ -302,8 +301,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   menuDescription: {
+    marginTop: 4,
     fontSize: 16,
     color: '#555',
+    fontStyle: 'italic'
+  },
+  modifierName: {
+    fontWeight: "bold"
   },
   recommendedSection: {
     marginTop: 20,
@@ -375,10 +379,10 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   quantityIcon: {
-    borderRadius: '50',
+    borderRadius: 24,
     borderColor: '#C0C0C0',
     borderWidth: '0.5',
-    padding: '30'
+    padding: 8
   },
   quantityText: {
     fontSize: 24,

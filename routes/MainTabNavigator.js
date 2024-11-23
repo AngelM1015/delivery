@@ -14,10 +14,11 @@ import ChatScreen from '../screens/ChatScreen';
 import CartScreen from '../screens/CartScreen';
 import MenuCheckoutScreen from '../screens/MenuCheckoutScreen';
 import OngoingOrderScreen from '../screens/OngoingOrderScreen';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import OrderDetailScreen from '../screens/OrderDetailScreen';
 import { Badge } from 'react-native-paper';
 import { useCart } from '../context/CartContext';
+import OngoingOrderDrawer from '../components/OngoingOrderDrawer';
 
 const themeColors = {
   activeTintColor: "#F09B00",
@@ -32,7 +33,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     marginHorizontal: 15,
     height: 56,
-    paddingBottom: 0
+    paddingBottom: 0,
+    zIndex: 10
   },
   icon: {
     width: '100%',
@@ -109,71 +111,76 @@ const MainTabNavigator = ({ role = 'guest' }) => {
   const { cartItems } = useCart();
 
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName = getTabBarIcon(role, route, focused);
-          return (
-            <View
-              style={[
-                styles.icon,
-                {
-                  backgroundColor: focused
-                    ? themeColors.activeTintColor
-                    : "transparent",
-                },
-              ]}
-            >
-              <Ionicons
-                name={iconName}
-                size={size}
-                color={focused ? "#FFF" : color}
+    <View style={{ flex: 1 }}>
+      {/* {role === 'customer' && (
+        <OngoingOrderDrawer style={{ bottomOffset: 80 }} />
+      )} */}
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName = getTabBarIcon(role, route, focused);
+            return (
+              <View
+                style={[
+                  styles.icon,
+                  {
+                    backgroundColor: focused
+                      ? themeColors.activeTintColor
+                      : "transparent",
+                  },
+                ]}
               >
-                {iconName === 'cart' || iconName === 'cart-outline' && (
-                  <View style={{  bottom: 20, right: 20, margin: 0 }}>
-                    {cartItems.length > 0 && (
-                      <Badge size={16} style={styles.cartBadge}>
-                        {cartItems.length}
-                      </Badge>
-                    )}
-                  </View>
-                )}
-              </Ionicons>
-            </View>
-          );
-        },
-        tabBarActiveTintColor: themeColors.activeTintColor,
-        tabBarInactiveTintColor: themeColors.inactiveTintColor,
-        tabBarStyle: styles.tabBar,
-        headerShown: false,
-        tabBarShowLabel: false,
-      })}
-    >
-      {['partner', 'restaurant_owner', 'admin'].includes(role) ? (
-        <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      ) : (
-        <Tab.Screen name="Home" component={HomeScreen} />
-      )}
-      {['guest'].includes(role) && (
-        <Tab.Screen name="Browse" component={MenuOfRestaurantsScreen} />
-      )}
-      {['customer'].includes(role) && (
-        <Tab.Screen name="Browse" component={MenuStackNavigator} />
-      )}
-      {['customer', 'partner'].includes(role) && (
-        <Tab.Screen
-          name="Cart"
-          component={role === 'partner' ? PartnerOrderStackNavigator : OrderStackNavigator} // Use stack navigator for orders
-        />
-      )}
-      {['partner', 'admin', 'restaurant_owner'].includes(role) && (
-        <Tab.Screen name="Metrics" component={MetricScreen} />
-      )}
-      {['admin', 'restaurant_owner'].includes(role) && (
-        <Tab.Screen name="Admin" component={AdminScreen} />
-      )}
-      <Tab.Screen name="Account" component={SettingsScreen} />
-    </Tab.Navigator>
+                <Ionicons
+                  name={iconName}
+                  size={size}
+                  color={focused ? "#FFF" : color}
+                >
+                  {iconName === 'cart' || iconName === 'cart-outline' && (
+                    <View style={{ bottom: 20, right: 20, margin: 0 }}>
+                      {cartItems.length > 0 && (
+                        <Badge size={16} style={styles.cartBadge}>
+                          {cartItems.length}
+                        </Badge>
+                      )}
+                    </View>
+                  )}
+                </Ionicons>
+              </View>
+            );
+          },
+          tabBarActiveTintColor: themeColors.activeTintColor,
+          tabBarInactiveTintColor: themeColors.inactiveTintColor,
+          tabBarStyle: styles.tabBar,
+          headerShown: false,
+          tabBarShowLabel: false,
+        })}
+      >
+        {['partner', 'restaurant_owner', 'admin'].includes(role) ? (
+          <Tab.Screen name="Dashboard" component={DashboardScreen} />
+        ) : (
+          <Tab.Screen name="Home" component={HomeScreen} />
+        )}
+        {['guest'].includes(role) && (
+          <Tab.Screen name="Browse" component={MenuOfRestaurantsScreen} />
+        )}
+        {['customer'].includes(role) && (
+          <Tab.Screen name="Browse" component={MenuStackNavigator} />
+        )}
+        {['customer', 'partner'].includes(role) && (
+          <Tab.Screen
+            name="Cart"
+            component={role === 'partner' ? PartnerOrderStackNavigator : OrderStackNavigator}
+          />
+        )}
+        {['partner', 'admin', 'restaurant_owner'].includes(role) && (
+          <Tab.Screen name="Metrics" component={MetricScreen} />
+        )}
+        {['admin', 'restaurant_owner'].includes(role) && (
+          <Tab.Screen name="Admin" component={AdminScreen} />
+        )}
+        <Tab.Screen name="Account" component={SettingsScreen} />
+      </Tab.Navigator>
+    </View>
   );
 };
 

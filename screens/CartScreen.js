@@ -109,7 +109,7 @@ const CartScreen = ({ navigation }) => {
                     <Text style={styles.itemTitle}>{item.name}</Text>
                     <Text style={styles.itemPrice}>${item.price}</Text>
                     <View style={styles.quantityControls}>
-                      <View style={{flexDirection: 'row'}}>
+                      <View style={{flexDirection: 'row', gap: 10}}>
                         <TouchableOpacity style={styles.quantityIcon} onPress={() => decrementQuantity(item.id)}>
                           <AntDesign name="minus" size={20} />
                         </TouchableOpacity>
@@ -227,16 +227,17 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   locationContainer: {
-    paddingHorizontal: 10,
+    marginHorizontal: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    minHeight: '12%'
+    alignItems: 'center',
+    minHeight: '12%',
   },
   locationText: {
     fontSize: 16,
     marginStart: 4,
-    maxWidth: '80%',
-    fontWeight: "bold"
+    maxWidth: '60%',
+    fontWeight: "bold",
   },
   changeLocation: {
     backgroundColor: '#f0f0f0',
@@ -284,14 +285,14 @@ const styles = StyleSheet.create({
     gap: 5
   },
   quantityText: {
-    marginHorizontal: 10,
+    margin: 'auto',
     fontSize: 16,
   },
   quantityIcon: {
-    borderRadius: '50',
+    borderRadius: 4,
     borderColor: '#C0C0C0',
-    borderWidth: '0.5',
-    padding: '30'
+    borderWidth: 0.5,
+    padding: 2
   },
   extraSection: {
     marginTop: 20,

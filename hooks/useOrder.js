@@ -9,6 +9,7 @@ const useOrder = () => {
   const { token, role } = useUser();
   const { clearCart } = useCart();
   const [loading, setLoading] = useState(false);
+  const [recentOrder, setRecentOrder] = useState({});
 
   const OrderServiceClient = useMemo(() => {
     if (token && role) {
@@ -16,10 +17,10 @@ const useOrder = () => {
     }
   }, [token, role])
 
-  const createOrder = async (navigation, data, payment_method_id) => {
+  const createOrder = async (navigation, data) => {
     setLoading(true);
     try {
-      const response = await OrderServiceClient.createOrder(data, payment_method_id);
+      const response = await OrderServiceClient.createOrder(data);
       if(response){
         console.log('response', response.data)
         clearCart();
@@ -30,6 +31,7 @@ const useOrder = () => {
           position: 'top',
           visibilityTime: 1500
         });
+
         await navigation.navigate('Orders');
       }
 
@@ -41,9 +43,27 @@ const useOrder = () => {
     }
   };
 
+  const getRecentOrder = async () => {
+    if (!OrderServiceClient) return;
+
+    setLoading(true);
+    try {
+
+      const response = await OrderServiceClient.recentOnGoingOrder();
+      setRecentOrder(response);
+    } catch (error) {
+      console.error('Error fetching recent order', error);
+      setError('Failed to fetch recent order.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return{
     loading,
-    createOrder
+    recentOrder,
+    createOrder,
+    getRecentOrder
   }
 }
 

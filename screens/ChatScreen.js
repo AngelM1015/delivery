@@ -18,10 +18,6 @@ const ChatScreen = ({ navigation }) => {
     setConversation(route.params.conversationId);
 
     const initialize = async () => {
-      // const token = await AsyncStorage.getItem('userToken');
-      // const userId = await AsyncStorage.getItem('userId');
-      // setuserId(userId);
-
       if (cable.connection.isOpen()) {
         console.log("WebSocket connection is open.");
       } else {

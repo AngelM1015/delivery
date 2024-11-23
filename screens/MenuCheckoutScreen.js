@@ -5,7 +5,6 @@ import Header from '../components/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { base_url } from '../constants/api';
-import { ToggleButton } from 'react-native-paper';
 import useOrder from '../hooks/useOrder';
 import PaymentMethod from '../components/PaymentMethod';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
@@ -64,33 +63,21 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   const orderTypeSelection = (value) => {
     console.log('value of order type', value);
     if (value === 'delivery') {
-      setDeliveryFee(15);
+      setDeliveryFee(20);
     } else {
       setDeliveryFee(0);
     }
     setOrderType(value);
-    
-    if(value === 'pickup' && paymentMethods[0].id !== 'cash'){
-      const cashPaymentOption = {
-        id: 'cash',
-        brand: 'Cash',
-        last4: 'N/A'
-      };
-      setPaymentMethods([cashPaymentOption, ...paymentMethods]);
-    } else if(value === 'delivery' && paymentMethods[0].id === 'cash'){
-        if(paymentMethod.id === 'cash'){
-          setPaymentMethod({});
-        }
-        console.log('total price', orderDetails.totalPrice + 20)
-        setDeliveryFee(20);
-        const methods = paymentMethods.slice(1)
-        setPaymentMethods(methods);
-    }
   }
 
   const submitOrder = async () => {
-    if (!orderType || !paymentMethod) {
+    if (!orderType || paymentMethod.length < 1) {
       Alert.alert('Error', 'Please select an order type and payment method');
+      return;
+    }
+
+    if(orderType === 'delivery' && deliveryDetails.address === ''){
+      Alert.alert('Error', 'Please add delivery address');
       return;
     }
 
@@ -107,9 +94,9 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         restaurant_id: storedRestaurantId,
         delivery_address: orderType === 'delivery' ? '209 Aspen Leaf Dr, Big Sky, MT 59716' : '',
         total_price: orderDetails.totalPrice,
+        payment_method_id: paymentMethod.id,
         address_id: 1,
         order_type: orderType,
-        payment_method: paymentMethod.brand === 'Cash' ? 'cash' : 'other',
         order_items_attributes: cartItems.map(item => ({
           menu_item_id: item.id,
           quantity: item.quantity,
@@ -120,8 +107,9 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
       }
     };
 
-    await createOrder(navigation, orderData.order, paymentMethod.id)
-    setOrderType(null);
+    route.params
+
+    await createOrder(navigation, orderData.order)
   };
 
   return (
@@ -251,16 +239,9 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
               (
                 <>
                   <Text style={styles.selectedPaymentMethod}>
-                    {paymentMethod.id === 'cash' ? 'Cash' : `${paymentMethod.brand}    **** ${paymentMethod.last4}`}
+                    {paymentMethod.brand}    **** {paymentMethod.last4}
                   </Text>
-                  {paymentMethod.brand === 'Cash' ?
-                    (
-                      <Ionicons name="cash" size={28} color="black" />
-                    ) :
-                    (
-                      <FontAwesome name={"cc-" + paymentMethod.brand.toLowerCase()} size={24} color="black" />
-                    )
-                  }
+                  <FontAwesome name={"cc-" + paymentMethod.brand.toLowerCase()} size={24} color="black" />
                 </>
               ) : (
                 <Text>
@@ -290,7 +271,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
             onPress={() => {
               submitOrder()
             }}
-            disabled={orderType === null && paymentMethod.length === 0}
+            disable={orderType === null && paymentMethod.length === 0}
           />
         </View>
       </ScrollView>

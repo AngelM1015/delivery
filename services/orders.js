@@ -41,15 +41,23 @@ export class OrderService {
     return response.data;
   }
 
-  async createOrder(data, payment_method_id) {
+  async createOrder(data) {
     const url = orders.order + "/create_order";
     const response = await client.post(url,
       {
-        order: data, payment_method_id: payment_method_id
+        order: data
       },
       {
         headers: { Authorization: `Bearer ${this.token}` },
       });
       return response.data;
+  }
+
+  async recentOnGoingOrder() {
+    const url = orders.order + "/customer_recent_order"
+    const response = await client.get(url, {
+      headers: { Authorization: `Bearer ${this.token}` },
+    });
+    return response.data;
   }
 }

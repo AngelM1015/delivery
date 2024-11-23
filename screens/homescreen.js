@@ -8,6 +8,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import useRestaurants from '../hooks/useRestaurants';
 import Locations from '../components/Locations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GOOGLE_MAPS_API_KEY } from '@env';
 
 const HomeScreen = ({navigation}) => {
   const { loading, restaurants, menuItems, selectedRestaurant, setSelectedRestaurant, fetchRestaurants, fetchMenuItems } = useRestaurants();
@@ -16,6 +17,7 @@ const HomeScreen = ({navigation}) => {
   const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const [distances, setDistances] = useState({});
 
   const backgroundImages = [
     require('../assets/images/Big_Sky_Resort.webp'),
@@ -24,9 +26,7 @@ const HomeScreen = ({navigation}) => {
   ];
 
   useEffect(() => {
-    console.log('restaurant', restaurants);
     if(selectedRestaurant === null){
-      console.log('in home screen use effetc')
       fetchRestaurants
     }
 
@@ -36,7 +36,6 @@ const HomeScreen = ({navigation}) => {
         if (location) {
           const parsedLocation = JSON.parse(location);
           setSelectedLocation(parsedLocation);
-          console.log('location', parsedLocation.location_name.toString())
         }
       } catch (error) {
         console.log("Error fetching location:", error);
@@ -62,8 +61,8 @@ const HomeScreen = ({navigation}) => {
     };
 
     const randomInterval = () => {
-      const minInterval = 120000; // 2 minutes in milliseconds
-      const maxInterval = 600000; // 10 minutes in milliseconds
+      const minInterval = 120000;
+      const maxInterval = 600000;
       return Math.floor(Math.random() * (maxInterval - minInterval + 1)) + minInterval;
     };
 
@@ -78,22 +77,60 @@ const HomeScreen = ({navigation}) => {
     setLocationModalVisible(false);
   };
 
+  const calculateDistance = async (lat1, lon1, lat2, lon2) => {
+    const origin = `${lat1},${lon1}`;
+    const destination = `${lat2},${lon2}`;
+    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&key=${GOOGLE_MAPS_API_KEY}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.rows[0]?.elements[0]?.status === 'OK') {
+        const distance = data.rows[0].elements[0].distance.text;
+        return distance;
+      } else {
+        console.error('Distance API error:', data);
+        return;
+      }
+    } catch (error) {
+      console.error('Error fetching distance:', error);
+      return;
+    }
+  };
+
   const renderRestaurant = ({ item: restaurant }) => {
     const isSelected = selectedRestaurant === restaurant.id;
     const image_url = base_url + restaurant.image_url;
-    console.log('image url', image_url);
+    let distance = '2km';
+
+  if (selectedLocation && restaurant.latitude && restaurant.longitude) {
+    distance = calculateDistance(
+      selectedLocation.latitude,
+      selectedLocation.longitude,
+      restaurant.latitude,
+      restaurant.longitude
+    );
+  } else if (restaurant.address) {
+    distance = restaurant.address;
+  }
+
     return (
       <TouchableOpacity
-        onPress={() => setSelectedRestaurant(restaurant.id)} // Load menu items and mark as selected
+        onPress={() => setSelectedRestaurant(restaurant.id)}
       >
         <Card
           style={[
             styles.restaurantCard,
-            { backgroundColor: isSelected ? '#F09B00' : 'white', justifyContent:'center',alignItems:'center' }, // Change background when selected
+            { backgroundColor: isSelected ? '#F09B00' : 'white', justifyContent: 'center', alignItems: 'center' },
           ]}
         >
           <Image source={{ uri: image_url}} style={styles.restaurantImage} />
           <Text numberOfLines={1} style={styles.restaurantTitle}>{restaurant.name}</Text>
+          <View style={styles.distanceContainer}>
+            <FontAwesome name="map-marker" size={14} color="gray" />
+            <Text style={styles.distanceText}>{distance}</Text>
+          </View>
           <Text style={styles.restaurantSubtitle}>{restaurant.address}</Text>
         </Card>
       </TouchableOpacity>
@@ -103,8 +140,7 @@ const HomeScreen = ({navigation}) => {
   const renderMenuItem = ({ item }) => {
     const price = item.item_prices?.length > 0 ? item.item_prices[0] : 'Not Available';
     const imageUrl = item.image_url ? base_url + item.image_url : 'https://via.placeholder.com/150'
-    const rating = '4.9'; // Static rating for now, can be dynamic
-    const distance = '2km'; // Static distance for now
+    const rating = '4.9';
 
     return (
       <TouchableOpacity onPress={() => navigation.navigate('MenuAboutScreen', { menuItemId: item.id, restaurantId: item.restaurant_id })}>
@@ -112,20 +148,9 @@ const HomeScreen = ({navigation}) => {
           <View style={styles.innerCardContainer}>
             <View style={styles.menuCardTop}>
               <Image source={{ uri: imageUrl }} style={styles.menuImage} />
-              <FontAwesome name="heart-o" size={24} color="white" style={styles.heartIcon} />
             </View>
             <View style={styles.menuDetails}>
               <Text style={styles.menuTitle} numberOfLines={1}>{item.name}</Text>
-              <View style={styles.menuInfo}>
-                <View style={styles.ratingContainer}>
-                  <FontAwesome name="star" size={14} color="gold" />
-                  <Text style={styles.ratingText}>{rating}</Text>
-                </View>
-                <View style={styles.distanceContainer}>
-                  <FontAwesome name="map-marker" size={14} color="gray" />
-                  <Text style={styles.distanceText}>{distance}</Text>
-                </View>
-              </View>
               <Text style={styles.priceText}>${price}</Text>
             </View>
           </View>
@@ -161,10 +186,6 @@ const HomeScreen = ({navigation}) => {
                     : 'Your Location'}
                   </Text>
                 </View>
-                {/* <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Icons.LocationIcon />
-                  <Text style={styles.locationSubtext}>{selectedLocation ? selectedLocation.location_name : 'Your Location'}</Text>
-                </View> */}
               </View>
               <TouchableOpacity>
                 <Icons.NotificationIcon />
@@ -323,23 +344,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  menuInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 5,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ratingText: {
-    marginLeft: 5,
-    fontSize: 12,
-    color: '#000',
-  },
   distanceContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: "center",
+    marginTop: 8,
   },
   distanceText: {
     marginLeft: 5,

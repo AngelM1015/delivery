@@ -117,15 +117,15 @@ const SettingScreen = ({route}) => {
   };
 
   const profileOptions = [
-    { icon:  <Icons.PersonalData/>, text: 'Personal Data',navigateTo: 'PersonalData'  },
-    { icon:  <Icons.SettingsIcon/>, text: 'Settings',navigateTo: 'SettingEdit' },
+    { icon:  <Icons.PersonalData/>, text: 'Personal Data', navigateTo: 'PersonalData'  },
+    { icon:  <Icons.SettingsIcon/>, text: 'Settings', navigateTo: 'SettingEdit' },
     ...(role === 'customer' ? [{ icon: <Icons.ExtraCard />, text: 'Extra Card', navigateTo: 'AddPaymentMethod' }] : []),
   ];
 
-  const supprt = [
+  const support = [
     { icon:  <Icons.HelpCenter/>, text: 'Help Center' },
     { icon:  <Icons.DeleteIcon/>, text: 'Request Account Deletion' },
-    { icon:  <Icons.AdduserIcon/>, text: 'Add another account' },
+    // { icon:  <Icons.AdduserIcon/>, text: 'Add another account', navigateTo: 'Login' },
   ]
 
   return (
@@ -205,11 +205,11 @@ const SettingScreen = ({route}) => {
 
         <Text style={{marginLeft: 20, paddingTop: 10}}>Support</Text>
         <View style={styles.profileOptionsContainer}>
-          {supprt.map((option) => (
+          {support.map((option) => (
             <TouchableOpacity 
               key={option.text} 
               style={styles.profileOption}
-              onPress={() => navigation.navigate(option.navigateTo)}
+              onPress={() => Alert.alert('This feature is currently unavailable, it will be added soon!')}
             >
               {option.icon}
               <View style={{flexDirection:'row', justifyContent:'space-between', width:'90%', alignItems:'center'}}>

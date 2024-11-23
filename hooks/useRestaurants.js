@@ -13,7 +13,6 @@ const useRestaurants = () => {
 
   const RestaurantServiceClient = useMemo(() => {
     if (token) {
-      console.log('token in restaurant hook', token);
       return new RestaurantService(token);
     }
     return null;
@@ -48,10 +47,8 @@ const useRestaurants = () => {
     setLoading(true);
     try {
       const response = await RestaurantServiceClient.fetchOwnerRestaurants();
-      console.log('owner Restaurants', response);
       setRestaurants(response);
       setSelectedRestaurant(response[0].id);
-      console.log('after setting owner restaurants ')
     } catch (error) {
       console.error('Error fetching owner restaurants:', error);
     } finally {
