@@ -20,20 +20,21 @@ const useRestaurants = () => {
 
   const fetchRestaurants = async () => {
     if (!RestaurantServiceClient) {
-      console.error('RestaurantServiceClient is not initialized');
+      console.error("RestaurantServiceClient is not initialized");
       return;
     }
 
     setLoading(true);
     try {
-      const Restaurants = role === 'restaurant_owner' ?
-        await RestaurantServiceClient.fetchOwnerRestaurants() :
-        await RestaurantServiceClient.fetchRestaurants();
+      const Restaurants =
+        role === "restaurant_owner"
+          ? await RestaurantServiceClient.fetchOwnerRestaurants()
+          : await RestaurantServiceClient.fetchRestaurants();
 
       setRestaurants(Restaurants);
       setSelectedRestaurant(Restaurants[0]?.id || null);
     } catch (error) {
-      console.error('Error fetching restaurants:', error);
+      console.error("Error fetching restaurants:", error);
     } finally {
       setLoading(false);
     }
@@ -41,7 +42,7 @@ const useRestaurants = () => {
 
   const fetchOwnerRestaurants = async () => {
     if (!RestaurantServiceClient) {
-      console.error('RestaurantServiceClient is not initialized');
+      console.error("RestaurantServiceClient is not initialized");
       return;
     }
     setLoading(true);
@@ -50,7 +51,7 @@ const useRestaurants = () => {
       setRestaurants(response);
       setSelectedRestaurant(response[0].id);
     } catch (error) {
-      console.error('Error fetching owner restaurants:', error);
+      console.error("Error fetching owner restaurants:", error);
     } finally {
       setLoading(false);
     }
@@ -63,7 +64,7 @@ const useRestaurants = () => {
 
       setMenuItems(response.data);
     } catch (error) {
-      console.error('Error fetching menu items:', error);
+      console.error("Error fetching menu items:", error);
     }
   };
 
@@ -108,7 +109,7 @@ const useRestaurants = () => {
     fetchMenuItems,
     changeStatus,
     setOwnerRestaurants,
-    setMenuItems
+    setMenuItems,
   };
 };
 

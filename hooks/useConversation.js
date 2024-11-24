@@ -3,15 +3,15 @@ import useUser from "./useUser";
 import { ConversationService } from "../services/conversations";
 
 const useConversation = () => {
-  const { loading: fetchingUser, role, token, userId } = useUser()
+  const { loading: fetchingUser, role, token, userId } = useUser();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [conversation, setConversation] = useState(null);
 
   const ConversationServiceClient = useMemo(() => {
-    console.log('token', token)
+    console.log("token", token);
     if (token && role) {
-      return new ConversationService(token, role, conversation)
+      return new ConversationService(token, role, conversation);
     }
   }, [token, role, conversation]);
 
@@ -21,7 +21,7 @@ const useConversation = () => {
       const conversation = await ConversationServiceClient.fetchConversation();
       setMessages(conversation.messages);
     } catch (error) {
-      console.error('Error fetching conversation:', error);
+      console.error("Error fetching conversation:", error);
     } finally {
       setLoading(false);
     }
@@ -32,7 +32,7 @@ const useConversation = () => {
     try {
       const message = await ConversationServiceClient.createMessage(body);
     } catch (error) {
-      console.error('Error sending Message', error);
+      console.error("Error sending Message", error);
     } finally {
       setLoading(false);
     }
@@ -40,18 +40,18 @@ const useConversation = () => {
 
   useEffect(() => {
     if (!fetchingUser) {
-      fetchConversation()
+      fetchConversation();
     }
-  }, [fetchingUser])
+  }, [fetchingUser]);
 
-  return{
+  return {
     conversation,
     messages,
     loading,
     createMessage,
     setMessages,
-    setConversation
-  }
+    setConversation,
+  };
 };
 
-export default useConversation
+export default useConversation;

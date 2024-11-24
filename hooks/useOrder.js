@@ -13,31 +13,30 @@ const useOrder = () => {
 
   const OrderServiceClient = useMemo(() => {
     if (token && role) {
-      return new OrderService(token, role)
+      return new OrderService(token, role);
     }
-  }, [token, role])
+  }, [token, role]);
 
   const createOrder = async (navigation, data) => {
     setLoading(true);
     try {
       const response = await OrderServiceClient.createOrder(data);
-      if(response){
-        console.log('response', response.data)
+      if (response) {
+        console.log("response", response.data);
         clearCart();
         Toast.show({
-          type: 'success',
-          text1: 'Success!',
-          text2: 'Order has been placed! 👋',
-          position: 'top',
-          visibilityTime: 1500
+          type: "success",
+          text1: "Success!",
+          text2: "Order has been placed! 👋",
+          position: "top",
+          visibilityTime: 1500,
         });
 
-        await navigation.navigate('Orders');
+        await navigation.navigate("Orders");
       }
-
-    }catch (error) {
-      console.error('Order submission error:', error.response.data.message);
-      Alert.alert('Error', error.response.data.message);
+    } catch (error) {
+      console.error("Order submission error:", error.response.data.message);
+      Alert.alert("Error", error.response.data.message);
     } finally {
       setLoading(false);
     }
@@ -48,23 +47,22 @@ const useOrder = () => {
 
     setLoading(true);
     try {
-
       const response = await OrderServiceClient.recentOnGoingOrder();
       setRecentOrder(response);
     } catch (error) {
-      console.error('Error fetching recent order', error);
-      setError('Failed to fetch recent order.');
+      console.error("Error fetching recent order", error);
+      setError("Failed to fetch recent order.");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  return{
+  return {
     loading,
     recentOrder,
     createOrder,
-    getRecentOrder
-  }
-}
+    getRecentOrder,
+  };
+};
 
 export default useOrder;

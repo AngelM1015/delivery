@@ -10,31 +10,30 @@ const useUser = () => {
   const [userName, setUserName] = useState();
 
   useEffect(() => {
-    fetchRole()
-  }, [])
+    fetchRole();
+  }, []);
 
   const fetchRole = async () => {
-    const token = await AsyncStorage.getItem('userToken');
-    const role = await AsyncStorage.getItem('userRole');
-    const userId = await AsyncStorage.getItem('userId');
-    const userEmail = await AsyncStorage.getItem('userEmail');
-    const userName = await AsyncStorage.getItem('userName');
-    setRole(role)
-    setToken(token)
-    setLoading(false)
-    setUserId(userId)
+    const token = await AsyncStorage.getItem("userToken");
+    const role = await AsyncStorage.getItem("userRole");
+    const userId = await AsyncStorage.getItem("userId");
+    const userEmail = await AsyncStorage.getItem("userEmail");
+    const userName = await AsyncStorage.getItem("userName");
+    setRole(role);
+    setToken(token);
+    setLoading(false);
+    setUserId(userId);
     setUserEmail(userEmail);
     setUserName(userName);
-  }
+  };
   return {
     role,
     loading,
     token,
     userId,
     userEmail,
-    userName
-  }
-
-}
+    userName,
+  };
+};
 
 export default useUser;

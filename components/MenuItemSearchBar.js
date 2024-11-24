@@ -1,5 +1,5 @@
-import React from 'react';
-import { TextInput, StyleSheet } from 'react-native';
+import React from "react";
+import { TextInput, StyleSheet } from "react-native";
 
 const MenuItemSearchBar = ({ searchQuery, setSearchQuery }) => {
   return (

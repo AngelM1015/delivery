@@ -24,8 +24,8 @@ const useOrders = () => {
       const orders = await OrderServiceClient.fetchOrders();
       setOrders(orders);
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      setError('Failed to fetch orders.');
+      console.error("Error fetching orders:", error);
+      setError("Failed to fetch orders.");
     } finally {
       setLoading(false);
     }
@@ -36,11 +36,12 @@ const useOrders = () => {
     setLoading(true);
     setError(null);
     try {
-      const partnerOrders = await OrderServiceClient.fetchPartnerPendingOrders();
+      const partnerOrders =
+        await OrderServiceClient.fetchPartnerPendingOrders();
       setPartnerOrders(partnerOrders);
     } catch (error) {
-      console.error('Error fetching partner pending orders:', error);
-      setError('Failed to fetch partner orders.');
+      console.error("Error fetching partner pending orders:", error);
+      setError("Failed to fetch partner orders.");
     } finally {
       setLoading(false);
     }
@@ -51,9 +52,13 @@ const useOrders = () => {
       if (!OrderServiceClient) return;
       try {
         const url = `api/v1/orders/${id}/${action}`;
-        await client.patch(url, {}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await client.patch(
+          url,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         fetchOrders();
       } catch (error) {
         console.error(`Error performing ${action} on order ${id}:`, error);
@@ -64,7 +69,7 @@ const useOrders = () => {
   useEffect(() => {
     if (!fetchingUser) {
       fetchOrders();
-      if (role === 'partner') {
+      if (role === "partner") {
         fetchPartnerPendingOrders();
       }
     }

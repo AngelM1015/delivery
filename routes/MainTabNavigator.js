@@ -1,24 +1,24 @@
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
-import { Ionicons } from '@expo/vector-icons';
-import DashboardScreen from '../screens/DashboardScreen';
-import HomeScreen from '../screens/homescreen';
-import MenuOfRestaurantsScreen from '../screens/MenuOfRestaurantsScreen';
-import MenuStackNavigator from '../screens/MenuStackNavigator';
-import PartnerOrderScreen from '../screens/PartnerOrderScreen';
-import MetricScreen from '../screens/MetricScreen';
-import AdminScreen from '../screens/AdminScreen';
-import SettingsScreen from '../screens/SettingScreen';
-import ChatScreen from '../screens/ChatScreen';
-import CartScreen from '../screens/CartScreen';
-import MenuCheckoutScreen from '../screens/MenuCheckoutScreen';
-import OngoingOrderScreen from '../screens/OngoingOrderScreen';
-import { StyleSheet, View, Text } from 'react-native';
-import OrderDetailScreen from '../screens/OrderDetailScreen';
-import { Badge } from 'react-native-paper';
-import { useCart } from '../context/CartContext';
-import OngoingOrderDrawer from '../components/OngoingOrderDrawer';
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
+import { Ionicons } from "@expo/vector-icons";
+import DashboardScreen from "../screens/DashboardScreen";
+import HomeScreen from "../screens/homescreen";
+import MenuOfRestaurantsScreen from "../screens/MenuOfRestaurantsScreen";
+import MenuStackNavigator from "../screens/MenuStackNavigator";
+import PartnerOrderScreen from "../screens/PartnerOrderScreen";
+import MetricScreen from "../screens/MetricScreen";
+import AdminScreen from "../screens/AdminScreen";
+import SettingsScreen from "../screens/SettingScreen";
+import ChatScreen from "../screens/ChatScreen";
+import CartScreen from "../screens/CartScreen";
+import MenuCheckoutScreen from "../screens/MenuCheckoutScreen";
+import OngoingOrderScreen from "../screens/OngoingOrderScreen";
+import { StyleSheet, View, Text } from "react-native";
+import OrderDetailScreen from "../screens/OrderDetailScreen";
+import { Badge } from "react-native-paper";
+import { useCart } from "../context/CartContext";
+import OngoingOrderDrawer from "../components/OngoingOrderDrawer";
 
 const themeColors = {
   activeTintColor: "#F09B00",
@@ -34,11 +34,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
     height: 56,
     paddingBottom: 0,
-    zIndex: 10
+    zIndex: 10,
   },
   icon: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 40,
     justifyContent: "center",
     alignItems: "center",
@@ -46,8 +46,8 @@ const styles = StyleSheet.create({
   cartBadge: {
     top: -10,
     left: -30,
-    backgroundColor: 'orange'
-  }
+    backgroundColor: "orange",
+  },
 });
 
 const Tab = createBottomTabNavigator();
@@ -59,7 +59,7 @@ const OrderStackNavigator = () => (
     <Stack.Screen name="CartScreen" component={CartScreen} />
     <Stack.Screen name="MenuCheckoutScreen" component={MenuCheckoutScreen} />
     <Stack.Screen name="ChatScreen" component={ChatScreen} />
-    <Stack.Screen name="OrderDetailScreen" component={OrderDetailScreen}/>
+    <Stack.Screen name="OrderDetailScreen" component={OrderDetailScreen} />
   </Stack.Navigator>
 );
 
@@ -74,40 +74,40 @@ const PartnerOrderStackNavigator = () => (
 const getTabBarIcon = (role, route, focused) => {
   const iconMap = {
     guest: {
-      Home: focused ? 'home' : 'home-outline',
-      Browse: focused ? 'search' : 'search-outline',
-      Order: focused ? 'list' : 'list-outline',
-      Account: focused ? 'person' : 'person-outline',
+      Home: focused ? "home" : "home-outline",
+      Browse: focused ? "search" : "search-outline",
+      Order: focused ? "list" : "list-outline",
+      Account: focused ? "person" : "person-outline",
     },
     customer: {
-      Home: focused ? 'home' : 'home-outline',
-      Browse: focused ? 'search' : 'search-outline',
+      Home: focused ? "home" : "home-outline",
+      Browse: focused ? "search" : "search-outline",
       Cart: focused ? "cart" : "cart-outline",
-      Account: focused ? 'person' : 'person-outline',
+      Account: focused ? "person" : "person-outline",
     },
     partner: {
-      Dashboard: focused ? 'grid' : 'grid-outline',
-      Order: focused ? 'list' : 'list-outline',
-      Metrics: focused ? 'bar-chart' : 'bar-chart-outline',
-      Account: focused ? 'person' : 'person-outline',
+      Dashboard: focused ? "grid" : "grid-outline",
+      Order: focused ? "list" : "list-outline",
+      Metrics: focused ? "bar-chart" : "bar-chart-outline",
+      Account: focused ? "person" : "person-outline",
     },
     restaurant_owner: {
-      Dashboard: focused ? 'grid' : 'grid-outline',
-      Metrics: focused ? 'bar-chart' : 'bar-chart-outline',
-      Admin: focused ? 'people' : 'people-outline',
-      Account: focused ? 'person' : 'person-outline',
+      Dashboard: focused ? "grid" : "grid-outline",
+      Metrics: focused ? "bar-chart" : "bar-chart-outline",
+      Admin: focused ? "people" : "people-outline",
+      Account: focused ? "person" : "person-outline",
     },
     admin: {
-      Dashboard: focused ? 'grid' : 'grid-outline',
-      Metrics: focused ? 'bar-chart' : 'bar-chart-outline',
-      Admin: focused ? 'storefront' : 'storefront-outline',
-      Account: focused ? 'person' : 'person-outline',
+      Dashboard: focused ? "grid" : "grid-outline",
+      Metrics: focused ? "bar-chart" : "bar-chart-outline",
+      Admin: focused ? "storefront" : "storefront-outline",
+      Account: focused ? "person" : "person-outline",
     },
   };
-  return iconMap[role][route.name] || 'alert-circle-outline';
+  return iconMap[role][route.name] || "alert-circle-outline";
 };
 
-const MainTabNavigator = ({ role = 'guest' }) => {
+const MainTabNavigator = ({ role = "guest" }) => {
   const { cartItems } = useCart();
 
   return (
@@ -135,15 +135,16 @@ const MainTabNavigator = ({ role = 'guest' }) => {
                   size={size}
                   color={focused ? "#FFF" : color}
                 >
-                  {iconName === 'cart' || iconName === 'cart-outline' && (
-                    <View style={{ bottom: 20, right: 20, margin: 0 }}>
-                      {cartItems.length > 0 && (
-                        <Badge size={16} style={styles.cartBadge}>
-                          {cartItems.length}
-                        </Badge>
-                      )}
-                    </View>
-                  )}
+                  {iconName === "cart" ||
+                    (iconName === "cart-outline" && (
+                      <View style={{ bottom: 20, right: 20, margin: 0 }}>
+                        {cartItems.length > 0 && (
+                          <Badge size={16} style={styles.cartBadge}>
+                            {cartItems.length}
+                          </Badge>
+                        )}
+                      </View>
+                    ))}
                 </Ionicons>
               </View>
             );
@@ -155,27 +156,31 @@ const MainTabNavigator = ({ role = 'guest' }) => {
           tabBarShowLabel: false,
         })}
       >
-        {['partner', 'restaurant_owner', 'admin'].includes(role) ? (
+        {["partner", "restaurant_owner", "admin"].includes(role) ? (
           <Tab.Screen name="Dashboard" component={DashboardScreen} />
         ) : (
           <Tab.Screen name="Home" component={HomeScreen} />
         )}
-        {['guest'].includes(role) && (
+        {["guest"].includes(role) && (
           <Tab.Screen name="Browse" component={MenuOfRestaurantsScreen} />
         )}
-        {['customer'].includes(role) && (
+        {["customer"].includes(role) && (
           <Tab.Screen name="Browse" component={MenuStackNavigator} />
         )}
-        {['customer', 'partner'].includes(role) && (
+        {["customer", "partner"].includes(role) && (
           <Tab.Screen
             name="Cart"
-            component={role === 'partner' ? PartnerOrderStackNavigator : OrderStackNavigator}
+            component={
+              role === "partner"
+                ? PartnerOrderStackNavigator
+                : OrderStackNavigator
+            }
           />
         )}
-        {['partner', 'admin', 'restaurant_owner'].includes(role) && (
+        {["partner", "admin", "restaurant_owner"].includes(role) && (
           <Tab.Screen name="Metrics" component={MetricScreen} />
         )}
-        {['admin', 'restaurant_owner'].includes(role) && (
+        {["admin", "restaurant_owner"].includes(role) && (
           <Tab.Screen name="Admin" component={AdminScreen} />
         )}
         <Tab.Screen name="Account" component={SettingsScreen} />

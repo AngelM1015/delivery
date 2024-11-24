@@ -3,23 +3,25 @@ import client from "../client";
 import useUser from "../hooks/useUser";
 
 export class RestaurantService {
-  token = ""
+  token = "";
   constructor(token) {
-    this.token = token
+    this.token = token;
   }
 
   async fetchRestaurants() {
-    console.log('restuarant url ', restaurants.restaurant)
+    console.log("restuarant url ", restaurants.restaurant);
     const response = await client.get(restaurants.restaurant);
-    return response.data
+    return response.data;
   }
 
   async fetchOwnerRestaurants() {
-    const response = await client.get(restaurants.ownerRestaurants,{
+    const response = await client.get(restaurants.ownerRestaurants, {
       params: {},
-      headers: { Authorization: `Bearer ${this.token}`,
-      Accept: 'application/json' }
-    },);
-    return response.data
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        Accept: "application/json",
+      },
+    });
+    return response.data;
   }
 }

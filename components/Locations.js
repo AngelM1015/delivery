@@ -1,19 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
-import { base_url } from '../constants/api';
-import axios from 'axios';
-import useUser from '../hooks/useUser';
-import { Ionicons } from '@expo/vector-icons';
-import CustomButton from './CustomButton';
-import MapView, { Marker } from 'react-native-maps';
-import { GOOGLE_MAPS_API_KEY } from '@env';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  Button,
+} from "react-native";
+import { base_url } from "../constants/api";
+import axios from "axios";
+import useUser from "../hooks/useUser";
+import { Ionicons } from "@expo/vector-icons";
+import CustomButton from "./CustomButton";
+import MapView, { Marker } from "react-native-maps";
+import { GOOGLE_MAPS_API_KEY } from "@env";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Locations = ({ isVisible, onClose, onSelectLocation }) => {
   const { token } = useUser();
   const [locations, setLocations] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [newLocation, setNewLocation] = useState('');
+  const [newLocation, setNewLocation] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
@@ -21,7 +30,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
 
   const bigSkyRegion = {
     latitude: 45.2614,
-    longitude: -111.3080,
+    longitude: -111.308,
     latitudeDelta: 0.1,
     longitudeDelta: 0.1,
   };
@@ -35,63 +44,75 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
   const fetchLocations = async () => {
     try {
       const response = await axios.get(`${base_url}api/v1/addresses`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setLocations(response.data);
     } catch (error) {
-      console.error('Error fetching locations:', error);
+      console.error("Error fetching locations:", error);
     }
   };
 
   const fetchSuggestions = async (query) => {
     try {
-      const response = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
-        params: {
-          input: query,
-          key: GOOGLE_MAPS_API_KEY,
-          location: `${bigSkyRegion.latitude},${bigSkyRegion.longitude}`,
-          region: 'us',
-          radius: 10000
-        },
-      });
+      const response = await axios.get(
+        "https://maps.googleapis.com/maps/api/place/autocomplete/json",
+        {
+          params: {
+            input: query,
+            key: GOOGLE_MAPS_API_KEY,
+            location: `${bigSkyRegion.latitude},${bigSkyRegion.longitude}`,
+            region: "us",
+            radius: 10000,
+          },
+        }
+      );
       setSuggestions(response.data.predictions);
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
+      console.error("Error fetching suggestions:", error);
     }
   };
 
   const handleAddLocation = async () => {
     if (!newLocation && !selectedLocation) return;
 
-    const locationData = selectedLocation ? {
-      latitude: selectedLocation.latitude,
-      longitude: selectedLocation.longitude,
-      location_name: newLocation
-    } : { location: newLocation };
+    const locationData = selectedLocation
+      ? {
+          latitude: selectedLocation.latitude,
+          longitude: selectedLocation.longitude,
+          location_name: newLocation,
+        }
+      : { location: newLocation };
 
-    console.log('location data', locationData);
+    console.log("location data", locationData);
 
     try {
-      const response = await axios.post(`${base_url}api/v1/addresses`, {address: locationData}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.post(
+        `${base_url}api/v1/addresses`,
+        { address: locationData },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setLocations([...locations, response.data]);
-      setNewLocation('');
+      setNewLocation("");
       setSelectedLocation(null);
       setIsAdding(false);
     } catch (error) {
-      console.error('Error adding new location:', error);
+      console.error("Error adding new location:", error);
     }
   };
 
   const handleSuggestionSelect = async (placeId) => {
     try {
-      const response = await axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
-        params: {
-          place_id: placeId,
-          key: GOOGLE_MAPS_API_KEY,
-        },
-      });
+      const response = await axios.get(
+        "https://maps.googleapis.com/maps/api/place/details/json",
+        {
+          params: {
+            place_id: placeId,
+            key: GOOGLE_MAPS_API_KEY,
+          },
+        }
+      );
       const { lat, lng } = response.data.result.geometry.location;
       const formattedAddress = response.data.result.formatted_address;
 
@@ -108,16 +129,16 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
         });
       }
     } catch (error) {
-      console.error('Error fetching place details:', error);
+      console.error("Error fetching place details:", error);
     }
   };
 
   const saveSelectedLocation = async (location) => {
     try {
-      await AsyncStorage.setItem('location', JSON.stringify(location));
-      console.log('Location saved successfully');
+      await AsyncStorage.setItem("location", JSON.stringify(location));
+      console.log("Location saved successfully");
     } catch (error) {
-      console.error('Error saving location:', error);
+      console.error("Error saving location:", error);
     }
   };
 
@@ -131,19 +152,22 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
 
   const fetchLocationName = async (latitude, longitude) => {
     try {
-      const response = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json`, {
-        params: {
-          latlng: `${latitude},${longitude}`,
-          key: GOOGLE_MAPS_API_KEY,
-        },
-      });
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/geocode/json`,
+        {
+          params: {
+            latlng: `${latitude},${longitude}`,
+            key: GOOGLE_MAPS_API_KEY,
+          },
+        }
+      );
       if (response.data.results[0]) {
         return response.data.results[0].formatted_address;
       }
-      return 'Unknown Location';
+      return "Unknown Location";
     } catch (error) {
-      console.error('Error fetching location name:', error);
-      return 'Unknown Location';
+      console.error("Error fetching location name:", error);
+      return "Unknown Location";
     }
   };
 
@@ -154,7 +178,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
           <Ionicons name="close" size={32} color="black" onPress={onClose} />
           <Text style={styles.header}>Select Location</Text>
         </View>
-        
+
         {isAdding && (
           <MapView
             ref={mapRef}
@@ -166,7 +190,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
               <Marker
                 coordinate={selectedLocation}
                 title="Selected Location"
-                description={newLocation || 'Selected Location'}
+                description={newLocation || "Selected Location"}
               />
             )}
           </MapView>
@@ -188,15 +212,22 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
                 data={suggestions}
                 keyExtractor={(item) => item.place_id}
                 renderItem={({ item }) => (
-                  <TouchableOpacity onPress={() => handleSuggestionSelect(item.place_id)}>
-                    <Text style={styles.suggestionText}>{item.description}</Text>
+                  <TouchableOpacity
+                    onPress={() => handleSuggestionSelect(item.place_id)}
+                  >
+                    <Text style={styles.suggestionText}>
+                      {item.description}
+                    </Text>
                   </TouchableOpacity>
                 )}
               />
               <CustomButton text="Save Location" onPress={handleAddLocation} />
             </View>
           ) : (
-            <CustomButton text="Add New Location" onPress={() => setIsAdding(true)} />
+            <CustomButton
+              text="Add New Location"
+              onPress={() => setIsAdding(true)}
+            />
           )}
 
           <FlatList
@@ -211,9 +242,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
               >
                 <View style={styles.locationItem}>
                   <Ionicons name="location-sharp" size={24} />
-                  <Text style={styles.locationText}>
-                    {item.location_name}
-                  </Text>
+                  <Text style={styles.locationText}>{item.location_name}</Text>
                 </View>
               </TouchableOpacity>
             )}
@@ -227,60 +256,60 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white'
+    backgroundColor: "white",
   },
   headerContainer: {
     marginVertical: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 15,
     paddingTop: 20,
   },
   header: {
     fontSize: 20,
-    fontWeight: 'bold',
-    marginLeft: 10
+    fontWeight: "bold",
+    marginLeft: 10,
   },
   map: {
-    height: '40%',
-    width: '100%'
+    height: "40%",
+    width: "100%",
   },
   controlsContainer: {
     flex: 1,
     paddingHorizontal: 20,
-    marginTop: 10
+    marginTop: 10,
   },
   locationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     padding: 10,
     marginBottom: 10,
     borderRadius: 10,
     borderWidth: 0.5,
-    borderColor: '#C0C0C0',
+    borderColor: "#C0C0C0",
   },
   locationText: {
     fontSize: 16,
-    width: '90%'
+    width: "90%",
   },
   addLocationContainer: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    marginVertical: 10
+    flexDirection: "column",
+    alignItems: "center",
+    marginVertical: 10,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     padding: 10,
     marginBottom: 10,
-    width: '100%',
-    borderRadius: 10
+    width: "100%",
+    borderRadius: 10,
   },
   suggestionText: {
     padding: 10,
     fontSize: 16,
-    color: 'black'
+    color: "black",
   },
 });
 

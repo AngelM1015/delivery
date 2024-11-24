@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
-import { TextInput, View, TouchableOpacity, StyleSheet } from 'react-native';
-import EmailIcon from '../assets/svgs/emailIcon.svg';  // SVG Email Icon
-import PasswordIcon from '../assets/svgs/passwordIcon.svg';  // SVG Password Icon
+import React, { useState } from "react";
+import { TextInput, View, TouchableOpacity, StyleSheet } from "react-native";
+import EmailIcon from "../assets/svgs/emailIcon.svg"; // SVG Email Icon
+import PasswordIcon from "../assets/svgs/passwordIcon.svg"; // SVG Password Icon
 
-const CustomInput = ({ placeholder, value, onChangeText, secureTextEntry = false, keyboardType = 'default', isPassword = false }) => {
+const CustomInput = ({
+  placeholder,
+  value,
+  onChangeText,
+  secureTextEntry = false,
+  keyboardType = "default",
+  isPassword = false,
+}) => {
   const [isSecure, setIsSecure] = useState(secureTextEntry);
 
   const toggleSecureEntry = () => {
@@ -26,7 +33,10 @@ const CustomInput = ({ placeholder, value, onChangeText, secureTextEntry = false
         <EmailIcon style={styles.icon} width={24} height={24} />
       )}
       {placeholder === "Password" && (
-        <TouchableOpacity onPress={toggleSecureEntry} style={styles.iconContainer}>
+        <TouchableOpacity
+          onPress={toggleSecureEntry}
+          style={styles.iconContainer}
+        >
           {isSecure ? (
             <PasswordIcon style={styles.icon} width={24} height={24} />
           ) : (
@@ -40,15 +50,15 @@ const CustomInput = ({ placeholder, value, onChangeText, secureTextEntry = false
 
 const styles = StyleSheet.create({
   inputContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderColor: '#C7C9D9',
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    borderColor: "#C7C9D9",
     borderWidth: 1,
     borderRadius: 16,
     paddingHorizontal: 10,
     marginBottom: 15,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   input: {
     flex: 1, // Take up all the space
