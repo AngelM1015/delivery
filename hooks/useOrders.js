@@ -84,7 +84,7 @@ const useOrders = () => {
     fetchOrders,
     fetchPartnerPendingOrders,
     cancelOrder: handleOrder("cancel_order"),
-    pickUpOrder: handleOrder("start_delivery"),
+    pickUpOrder: handleOrder("pick_up_order"),
     deliverOrder: handleOrder("deliver_order"),
   };
 };

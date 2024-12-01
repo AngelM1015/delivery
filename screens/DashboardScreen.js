@@ -136,7 +136,7 @@ const DashboardScreen = () => {
                 trackColor={{ false: "#767577", true: "#F09B00" }}
                 thumbColor={item.isenabled ? "#ffffff" : "#f4f3f4"}
                 ios_backgroundColor="#3e3e3e"
-                onValueChange={toggleSwitch(item)}
+                onValueChange={() => toggleSwitch(item)}
                 value={item.isenabled}
                 style={styles.switch}
               />
@@ -163,7 +163,20 @@ const DashboardScreen = () => {
     );
   };
 
-  const toggleSwitch = ({ item }) => {
+  const toggleSwitch = async ( item ) => {
+    console.log('called toggle switch', item);
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      let endpoint = `restaurants/${selectedRestaurant}/menu_items/${item.id}/enable_menu_item`
+      if (endpoint) {
+        const response = await axios.patch(`${base_url}api/v1/${endpoint}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+
     // changeStatus(selectedRestaurant, item.id, !item.isenabled);
     // setMenuItems((prevItems) =>
     //   prevItems.map((menu) =>
@@ -326,11 +339,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 100,
   },
-  heartIcon: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-  },
   menuDetails: {
     padding: 2,
     gap: 4,
@@ -343,6 +351,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 5,
+  },
+  switch: {
+    top: -90,
   },
   ratingContainer: {
     flexDirection: "row",

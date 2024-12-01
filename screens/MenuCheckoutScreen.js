@@ -116,7 +116,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
             : "",
         total_price: orderDetails.totalPrice,
         payment_method_id: paymentMethod.id,
-        address_id: 1,
+        address_id: address.id,
         order_type: orderType,
         order_items_attributes: cartItems.map((item) => ({
           menu_item_id: item.id,

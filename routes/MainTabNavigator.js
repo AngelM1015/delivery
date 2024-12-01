@@ -19,6 +19,7 @@ import OrderDetailScreen from "../screens/OrderDetailScreen";
 import { Badge } from "react-native-paper";
 import { useCart } from "../context/CartContext";
 import OngoingOrderDrawer from "../components/OngoingOrderDrawer";
+import NewOrderScreen from "../screens/NewOrderScreen";
 
 const themeColors = {
   activeTintColor: "#F09B00",
@@ -177,10 +178,13 @@ const MainTabNavigator = ({ role = "guest" }) => {
             }
           />
         )}
+        {["restaurant_owner"].includes(role) && (
+          <Tab.Screen name="NewOrder" component={NewOrderScreen} />
+        )}
         {["partner", "admin", "restaurant_owner"].includes(role) && (
           <Tab.Screen name="Metrics" component={MetricScreen} />
         )}
-        {["admin", "restaurant_owner"].includes(role) && (
+        {["admin"].includes(role) && (
           <Tab.Screen name="Admin" component={AdminScreen} />
         )}
         <Tab.Screen name="Account" component={SettingsScreen} />

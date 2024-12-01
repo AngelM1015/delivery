@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { base_url } from "../constants/api";
 
 const PartnerOrderScreen = ({ navigation }) => {
-  const { loading, partnerOrders, fetchPartnerPendingOrders, deliverOrder } =
+  const { loading, partnerOrders, fetchPartnerPendingOrders, deliverOrder, pickUpOrder } =
     useOrders();
   const [error, setError] = useState("");
 
@@ -97,9 +97,9 @@ const PartnerOrderScreen = ({ navigation }) => {
       <Text>Delivery Address: {item.delivery_address}</Text>
       <TouchableOpacity
         style={styles.pickupButton}
-        onPress={() => deliverOrder(item.id)}
+        onPress={item.status === 'partner_assigned' ? (() => pickUpOrder(item.id)) : (() => deliverOrder(item.id))}
       >
-        <Text style={styles.pickupButtonText}>Deliver Order</Text>
+        <Text style={styles.pickupButtonText}>{item.status === 'partner_assigned' ? "Pick Order" : "Deliver Order"}</Text>
       </TouchableOpacity>
     </View>
   );

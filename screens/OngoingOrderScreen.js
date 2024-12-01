@@ -17,6 +17,7 @@ import cable from "../cable";
 import { GOOGLE_MAPS_API_KEY } from "@env";
 import { FontAwesome, MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { base_url } from "../constants/api";
+import client from "../client";
 
 const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
   const [slideAnim] = useState(new Animated.Value(0));
@@ -106,18 +107,19 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
     }
   };
 
-  const renderMap = () => {
+  const renderMap = async () => {
     if (!order.partner_location || !order.address) return null;
 
     const partnerCoords = {
-      latitude: order.partner_location.latitude,
-      longitude: order.partner_location.longitude,
+      latitude: partnerLocation ? partnerLocation.latitude : order.partner_location.latitude,
+      longitude: partnerLocation ? partnerLocation.longitude : order.partner_location.longitude,
     };
 
     const customerCoords = {
       latitude: order.address.latitude,
       longitude: order.address.longitude,
     };
+    console.log('customer coordinates', customerCoords);
 
     return (
       <MapView

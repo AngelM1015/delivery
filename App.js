@@ -94,9 +94,9 @@ function App() {
         if (role) {
           setUserRole(role);
         }
-        const currentLocation = await Location.getCurrentPositionAsync();
+        // const currentLocation = await Location.getCurrentPositionAsync();
 
-        console.log("current location", currentLocation.coords);
+        // console.log("current location", currentLocation.coords);
 
         const onboarded = await AsyncStorage.getItem("hasOnboarded");
         setHasOnboarded(onboarded === "true");

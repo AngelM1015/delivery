@@ -103,7 +103,7 @@ const HomeScreen = ({ navigation }) => {
 
   const calculateDistance = async (lat1, lon1, lat2, lon2) => {
     const origin = `${lat1},${lon1}`;
-    const destination = `${lat2},${lon2}`;
+    const destination = `31.525994718358792,74.34680197329752`;
     const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&key=${GOOGLE_MAPS_API_KEY}`;
 
     try {

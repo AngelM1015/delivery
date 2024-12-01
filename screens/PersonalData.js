@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,20 +12,95 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { Icons } from "../constants/Icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import client from "../client";
+import Toast from "react-native-toast-message";
 
-const PersonalData = () => {
-  const [fullName, setFullName] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
+const PersonalData = ({navigation}) => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("")
+  // const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender] = useState("Male");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [location, setLocation] = useState("");
   const [isGenderModalVisible, setIsGenderModalVisible] = useState(false);
   const genderOptions = ["Male", "Female", "Other"];
+  const [userData, setUserData] = useState({
+    userName: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: ''
+  });
 
-  const handleSave = () => {};
+  useEffect( () => {
+    fetchUserData();
+  }, [])
+
+  const fetchUserData = async () => {
+    const token = await AsyncStorage.getItem('userToken');
+    const userId = await AsyncStorage.getItem('userId');
+    const url = `api/v1/users/${userId}`
+    console.log('userId', userId);
+    try {
+      const response = await client.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      setUserData({
+        userName: response.data.username,
+        firstName: response.data.first_name,
+        lastName: response.data.last_name,
+        email: response.data.email,
+        phone: response.data.phone
+      })
+      console.log('response on getting personal data', response.data)
+
+    } catch(error){
+      Alert.alert('error while fetching personal data', error)
+    }
+  }
+
+  const handleSave = async () => {
+    const token = await AsyncStorage.getItem('userToken');
+    const userId = await AsyncStorage.getItem('userId');
+    const url = `api/v1/users/${userId}`
+    const data = {
+      first_name: userData.firstName,
+      last_name: userData.lastName,
+      email: userData.email,
+      username: userData.userName,
+      phone: userData.phone
+    }
+
+    console.log('user data', data);
+    try {
+      const response = await client.put(url, {user: data}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      AsyncStorage.setItem('userName', response.data.username);
+      console.log('response on updating personal data', response.data)
+      Toast.show({
+        type: "success",
+        text1: "Success!",
+        text2: "data updated successfully! 👋",
+        position: "top",
+        visibilityTime: 1500,
+      });
+
+      await navigation.goBack();
+
+    } catch(error){
+      Alert.alert('error while updating personal data', error)
+    }
+  };
 
   const handleGenderSelect = (selectedGender) => {
     setGender(selectedGender);
@@ -43,19 +118,37 @@ const PersonalData = () => {
           <Text style={styles.title}>Personal Data</Text>
           <Image
             source={require("../assets/images/icon.png")}
-            style={{ width: 100, height: 100, alignSelf: "center" }}
+            style={{ width: '40%', height: '20%', alignSelf: "center", marginTop: '2%' }}
           />
           <View style={styles.formContainer}>
-            <View style={styles.formItem}>
-              <Text style={styles.label}>Full Name</Text>
+          <View style={styles.formItem}>
+              <Text style={styles.label}>User Name</Text>
               <TextInput
                 style={styles.input}
-                value={fullName}
-                onChangeText={(text) => setFullName(text)}
-                placeholder="Enter your full name"
+                value={userData.userName}
+                onChangeText={(text) => setUserData({ ...userData, userName: text})}
+                placeholder="Enter your user name"
               />
             </View>
             <View style={styles.formItem}>
+              <Text style={styles.label}>First Name</Text>
+              <TextInput
+                style={styles.input}
+                value={userData.firstName}
+                onChangeText={(text) => setUserData({ ...userData, firstName: text})}
+                placeholder="Enter your first name"
+              />
+            </View>
+            <View style={styles.formItem}>
+              <Text style={styles.label}>Last Name</Text>
+              <TextInput
+                style={styles.input}
+                value={userData.lastName}
+                onChangeText={(text) => setUserData({ ...userData, lastName: text})}
+                placeholder="Enter your last name"
+              />
+            </View>
+            {/* <View style={styles.formItem}>
               <Text style={styles.label}>Date Of Birth</Text>
               <TextInput
                 style={styles.input}
@@ -63,8 +156,8 @@ const PersonalData = () => {
                 onChangeText={(text) => setDateOfBirth(text)}
                 placeholder="Enter your date of birth"
               />
-            </View>
-            <View style={styles.formItem}>
+            </View> */}
+            {/* <View style={styles.formItem}>
               <Text style={styles.label}>Gender</Text>
               <TouchableOpacity
                 style={styles.genderInputContainer}
@@ -78,9 +171,9 @@ const PersonalData = () => {
                 />
                 <Icons.DropdownIcon style={styles.icon} />
               </TouchableOpacity>
-            </View>
+            </View> */}
 
-            <Modal
+            {/* <Modal
               visible={isGenderModalVisible}
               transparent
               animationType="slide"
@@ -102,26 +195,27 @@ const PersonalData = () => {
                   />
                 </View>
               </View>
-            </Modal>
-            <View style={styles.formItem}>
-              <Text style={styles.label}>Phone</Text>
-              <TextInput
-                style={styles.input}
-                value={phone}
-                onChangeText={(text) => setPhone(text)}
-                placeholder="Enter your phone number"
-              />
-            </View>
+            </Modal> */}
             <View style={styles.formItem}>
               <Text style={styles.label}>Email</Text>
               <TextInput
+                editable={false}
                 style={styles.input}
-                value={email}
-                onChangeText={(text) => setEmail(text)}
+                value={userData.email}
+                onChangeText={(text) => setUserData({ ...userData, email: text})}
                 placeholder="Enter your email"
               />
             </View>
             <View style={styles.formItem}>
+              <Text style={styles.label}>Phone</Text>
+              <TextInput
+                style={styles.input}
+                value={userData.phone}
+                onChangeText={(text) => setUserData({ ...userData, phone: text})}
+                placeholder="Enter your phone number"
+              />
+            </View>
+            {/* <View style={styles.formItem}>
               <Text style={styles.label}>Location</Text>
               <TextInput
                 style={styles.input}
@@ -129,7 +223,7 @@ const PersonalData = () => {
                 onChangeText={(text) => setLocation(text)}
                 placeholder="Enter your location"
               />
-            </View>
+            </View> */}
             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
@@ -145,6 +239,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 10,
     paddingBottom: 20,
+    marginTop: '8%'
   },
   title: {
     fontSize: 24,
@@ -154,7 +249,7 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     flex: 1,
-    marginTop: 50,
+    marginTop: '5%',
   },
   formItem: {
     marginBottom: 20,

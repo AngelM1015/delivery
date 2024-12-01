@@ -11,6 +11,7 @@ const { width, height } = Dimensions.get("window");
 
 const OnboardingComponent = ({ navigation }) => {
   const handleCompleteOnboarding = async () => {
+    console.log("Completing onboarding...");
     await AsyncStorage.setItem("hasOnboarded", "true");
     navigation.replace("Login");
   };
@@ -186,6 +187,9 @@ const OnboardingComponent = ({ navigation }) => {
         containerStyles={{ paddingHorizontal: 15 }}
         onDone={handleCompleteOnboarding}
         onSkip={handleSkipOnboarding}
+        showSkip={true}
+        showNext={true}
+        showDone={true}
         pages={onboardingPages}
       />
     </Provider>
