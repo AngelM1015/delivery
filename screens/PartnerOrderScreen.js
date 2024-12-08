@@ -1,90 +1,253 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, TouchableOpacity, RefreshControl } from 'react-native';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  TouchableOpacity,
+  RefreshControl,
+  Image,
+  Linking,
+  Platform
+} from "react-native";
+import useOrders from "../hooks/useOrders";
+import { Ionicons } from "@expo/vector-icons";
+import { base_url } from "../constants/api";
 
 const PartnerOrderScreen = ({ navigation }) => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [userRole, setUserRole] = useState('');
+  const { loading, partnerOrders, fetchPartnerPendingOrders, deliverOrder, pickUpOrder } =
+    useOrders();
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const initialize = async () => {
-      try {
-        const token = await AsyncStorage.getItem('userToken');
-        const role = await AsyncStorage.getItem('userRole');
-        setUserRole(role);
-        if (!token) {
-          setError('User token not found.');
-          Alert.alert('Authentication Error', 'User token not found.');
-          return;
-        }
-        fetchOrders(token, role);
-      } catch (err) {
-        console.error('Error during initialization:', err);
-        setError(err.message);
-      }
-    };
-
-    initialize();
+    fetchPartnerPendingOrders();
+    console.log("in partner order screen");
   }, []);
 
-  const fetchOrders = async (token, role) => {
-    try {
-      setLoading(true);
-      let url = 'http://localhost:3000/api/v1/orders/partner_pending_orders';
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setOrders(response.data);
-    } catch (err) {
-      console.error('Error fetching orders:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const onRefresh = async () => {
-    const token = await AsyncStorage.getItem('userToken');
-    const role = await AsyncStorage.getItem('userRole');
-    fetchOrders(token, role);
+    fetchPartnerPendingOrders();
   };
 
-  const handleOrderClick = (order) => {
-    navigation.navigate('OngoingOrderScreen', { id: order.id });
+  const redirectToMap = (item) => {
+    const latitude = item.address.latitude;
+    const longitude = item.address.longitude;
+    const label = item.address.location_name;
+
+    const url = Platform.select({
+      ios: `maps://?q=${label}&ll=${latitude},${longitude}`,
+      android: "geo:" + latitude + "," + longitude + "?q=" + label
+    });
+
+    Linking.canOpenURL(url).then(supported => {
+      if (supported) {
+        return Linking.openURL(url);
+      } else {
+        const browser_url =
+          "https://www.google.de/maps/@" +
+          latitude +
+          "," +
+          longitude +
+          "?q=" +
+          label;
+        return Linking.openURL(browser_url);
+      }
+    });
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.orderItem} onPress={() => handleOrderClick(item)}>
     <View style={styles.orderItem}>
-      <Text style={styles.orderText}>Order ID: {item.id}</Text>
-      {item.user && <Text>Customer: {item.user.email} </Text>}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Text style={styles.orderId}>Order ID {item.id}</Text>
+        {item.status === "partner_assigned" && (
+          <View
+            style={{
+              backgroundColor: "#F09B00",
+              padding: 10,
+              borderRadius: 24,
+            }}
+          >
+            <Ionicons
+              name="chatbox-ellipses-outline"
+              size={30}
+              color="white"
+              onPress={() =>
+                navigation.navigate("Chat", {
+                  conversationId: item.conversation_id,
+                })
+              }
+            />
+          </View>
+        )}
+      </View>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <View
+          style={{ flexDirection: "row", alignItems: "center", marginTop: 15 }}
+        >
+          <Image
+            source={{
+              uri: item.image_url
+                ? base_url + item.image_url
+                : "../assets/images/icon.png",
+            }}
+            style={{ width: 80, height: 80, borderRadius: 10 }}
+          />
+          <View style={{ marginLeft: 15, gap: 10 }}>
+            <Text style={{ color: "black", fontSize: 20, fontWeight: "bold" }}>
+              {item.restaurant_name}
+            </Text>
+            <Text style={{ color: "black", fontSize: 14 }}>
+              {item.order_items
+                .map((orderItem) => orderItem.menu_item)
+                .join(", ")}
+            </Text>
+            <Text style={{ color: "#F09B00", fontSize: 14, fontWeight: "400" }}>
+              ${item.total_price}
+            </Text>
+          </View>
+        </View>
+        <Text style={{ color: "black", fontWeight: "400", fontSize: 12 }}>
+          {item.order_items.length} item
+        </Text>
+      </View>
       <Text>Delivery Address: {item.delivery_address}</Text>
-      <Text>Restaurant Address: {item.restaurant_address}</Text>
-      <Text>Pick Up at:  {item.pick_up_time}</Text>
-
+      {item.status === 'picked_up' && (
+        <TouchableOpacity
+          style={styles.directionButton}
+          onPress={() => redirectToMap(item)}
+        >
+          <Text style={styles.directionText}>Open in Maps</Text>
+        </TouchableOpacity>
+      )}
+      <TouchableOpacity
+        style={styles.pickupButton}
+        onPress={item.status === 'partner_assigned' ? (() => pickUpOrder(item.id)) : (() => deliverOrder(item.id))}
+      >
+        <Text style={styles.pickupButtonText}>{item.status === 'partner_assigned' ? "Pick Order" : "Deliver Order"}</Text>
+      </TouchableOpacity>
     </View>
-    </TouchableOpacity>
   );
 
-  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#0000ff" /><Text style={styles.loadingText}>Loading orders...</Text></View>;
-  if (error) return <View style={styles.centered}><Text style={styles.errorText}>Error: {error}</Text></View>;
-  if (orders.length === 0) return <View style={styles.centered}><Text>No orders available</Text></View>;
+  if (loading)
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Loading orders...</Text>
+      </View>
+    );
+  if (error)
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>Error: {error}</Text>
+      </View>
+    );
+  if (partnerOrders.length === 0)
+    return (
+      <View style={styles.centered}>
+        <Text>No orders available</Text>
+      </View>
+    );
 
-  return <FlatList data={orders} renderItem={renderItem} keyExtractor={item => item.id.toString()} 
-  refreshControl={
-    <RefreshControl loading={loading} onRefresh={onRefresh} />
-  }/>;
+  return (
+    <View style={{ padding: 20, marginTop: 30 }}>
+      <Text style={{ alignSelf: "center" }}>Orders</Text>
+
+      <FlatList
+        style={{ marginTop: 10 }}
+        data={partnerOrders}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        refreshControl={
+          <RefreshControl loading={loading} onRefresh={onRefresh} />
+        }
+      />
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' },
-  orderItem: { padding: 20, marginVertical: 8, marginHorizontal: 16, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#ddd', borderRadius: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, elevation: 5 },
-  orderText: { fontSize: 16, color: '#333' },
-  loadingText: { marginTop: 10, fontSize: 18, color: '#007bff' },
-  errorText: { marginTop: 10, fontSize: 18, color: 'red' },
+  orderItem: {
+    marginVertical: 8,
+    marginHorizontal: 4,
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    padding: 8,
+  },
+  orderId: {
+    marginBottom: 20,
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "orange",
+  },
+  orderTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  fab: {
+    marginTop: 4,
+    position: "absolute",
+    right: 10,
+    borderRadius: 10,
+    padding: 6,
+    backgroundColor: "orange",
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#FF4040",
+    borderRadius: 16,
+    padding: 12,
+    alignItems: "center",
+    marginTop: 20,
+    width: "30%",
+  },
+  directionButton: {
+    marginVertical: 4,
+    borderRadius: 8,
+  },
+  directionText: {
+    color: "blue",
+    fontSize: 18,
+    fontStyle: 'italic',
+    textAlign: 'right',
+    marginEnd: 4
+  },
+  pickupButton: {
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: "orange",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  pickupButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 24,
+  },
 });
 
 export default PartnerOrderScreen;

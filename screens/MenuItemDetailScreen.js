@@ -1,12 +1,19 @@
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { ScrollView, View, Image, StyleSheet, Text } from 'react-native';
-import { Card, Title, Paragraph, ActivityIndicator, Button, Provider as PaperProvider } from 'react-native-paper';
-import { useCart } from '../context/CartContext';
-import { UserContext } from '../context/UserContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useEffect, useContext } from "react";
+import axios from "axios";
+import { ScrollView, View, Image, StyleSheet, Text } from "react-native";
+import {
+  Card,
+  Title,
+  Paragraph,
+  ActivityIndicator,
+  Button,
+  Provider as PaperProvider,
+} from "react-native-paper";
+import { useCart } from "../context/CartContext";
+import { UserContext } from "../context/UserContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { base_url } from '../constants/api';
+import { base_url } from "../constants/api";
 
 const MenuItemImage = ({ menuItemDetails }) => {
   const imageUrl = `${base_url}${menuItemDetails.image_url}`;
@@ -31,21 +38,26 @@ const MenuItemDetailScreen = ({ route }) => {
         const url = `${base_url}api/v1/restaurants/${restaurantId}/menu_items/${menuItemId}`;
         console.log(`Fetching menu item from: ${url}`);
         const response = await axios.get(url);
-        console.log('Response data:', response.data);
+        console.log("Response data:", response.data);
         if (!response.data) {
-          throw new Error('No data received');
+          throw new Error("No data received");
         }
         setMenuItemDetails(response.data);
-        const initialCounts = (response.data.modifiers || []).reduce((counts, modifier) => {
-          counts[modifier.id] = {};
-          (modifier.modifier_options || []).forEach(option => {
-            counts[modifier.id][option.id] = 0;
-          });
-          return counts;
-        }, {});
+        const initialCounts = (response.data.modifiers || []).reduce(
+          (counts, modifier) => {
+            counts[modifier.id] = {};
+            (modifier.modifier_options || []).forEach((option) => {
+              counts[modifier.id][option.id] = 0;
+            });
+            return counts;
+          },
+          {}
+        );
         setModifierCounts(initialCounts);
       } catch (err) {
-        setError(err.message || 'Failed to load menu item. Please try again later.');
+        setError(
+          err.message || "Failed to load menu item. Please try again later."
+        );
       } finally {
         setIsLoading(false);
       }
@@ -57,7 +69,7 @@ const MenuItemDetailScreen = ({ route }) => {
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
-    AsyncStorage.setItem('selectedRestaurantId', `${restaurantId}`);
+    AsyncStorage.setItem("selectedRestaurantId", `${restaurantId}`);
     const selectedModifiers = Object.entries(modifierCounts)
       .map(([modifierId, optionsCounts]) => ({
         modifierId,
@@ -65,42 +77,58 @@ const MenuItemDetailScreen = ({ route }) => {
           .filter(([_, count]) => count > 0)
           .map(([optionId, count]) => {
             const option = menuItemDetails.modifiers
-              .find(modifier => modifier.id === parseInt(modifierId)).modifier_options
-              .find(option => option.id === parseInt(optionId));
+              .find((modifier) => modifier.id === parseInt(modifierId))
+              .modifier_options.find(
+                (option) => option.id === parseInt(optionId)
+              );
             return { ...option, count };
-          })
+          }),
       }))
-      .filter(modifier => modifier.options.length > 0);
+      .filter((modifier) => modifier.options.length > 0);
 
-    const price = menuItemDetails.item_prices.length > 0 ? parseFloat(menuItemDetails.item_prices[0]) : '0.0';
+    const price =
+      menuItemDetails.item_prices.length > 0
+        ? parseFloat(menuItemDetails.item_prices[0])
+        : "0.0";
 
     // Ensure the imageUrl is correctly set
-    const imageUrl = menuItemDetails.image_url ? `${base_url}${menuItemDetails.image_url}` : null;
-    console.log('Image URL:', imageUrl); // Log the image URL before adding
+    const imageUrl = menuItemDetails.image_url
+      ? `${base_url}${menuItemDetails.image_url}`
+      : null;
+    console.log("Image URL:", imageUrl); // Log the image URL before adding
 
     const itemForCart = {
       id: menuItemId,
       name: menuItemDetails.name,
-      price: price + selectedModifiers.reduce((w, x) => w + x.options.reduce((a, b) => a + parseFloat(b.additional_price * b.count), 0), 0),
+      price:
+        price +
+        selectedModifiers.reduce(
+          (w, x) =>
+            w +
+            x.options.reduce(
+              (a, b) => a + parseFloat(b.additional_price * b.count),
+              0
+            ),
+          0
+        ),
       imageUrl, // Include the imageUrl here
       selectedModifiers,
       quantity: 1,
     };
 
-    console.log('Item being added to cart:', itemForCart); // Log the entire item object
+    console.log("Item being added to cart:", itemForCart); // Log the entire item object
     addToCart(itemForCart);
   };
 
-
-
-
   const handleQuantityChange = (modifierId, optionId, increment) => {
-    setModifierCounts(prevCounts => {
+    setModifierCounts((prevCounts) => {
       const newCounts = { ...prevCounts };
       const currentCount = newCounts[modifierId]?.[optionId] || 0;
       newCounts[modifierId] = {
         ...newCounts[modifierId],
-        [optionId]: increment ? currentCount + 1 : Math.max(currentCount - 1, 0),
+        [optionId]: increment
+          ? currentCount + 1
+          : Math.max(currentCount - 1, 0),
       };
       return newCounts;
     });
@@ -123,27 +151,46 @@ const MenuItemDetailScreen = ({ route }) => {
       <ScrollView>
         <MenuItemImage menuItemDetails={menuItemDetails} />
         <Title style={styles.title}>{menuItemDetails.name}</Title>
-        <Paragraph style={styles.description}>{menuItemDetails.description}</Paragraph>
+        <Paragraph style={styles.description}>
+          {menuItemDetails.description}
+        </Paragraph>
         {(menuItemDetails.modifiers || []).length === 0 ? (
-          <Text style={styles.noModifiersText}>No additional options available.</Text>
+          <Text style={styles.noModifiersText}>
+            No additional options available.
+          </Text>
         ) : (
           (menuItemDetails.modifiers || []).map((modifier) => (
             <Card key={modifier.id} style={styles.card}>
-              <Card.Title title={modifier.name} titleStyle={styles.modifierTitle} />
+              <Card.Title
+                title={modifier.name}
+                titleStyle={styles.modifierTitle}
+              />
               <Card.Content>
                 {(modifier.modifier_options || []).map((option) => (
                   <View key={option.id} style={styles.optionContainer}>
                     <Paragraph>
                       {option.name}
-                      (+${option.additional_price ?? '0.00'})
+                      (+${option.additional_price ?? "0.00"})
                     </Paragraph>
-                    {userRole !== 'guest' && (
+                    {userRole !== "guest" && (
                       <View style={styles.counterContainer}>
-                        <Button icon="minus" compact onPress={() => handleQuantityChange(modifier.id, option.id, false)} />
+                        <Button
+                          icon="minus"
+                          compact
+                          onPress={() =>
+                            handleQuantityChange(modifier.id, option.id, false)
+                          }
+                        />
                         <Text style={styles.countText}>
                           {modifierCounts[modifier.id]?.[option.id] || 0}
                         </Text>
-                        <Button icon="plus" compact onPress={() => handleQuantityChange(modifier.id, option.id, true)} />
+                        <Button
+                          icon="plus"
+                          compact
+                          onPress={() =>
+                            handleQuantityChange(modifier.id, option.id, true)
+                          }
+                        />
                       </View>
                     )}
                   </View>
@@ -153,14 +200,14 @@ const MenuItemDetailScreen = ({ route }) => {
           ))
         )}
       </ScrollView>
-      {userRole === 'guest' ? (
+      {userRole === "guest" ? (
         <Button disabled>We’re just browsing as guest</Button>
       ) : (
         <Button
           style={styles.addToCart}
           onPress={handleAddToCart}
-          textColor='white'
-          icon='cart'
+          textColor="white"
+          icon="cart"
         >
           Add to Cart
         </Button>
@@ -171,18 +218,18 @@ const MenuItemDetailScreen = ({ route }) => {
 
 const styles = StyleSheet.create({
   image: {
-    width: '100%',
+    width: "100%",
     height: 200,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     margin: 16,
   },
   modifierTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     // margin: 16,
   },
   description: {
@@ -194,29 +241,29 @@ const styles = StyleSheet.create({
     margin: 16,
   },
   optionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 8,
   },
   counterContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   countText: {
     marginHorizontal: 8,
   },
   noModifiersText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 10,
     fontSize: 16,
-    color: 'grey',
+    color: "grey",
   },
   addToCart: {
-    backgroundColor: 'orange',
+    backgroundColor: "orange",
     fontSize: 39,
     margin: 16,
-  }
+  },
 });
 
 export default MenuItemDetailScreen;

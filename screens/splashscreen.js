@@ -1,10 +1,10 @@
-import React, { useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import Emoji from 'react-native-emoji';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useRef, useEffect } from "react";
+import { View, Text, StyleSheet, Animated } from "react-native";
+import Emoji from "react-native-emoji";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SplashScreen = ({ navigation }) => {
-  const emojis = ['fries', 'pizza', 'hamburger'];
+  const emojis = ["fries", "pizza", "hamburger"];
   const spinValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -17,14 +17,14 @@ const SplashScreen = ({ navigation }) => {
     ).start();
 
     const timer = setTimeout(async () => {
-      const token = await AsyncStorage.getItem('userToken');
-      const hasOnboarded = await AsyncStorage.getItem('hasOnboarded') === 'true';
+      const token = await AsyncStorage.getItem("userToken");
+      const hasOnboarded =
+        (await AsyncStorage.getItem("hasOnboarded")) === "true";
 
       if (token) {
-        navigation.replace('Main');
-      } 
-      else {
-        navigation.replace('Onboarding');
+        navigation.replace("Main");
+      } else {
+        navigation.replace("Onboarding");
       }
     }, 3000);
 
@@ -33,18 +33,11 @@ const SplashScreen = ({ navigation }) => {
 
   const getEmojiPosition = (index) => {
     const inputRange = [0, 1];
-    const outputRange = [
-      `0deg`,
-      `${360 * (index + 1)}deg`
-    ];
+    const outputRange = [`0deg`, `${360 * (index + 1)}deg`];
     const rotate = spinValue.interpolate({ inputRange, outputRange });
 
     return {
-      transform: [
-        { translateX: 60 },
-        { rotate },
-        { translateX: -120 },
-      ],
+      transform: [{ translateX: 60 }, { rotate }, { translateX: -120 }],
     };
   };
 
@@ -56,7 +49,10 @@ const SplashScreen = ({ navigation }) => {
       </View>
       <View style={styles.emojisContainer}>
         {emojis.map((emoji, index) => (
-          <Animated.View key={emoji} style={[styles.emojiContainer, getEmojiPosition(index)]}>
+          <Animated.View
+            key={emoji}
+            style={[styles.emojiContainer, getEmojiPosition(index)]}
+          >
             <Emoji name={emoji} style={styles.emoji} />
           </Animated.View>
         ))}
@@ -68,37 +64,37 @@ const SplashScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#1c1e26',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1c1e26",
   },
   textContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   title: {
-    color: '#f8c852',
+    color: "#f8c852",
     fontSize: 36,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
-    color: '#f8c852',
+    color: "#f8c852",
     fontSize: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emojisContainer: {
-    position: 'absolute',
+    position: "absolute",
     width: 240,
     height: 240,
-    alignItems: 'center',
-    justifyContent: 'center',
-    top: '50%',
-    left: '40%',
+    alignItems: "center",
+    justifyContent: "center",
+    top: "50%",
+    left: "40%",
     marginLeft: -120,
     marginTop: -120,
   },
   emojiContainer: {
-    position: 'absolute',
+    position: "absolute",
   },
   emoji: {
     fontSize: 32,
