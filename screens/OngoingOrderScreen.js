@@ -17,7 +17,6 @@ import cable from "../cable";
 import { GOOGLE_MAPS_API_KEY } from "@env";
 import { FontAwesome, MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { base_url } from "../constants/api";
-import client from "../client";
 
 const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
   const [slideAnim] = useState(new Animated.Value(0));
@@ -28,7 +27,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
   const [customerMessage, setCustomerMessage] = useState("");
   const [partnerMessage, setPartnerMessage] = useState("");
   const [partnerLocation, setPartnerLocation] = useState(null);
-  const [showDetails, setShowDetails] = useState(false); // State to toggle order details
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     const fetchOngoingOrder = async () => {
@@ -108,6 +107,8 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
   };
 
   const renderMap = async () => {
+    console.log('partner location in map', partnerLocation);
+    console.log('customer location in map', order.address)
     if (!order.partner_location || !order.address) return null;
 
     const partnerCoords = {

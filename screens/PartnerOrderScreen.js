@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   RefreshControl,
   Image,
+  Linking,
+  Platform
 } from "react-native";
 import useOrders from "../hooks/useOrders";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,6 +27,32 @@ const PartnerOrderScreen = ({ navigation }) => {
 
   const onRefresh = async () => {
     fetchPartnerPendingOrders();
+  };
+
+  const redirectToMap = (item) => {
+    const latitude = item.address.latitude;
+    const longitude = item.address.longitude;
+    const label = item.address.location_name;
+
+    const url = Platform.select({
+      ios: `maps://?q=${label}&ll=${latitude},${longitude}`,
+      android: "geo:" + latitude + "," + longitude + "?q=" + label
+    });
+
+    Linking.canOpenURL(url).then(supported => {
+      if (supported) {
+        return Linking.openURL(url);
+      } else {
+        const browser_url =
+          "https://www.google.de/maps/@" +
+          latitude +
+          "," +
+          longitude +
+          "?q=" +
+          label;
+        return Linking.openURL(browser_url);
+      }
+    });
   };
 
   const renderItem = ({ item }) => (
@@ -95,6 +123,14 @@ const PartnerOrderScreen = ({ navigation }) => {
         </Text>
       </View>
       <Text>Delivery Address: {item.delivery_address}</Text>
+      {item.status === 'picked_up' && (
+        <TouchableOpacity
+          style={styles.directionButton}
+          onPress={() => redirectToMap(item)}
+        >
+          <Text style={styles.directionText}>Open in Maps</Text>
+        </TouchableOpacity>
+      )}
       <TouchableOpacity
         style={styles.pickupButton}
         onPress={item.status === 'partner_assigned' ? (() => pickUpOrder(item.id)) : (() => deliverOrder(item.id))}
@@ -142,17 +178,6 @@ const PartnerOrderScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  // orderItem: {
-  //   padding: 10,
-  //   marginVertical: 8,
-  //   marginHorizontal: 4,
-  //   backgroundColor: '#ffffff',
-  //   borderRadius: 8,
-  //   shadowColor: '#000',
-  //   shadowOffset: { width: 2, height: 2 },
-  //   shadowOpacity: 0.15,
-  //   shadowRadius: 4,
-  // },
   orderItem: {
     marginVertical: 8,
     marginHorizontal: 4,
@@ -198,6 +223,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
     width: "30%",
+  },
+  directionButton: {
+    marginVertical: 4,
+    borderRadius: 8,
+  },
+  directionText: {
+    color: "blue",
+    fontSize: 18,
+    fontStyle: 'italic',
+    textAlign: 'right',
+    marginEnd: 4
   },
   pickupButton: {
     marginTop: 8,

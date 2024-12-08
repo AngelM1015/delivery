@@ -3,7 +3,6 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  Dimensions,
   TouchableOpacity,
   View,
   Image,
@@ -11,13 +10,16 @@ import {
   SafeAreaView,
   Switch,
 } from "react-native";
+import * as Location from "expo-location";
 import { Card } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import PartnerOrders from "../components/PartnerOrders";
-import { FontAwesome } from "@expo/vector-icons";
 import useRestaurants from "../hooks/useRestaurants";
 import { base_url } from "../constants/api";
+import client from "../client";
+import cable from "../cable";
+import Toast from "react-native-toast-message";
 
 const DashboardScreen = () => {
   const [role, setRole] = useState(null);
@@ -27,7 +29,6 @@ const DashboardScreen = () => {
     restaurants,
     fetchRestaurants,
     setSelectedRestaurant,
-    changeStatus,
     setMenuItems,
   } = useRestaurants();
 
@@ -39,6 +40,23 @@ const DashboardScreen = () => {
   const [backgroundImage, setBackgroundImage] = useState(
     "https://via.placeholder.com/150"
   );
+  const [newOrders, setNewOrders] = useState([]);
+
+  const sendLocationToBackend = async (subscription) => {
+    try {
+      const currentLocation = await Location.getCurrentPositionAsync();
+      console.log("location fetched: ", currentLocation.coords);
+  
+      if (subscription && typeof subscription.sendLocation === "function") {
+        subscription.sendLocation({ location: currentLocation.coords });
+        console.log("location sent: ", currentLocation.coords);
+      } else {
+        console.error("subscription.sendLocation is not a function or subscription is undefined");
+      }
+    } catch (error) {
+      console.error("Error sending location to backend:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchRoleAndData = async () => {
@@ -51,6 +69,67 @@ const DashboardScreen = () => {
         }
       } else {
         await fetchData(role);
+      }
+
+      const userId = await AsyncStorage.getItem("userId");
+      if (role === "partner") {
+        const currentLocation = await Location.getCurrentPositionAsync();
+        console.log("current location", currentLocation.coords);
+
+        if (cable.connection.isOpen()) {
+          console.log("WebSocket connection is open.");
+        } else {
+          console.log("WebSocket connection is not open.");
+        }
+        console.log("user id", userId);
+
+        const subscription = await cable.subscriptions.create(
+          { channel: "PartnerChannel", id: userId },
+          {
+            received(data) {
+              console.log("New order notification:", data);
+              if (data.new_order) {
+                console.log('in new orderr assignement!')
+                addNewOrder(data.new_order);
+                // Toast.show({
+                //   type: "success",
+                //   text1: "New Order Assigned!",
+                //   text2: `Order from ${data.new_order.restaurant_name}`,
+                //   position: "top",
+                // });
+              }
+              else {
+                console.log('in new orderr request!')
+                // Toast.show({
+                //   type: "success",
+                //   text1: "New Order Request",
+                //   text2: `Order from ${data.new_order.restaurant_name}`,
+                //   position: "top",
+                // });
+              }
+            },
+
+            sendLocation(locationData) {
+              this.perform("send_location", { location: locationData });
+            },
+          }
+        );
+        console.log("subscription", subscription);
+
+        const intervalId = setInterval(
+          () => sendLocationToBackend(subscription),
+          10000
+        );
+
+        return () => {
+          try {
+            subscription.unsubscribe();
+          } catch (error) {
+            console.error("Error during WebSocket cleanup:", error);
+          } finally {
+            clearInterval(intervalId);
+          }
+        };
       }
     };
 
@@ -74,6 +153,8 @@ const DashboardScreen = () => {
       }
     };
 
+    console.log('subscriptions: ', cable.subscriptions);
+
     fetchRoleAndData();
   }, []);
 
@@ -85,6 +166,13 @@ const DashboardScreen = () => {
 
     setCompletedOrders(groupedOrders.delivered?.length || 0);
     setCanceledOrders(groupedOrders.canceled?.length || 0);
+  };
+
+  const addNewOrder = (newOrder) => {
+    setNewOrders((prevOrders) => [...prevOrders, newOrder]);
+    setTimeout(() => {
+      setNewOrders((prevOrders) => prevOrders.filter((order) => order.id !== newOrder.id));
+    }, 10000);
   };
 
   const renderRestaurant = ({ item: restaurant }) => {
@@ -123,8 +211,6 @@ const DashboardScreen = () => {
     const imageUrl = item.image_url
       ? base_url + item.image_url
       : "https://via.placeholder.com/150";
-    const rating = "4.9";
-    const distance = "2km";
 
     return (
       <Card style={styles.menuCard}>
@@ -146,17 +232,7 @@ const DashboardScreen = () => {
             <Text style={styles.menuTitle} numberOfLines={1}>
               {item.name}
             </Text>
-            <View style={styles.menuInfo}>
-              <View style={styles.ratingContainer}>
-                <FontAwesome name="star" size={14} color="gold" />
-                <Text style={styles.ratingText}>{rating}</Text>
-              </View>
-              <View style={styles.distanceContainer}>
-                {/* <FontAwesome name="map-marker" size={14} color="gray" /> */}
-                <Text style={styles.distanceText}>{distance}</Text>
-              </View>
-            </View>
-            <Text style={styles.priceText}>${price}</Text>
+            <Text style={styles.priceText}>$ {price}</Text>
           </View>
         </View>
       </Card>
@@ -164,25 +240,25 @@ const DashboardScreen = () => {
   };
 
   const toggleSwitch = async ( item ) => {
-    console.log('called toggle switch', item);
+    item.isenabled = !item.isenabled;
+
+    setMenuItems((prevItems) =>
+      prevItems.map((menu) =>
+        menu.id === item.id ? { ...menu, isenabled: item.isenabled } : menu
+      )
+    );
     try {
       const token = await AsyncStorage.getItem("userToken");
-      let endpoint = `restaurants/${selectedRestaurant}/menu_items/${item.id}/enable_menu_item`
-      if (endpoint) {
-        const response = await axios.patch(`${base_url}api/v1/${endpoint}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
+      const endpoint = `restaurants/${selectedRestaurant}/menu_items/${item.id}/enable_menu_item`
+
+      const response = await client.patch(`api/v1/${endpoint}`,{menu_item: item}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log('new value of enabled', item.isenabled)
     } catch (error) {
       console.error("Error fetching data:", error);
     }
-
-    // changeStatus(selectedRestaurant, item.id, !item.isenabled);
-    // setMenuItems((prevItems) =>
-    //   prevItems.map((menu) =>
-    //     menu.id === item.id ? { ...menu, isenabled: !menu.isenabled } : menu
-    //   )
-    // );
   };
 
   const renderDashboard = () => {
@@ -193,23 +269,35 @@ const DashboardScreen = () => {
     if (role === "partner") {
       return (
         <>
-          <View style={styles.orderGroups}>
-            <Text style={styles.canceledOrders}> {canceledOrders} Cancel</Text>
-            <Text style={styles.completedOrders}>
-              {completedOrders} Completed
-            </Text>
+          <ScrollView style={styles.newOrdersContainer}>
+            {newOrders.map((order) => (
+              <View key={order.id} style={styles.newOrderCard}>
+                <Text style={styles.newOrderText}> {`Order Id:  ${order.id}`}</Text>
+                <Text style={styles.newOrderText}>{`Order from ${order.restaurant_name}`}</Text>
+                <Text style={styles.newOrderText}> {`Order Items:  ${order.order_items} items`}</Text>
+                <Text style={styles.newOrderText}> {`Order Price:  $${order.price}`}</Text>
+              </View>
+            ))}
+          </ScrollView>
+          <View style={styles.footer}>
+            <View style={styles.orderGroups}>
+              <Text style={styles.canceledOrders}> {canceledOrders} Cancel</Text>
+              <Text style={styles.completedOrders}>
+                {completedOrders} Completed
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.orderHistoryButton}
+              onPress={() => setModalVisible(true)}
+            >
+              <Text style={styles.orderHistoryButtonText}>Order History</Text>
+            </TouchableOpacity>
+            <PartnerOrders
+              visible={modalVisible}
+              onRequestClose={() => setModalVisible(false)}
+              orders={orders}
+            />
           </View>
-          <TouchableOpacity
-            style={styles.orderHistoryButton}
-            onPress={() => setModalVisible(true)}
-          >
-            <Text style={styles.orderHistoryButtonText}>Order History</Text>
-          </TouchableOpacity>
-          <PartnerOrders
-            visible={modalVisible}
-            onRequestClose={() => setModalVisible(false)}
-            orders={orders}
-          />
         </>
       );
     } else if (role === "restaurant_owner") {
@@ -267,10 +355,40 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
+  newOrdersContainer: {
+    flex: 1,
+    padding: 10,
+  },
+  newOrderCard: {
+    marginVertical: 8,
+    marginHorizontal: 4,
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    shadowColor: "#000",
+    shadowOffset: { height: 4 },
+    shadowOpacity: 0.15,
+    padding: 10,
+  },
+  newOrderText: {
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 8,
+    fontWeight: "bold",
+    fontSize: 20,
+    color: "#F09B00",
+  },
+  footer: {
+    backgroundColor: "#FFF",
+    padding: 20,
+    borderTopWidth: 1,
+    borderColor: "#DDD",
+  },
   orderGroups: {
     flexDirection: "row",
-    gap: 20,
-    marginStart: 14,
+    justifyContent: "space-between",
+    marginBottom: 10,
   },
   canceledOrders: {
     color: "red",
@@ -285,8 +403,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    alignSelf: "start",
-    margin: 20,
+    alignSelf: "center",
   },
   orderHistoryButtonText: {
     color: "#fff",
@@ -325,53 +442,32 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     backgroundColor: "#fff",
     elevation: 3,
-    width: 180,
   },
   innerCardContainer: {
     overflow: "hidden",
     borderRadius: 10,
-    gap: 8,
   },
   menuCardTop: {
     position: "relative",
   },
   menuImage: {
     width: "100%",
-    height: 100,
+    height: 120,
+    borderRadius: 10
   },
   menuDetails: {
     padding: 2,
-    gap: 4,
   },
   menuTitle: {
     fontSize: 14,
     fontWeight: "bold",
   },
-  menuInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 5,
+  switchContainer: {
+
   },
   switch: {
-    top: -90,
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  ratingText: {
-    marginLeft: 5,
-    fontSize: 12,
-    color: "#000",
-  },
-  distanceContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  distanceText: {
-    marginLeft: 5,
-    fontSize: 12,
-    color: "#000",
+    top: -110,
+    left: 8
   },
   priceText: {
     marginTop: 10,

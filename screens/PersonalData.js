@@ -7,28 +7,17 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
-  Modal,
-  FlatList,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
   Alert,
 } from "react-native";
-import { Icons } from "../constants/Icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import client from "../client";
 import Toast from "react-native-toast-message";
 
 const PersonalData = ({navigation}) => {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("")
-  // const [dateOfBirth, setDateOfBirth] = useState("");
-  const [gender, setGender] = useState("Male");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [location, setLocation] = useState("");
-  const [isGenderModalVisible, setIsGenderModalVisible] = useState(false);
-  const genderOptions = ["Male", "Female", "Other"];
+  const [errors, setErrors] = useState({})
   const [userData, setUserData] = useState({
     userName: '',
     firstName: '',
@@ -67,44 +56,76 @@ const PersonalData = ({navigation}) => {
   }
 
   const handleSave = async () => {
-    const token = await AsyncStorage.getItem('userToken');
-    const userId = await AsyncStorage.getItem('userId');
-    const url = `api/v1/users/${userId}`
-    const data = {
-      first_name: userData.firstName,
-      last_name: userData.lastName,
-      email: userData.email,
-      username: userData.userName,
-      phone: userData.phone
-    }
+    const newErrors = {};
 
-    console.log('user data', data);
+    if (!userData.userName) newErrors.userName = "Username is required.";
+    if (!userData.firstName) newErrors.firstName = "First name is required.";
+    if (!userData.lastName) newErrors.lastName = "Last name is required.";
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length !== 0) return
+
     try {
-      const response = await client.put(url, {user: data}, {
+      const token = await AsyncStorage.getItem('userToken');
+      const userId = await AsyncStorage.getItem('userId');
+      const url = `api/v1/users/${userId}`;
+      const data = {
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        email: userData.email,
+        username: userData.userName,
+        phone: userData.phone,
+      };
+
+      console.log('user data', data);
+
+      const response = await client.put(url, { user: data }, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
+
       AsyncStorage.setItem('userName', response.data.username);
-      console.log('response on updating personal data', response.data)
+      console.log('response on updating personal data', response.data);
+
       Toast.show({
         type: "success",
         text1: "Success!",
-        text2: "data updated successfully! 👋",
+        text2: "Data updated successfully! 👋",
         position: "top",
         visibilityTime: 1500,
       });
 
-      await navigation.goBack();
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error while updating personal data:', error);
 
-    } catch(error){
-      Alert.alert('error while updating personal data', error)
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 422) {
+          Alert.alert(
+            "Validation Error",
+            data?.message || "Fill Up the required fields. Please review your inputs."
+          );
+        } else if (status === 500) {
+          Alert.alert(
+            "Server Error",
+            "Something went wrong on the server. Please try again later."
+          );
+        } else {
+          Alert.alert("Error", `Unexpected error occurred: ${status}`);
+        }
+      } else if (error.request) {
+        Alert.alert(
+          "Network Error",
+          "No response received. Please check your connection and try again."
+        );
+      } else {
+        Alert.alert("Error", error.message || "An unknown error occurred.");
+      }
     }
-  };
-
-  const handleGenderSelect = (selectedGender) => {
-    setGender(selectedGender);
-    setIsGenderModalVisible(false);
   };
 
   return (
@@ -129,6 +150,7 @@ const PersonalData = ({navigation}) => {
                 onChangeText={(text) => setUserData({ ...userData, userName: text})}
                 placeholder="Enter your user name"
               />
+              {errors.userName && <Text style={styles.errorText}>{errors.userName}</Text>}
             </View>
             <View style={styles.formItem}>
               <Text style={styles.label}>First Name</Text>
@@ -138,6 +160,7 @@ const PersonalData = ({navigation}) => {
                 onChangeText={(text) => setUserData({ ...userData, firstName: text})}
                 placeholder="Enter your first name"
               />
+              {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
             </View>
             <View style={styles.formItem}>
               <Text style={styles.label}>Last Name</Text>
@@ -147,55 +170,8 @@ const PersonalData = ({navigation}) => {
                 onChangeText={(text) => setUserData({ ...userData, lastName: text})}
                 placeholder="Enter your last name"
               />
+              {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
             </View>
-            {/* <View style={styles.formItem}>
-              <Text style={styles.label}>Date Of Birth</Text>
-              <TextInput
-                style={styles.input}
-                value={dateOfBirth}
-                onChangeText={(text) => setDateOfBirth(text)}
-                placeholder="Enter your date of birth"
-              />
-            </View> */}
-            {/* <View style={styles.formItem}>
-              <Text style={styles.label}>Gender</Text>
-              <TouchableOpacity
-                style={styles.genderInputContainer}
-                onPress={() => setIsGenderModalVisible(true)}
-              >
-                <TextInput
-                  value={gender}
-                  style={{ flex: 1, width: "100%" }}
-                  placeholder="Select your gender"
-                  editable={false}
-                />
-                <Icons.DropdownIcon style={styles.icon} />
-              </TouchableOpacity>
-            </View> */}
-
-            {/* <Modal
-              visible={isGenderModalVisible}
-              transparent
-              animationType="slide"
-              onRequestClose={() => setIsGenderModalVisible(false)}
-            >
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <FlatList
-                    data={genderOptions}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        onPress={() => handleGenderSelect(item)}
-                        style={styles.modalOption}
-                      >
-                        <Text style={styles.modalOptionText}>{item}</Text>
-                      </TouchableOpacity>
-                    )}
-                    keyExtractor={(item) => item}
-                  />
-                </View>
-              </View>
-            </Modal> */}
             <View style={styles.formItem}>
               <Text style={styles.label}>Email</Text>
               <TextInput
@@ -215,15 +191,6 @@ const PersonalData = ({navigation}) => {
                 placeholder="Enter your phone number"
               />
             </View>
-            {/* <View style={styles.formItem}>
-              <Text style={styles.label}>Location</Text>
-              <TextInput
-                style={styles.input}
-                value={location}
-                onChangeText={(text) => setLocation(text)}
-                placeholder="Enter your location"
-              />
-            </View> */}
             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
@@ -239,20 +206,20 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 10,
     paddingBottom: 20,
-    marginTop: '8%'
+    marginTop: '3%'
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
+    marginBottom: 14,
     textAlign: "center",
   },
   formContainer: {
     flex: 1,
-    marginTop: '5%',
+    marginTop: '4%',
   },
   formItem: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
     fontSize: 14,
@@ -280,24 +247,9 @@ const styles = StyleSheet.create({
   icon: {
     justifyContent: "flex-end",
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    marginHorizontal: 20,
-    padding: 20,
-  },
-  modalOption: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-  },
-  modalOptionText: {
-    fontSize: 16,
-    color: "#333",
+  errorText: {
+    color: "#FF0000",
+    fontSize: 12,
   },
   saveButton: {
     backgroundColor: "#F09B00",

@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator
 } from "react-native";
 import CustomButton from "../components/CustomButton";
 import Header from "../components/Header";
@@ -19,6 +20,7 @@ import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import useUser from "../hooks/useUser";
 
 const MenuCheckoutScreen = ({ navigation, route }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const { createOrder } = useOrder();
   const { userName } = useUser();
   const { cartItems = [], orderDetails = {} } = route.params || {};
@@ -132,11 +134,24 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 
     route.params;
 
-    await createOrder(navigation, orderData.order);
+    setIsLoading(true); // Start loader
+    try {
+      await createOrder(navigation, orderData.order);
+    } catch (error) {
+      Alert.alert("Error", "Failed to create order. Please try again.");
+    } finally {
+      setIsLoading(false); // Stop loader
+    }
   };
 
   return (
     <View style={styles.container}>
+      {isLoading && (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color="#FFA500" />
+            <Text style={styles.loadingText}>Submitting your order...</Text>
+          </View>
+        )}
       <View style={styles.headerContainer}>
         <Header title="Checkout" navigation={navigation} showShareIcon={true} />
       </View>
@@ -216,9 +231,11 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           </View>
         </View>
 
+        <View style={styles.separator} />
+
         {/* Order Type Selection */}
-        <Text style={{ fontSize: 16, marginBottom: 10, paddingLeft: 10 }}>
-          Select Order Type:
+        <Text style={{ fontSize: 18, marginBottom: 8, fontWeight: "bold" }}>
+          Select delivery or pickup
         </Text>
         <View style={styles.orderTypeContainer}>
           <View style={styles.orderTypeWrapper}>
@@ -351,6 +368,22 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: "#000",
   },
+  loaderContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: "#FFF",
+    fontSize: 16,
+  },
   itemContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -396,6 +429,7 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 16,
     color: "#666",
+    fontStyle: "italic"
   },
   detailAmount: {
     fontSize: 16,
@@ -404,6 +438,7 @@ const styles = StyleSheet.create({
   totalText: {
     fontWeight: "bold",
     fontSize: 18,
+    fontStyle: "italic"
   },
   totalAmount: {
     fontWeight: "bold",
@@ -422,6 +457,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
+    fontStyle: "italic"
   },
   deliveryDetail: {
     fontSize: 16,
@@ -492,6 +528,7 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 8,
     alignItems: "center",
+    marginBottom: 14
   },
 });
 

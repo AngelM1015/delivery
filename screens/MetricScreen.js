@@ -23,7 +23,6 @@ import { BarChart } from "react-native-chart-kit";
 import cable from "../cable";
 import useUser from "../hooks/useUser";
 import usePartnerOrders from "../hooks/usePartnerOrders";
-import PartnerOrders from "../components/PartnerOrders";
 import { base_url } from "../constants/api";
 
 const formatStatus = (status) => {
@@ -90,7 +89,7 @@ const processChartData = (orders) => {
 const MetricScreen = ({ navigation }) => {
   const { partnerOrders, fetchAllPartnerOrders } = usePartnerOrders();
   const [orders, setOrders] = useState([]);
-  const { token, role } = useUser();
+  const { role } = useUser();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -103,22 +102,21 @@ const MetricScreen = ({ navigation }) => {
     if (partnerOrders && partnerOrders.length > 0) {
       setOrders(partnerOrders);
     }
+
+    fetchOrders();
   }, [partnerOrders]);
 
   const fetchOrders = async () => {
+    const userRole = await AsyncStorage.getItem('userRole');
+    const userToken = await AsyncStorage.getItem('userToken');
+    console.log('user role,', userRole)
+    if(userRole !== "restaurant_owner") return;
+
     setRefreshing(true);
-    const headers = { Authorization: `Bearer ${token}` };
-    let apiUrl = `${base_url}api/v1/orders`;
-    apiUrl +=
-      role === "restaurant_owner"
-        ? "/restaurant_orders"
-        : role === "admin"
-          ? "/all_orders"
-          : "/partner_orders";
+    const headers = { Authorization: `Bearer ${userToken}` };
+    let apiUrl = `${base_url}api/v1/orders/restaurant_orders`;
+
     try {
-      console.log("token in metric", token);
-      console.log("role in metricx", role);
-      console.log("apiurl in metric", apiUrl);
       const response = await axios.get(apiUrl, { headers: headers });
       setOrders(response.data);
       setRestaurant(response.data[0]["restaurant_id"]);

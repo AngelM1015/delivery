@@ -15,7 +15,6 @@ import {
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Location from "expo-location";
 import { CartProvider } from "./context/CartContext";
 import { UserProvider } from "./context/UserContext";
 import OngoingOrderDrawer from "./components/OngoingOrderDrawer";
@@ -33,7 +32,6 @@ import SettingScreen from "./screens/SettingScreen";
 import PersonalData from "./screens/PersonalData";
 import SettingEdit from "./screens/SettingsEdit";
 import MenuCheckoutScreen from "./screens/MenuCheckoutScreen";
-import cable from "./cable";
 import Toast from "react-native-toast-message";
 import { StripeProvider } from "@stripe/stripe-react-native";
 import AddPaymentMethodScreen from "./screens/AddPaymentMethodScreen";
@@ -81,7 +79,6 @@ function App() {
   const [hasOnboarded, setHasOnboarded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const appState = useRef(AppState.currentState);
-  const [showNotification, setShowNotification] = useState({});
   const [isRoleChanged, setIsRoleChanged] = useState(false);
 
   LogBox.ignoreAllLogs(true);
@@ -94,65 +91,12 @@ function App() {
         if (role) {
           setUserRole(role);
         }
-        // const currentLocation = await Location.getCurrentPositionAsync();
-
-        // console.log("current location", currentLocation.coords);
 
         const onboarded = await AsyncStorage.getItem("hasOnboarded");
         setHasOnboarded(onboarded === "true");
 
         const token = await AsyncStorage.getItem("userToken");
         setIsAuthenticated(!!token);
-
-        const userId = await AsyncStorage.getItem("userId");
-        console.log("aunthenticated", isAuthenticated);
-        console.log("userRole", userRole);
-
-        if (userRole === "partner") {
-          if (cable.connection.isOpen()) {
-            console.log("WebSocket connection is open.");
-          } else {
-            console.log("WebSocket connection is not open.");
-          }
-          console.log("user id", userId);
-
-          const subscription = await cable.subscriptions.create(
-            { channel: "PartnerChannel", id: userId },
-            {
-              received(data) {
-                console.log("New order notification:", data);
-                setShowNotification(data);
-                setNewOrder("true");
-                Toast.show({
-                  type: "success",
-                  text1: "New Order Request",
-                  text2: `Order from ${data.restaurant_name}`,
-                  position: "top",
-                });
-              },
-
-              sendLocation(locationData) {
-                this.perform("send_location", { location: locationData });
-              },
-            }
-          );
-          console.log("subscription", subscription);
-
-          const intervalId = setInterval(
-            () => sendLocationToBackend(subscription),
-            4000
-          );
-          window.intervalId = intervalId;
-          return () => {
-            try {
-              subscription.unsubscribe();
-            } catch (error) {
-              console.error("Error during WebSocket cleanup:", error);
-            } finally {
-              clearInterval(intervalId);
-            }
-          };
-        }
 
         // Check for active orders here
         // const activeOrders = await checkActiveOrders();
@@ -196,24 +140,6 @@ function App() {
       </View>
     );
   }
-
-  const sendLocationToBackend = async (subscription) => {
-    try {
-      const currentLocation = await Location.getCurrentPositionAsync();
-      console.log("location fetched: ", currentLocation.coords);
-
-      if (subscription && typeof subscription.sendLocation === "function") {
-        subscription.sendLocation({ location: currentLocation.coords });
-        console.log("location sent: ", currentLocation.coords);
-      } else {
-        console.error(
-          "subscription.sendLocation is not a function or subscription is undefined"
-        );
-      }
-    } catch (error) {
-      console.error("Error sending location to backend:", error);
-    }
-  };
 
   if (!isReady) {
     return (
@@ -327,7 +253,7 @@ function App() {
                 </Stack.Navigator>
               </CartProvider>
             </UserProvider>
-            <Toast ref={(ref) => Toast.setRef(ref)} />
+            {/* <Toast ref={(ref) => Toast.setRef(ref)} /> */}
           </NavigationContainer>
         </PaperProvider>
       </StripeProvider>

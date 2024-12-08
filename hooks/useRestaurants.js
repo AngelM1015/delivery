@@ -59,7 +59,7 @@ const useRestaurants = () => {
 
   const fetchMenuItems = async (restaurantId) => {
     try {
-      const url = `api/v1/restaurants/${restaurantId}/menu_items/`;
+      const url = role === 'restaurant_owner' ? `api/v1/restaurants/${restaurantId}/all_menu_items/` :`api/v1/restaurants/${restaurantId}/menu_items/`;
       const response = await client.get(url);
 
       setMenuItems(response.data);

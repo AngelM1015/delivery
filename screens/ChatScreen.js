@@ -72,6 +72,7 @@ const ChatScreen = ({ navigation }) => {
       },
     };
     createMessage(body);
+    setNewMessage('');
   };
 
   const handleCall = () => {

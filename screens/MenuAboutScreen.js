@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   quantityIcon: {
     borderRadius: 24,
     borderColor: "#C0C0C0",
-    borderWidth: "0.5",
+    borderWidth: 0.5,
     padding: 8,
   },
   quantityText: {

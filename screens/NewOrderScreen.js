@@ -5,14 +5,15 @@ import {
   FlatList,
   RefreshControl,
   Switch,
+  TouchableOpacity,
 } from "react-native";
 import {
   Button,
   Text,
-  Modal,
   Portal,
   Provider,
   Snackbar,
+  Modal,
 } from "react-native-paper";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -50,7 +51,7 @@ const formatTime = (dateTime) => {
   return strTime;
 };
 
-const NewOrderScreen = () => {
+const NewOrderScreen = ({ navigation }) => {
 
   const [orders, setOrders] = useState([]);
   const [newOrders, setNewOrders] = useState([]);
@@ -104,13 +105,15 @@ const NewOrderScreen = () => {
         const response = await axios.get(apiUrl, { headers });
         const newestOrders = response.data || [];
 
-        setNewOrders((prevOrders) => {
-          const existingOrderIds = new Set(prevOrders.map((order) => order.id));
-          const uniqueNewOrders = newestOrders.filter(
-            (order) => !existingOrderIds.has(order.id)
-          );
-          return [...uniqueNewOrders, ...prevOrders];
-        });
+        if(newestOrders.length > 0){
+          setNewOrders((prevOrders) => {
+            const existingOrderIds = new Set(prevOrders.map((order) => order.id));
+            const uniqueNewOrders = newestOrders.filter(
+              (order) => !existingOrderIds.has(order.id)
+            );
+            return [...uniqueNewOrders, ...prevOrders];
+          });
+        }
 
         await new Promise((resolve) => setTimeout(resolve, 20000));
       }
@@ -249,7 +252,12 @@ const NewOrderScreen = () => {
     </View>
   );
 
+  const showDetails = (orderId) => {
+    navigation.navigate("OrderDetails", { orderId: orderId })
+  }
+
   const renderHistoryItem = ({ item }) => (
+    <TouchableOpacity onPress={() => showDetails(item.id)}>
     <View style={styles.menuItem}>
       <View
         style={{
@@ -290,6 +298,7 @@ const NewOrderScreen = () => {
         <Text style={styles.menuText}>{item.restaurant_name}</Text>
       </View>
     </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -324,10 +333,17 @@ const NewOrderScreen = () => {
             {snackbarMessage}
           </Snackbar>
           <Modal
+            animationType="slide"
             visible={historyVisible}
-            onDismiss={() => setHistoryVisible(false)}
+            onRequestClose={() => setHistoryVisible(false)}
             contentContainerStyle={styles.modalContent}
           >
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setHistoryVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>X</Text>
+            </TouchableOpacity>
             <FlatList
               data={orders.filter(
                 (order) => order.status !== "restaurant_pending_approval"
@@ -355,7 +371,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     paddingHorizontal: 20,
-    paddingTop: 20,
+    marginTop: 40,
   },
   title: {
     fontSize: 24,
@@ -400,8 +416,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "white",
-    padding: 20,
-    margin: 20,
+    padding: 10,
     borderRadius: 10,
   },
   orderType: {
@@ -417,9 +432,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     flexDirection: "row",
     alignItems: "center",
-    padding: 3,
+    padding: 10,
     backgroundColor: "#f2f2f2",
-    borderRadius: 10,
+    borderRadius: 14,
   },
   ActiveLabel: {
     marginLeft: 10,
@@ -467,6 +482,18 @@ const styles = StyleSheet.create({
     margin: 10,
     padding: 10,
     color: "#fff",
+    fontWeight: "bold",
+  },
+  closeButton: {
+    alignSelf: "flex-end",
+    backgroundColor: "#FFA500",
+    borderRadius: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  closeButtonText: {
+    color: "#fff",
+    fontSize: 24,
     fontWeight: "bold",
   },
 });
