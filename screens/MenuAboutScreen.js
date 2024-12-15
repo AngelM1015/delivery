@@ -15,7 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { base_url } from "../constants/api";
 import { useCart } from "../context/CartContext";
-import { FontAwesome, AntDesign } from "@expo/vector-icons";
+import { FontAwesome, AntDesign, Ionicons } from "@expo/vector-icons";
 import Header from "../components/Header";
 import Toast from "react-native-toast-message";
 
@@ -26,8 +26,9 @@ const MenuAboutScreen = ({ route, navigation }) => {
   const [modifierCounts, setModifierCounts] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [modifiers, setModifiers] = useState([]);
-  const { addToCart, clearCart, cartRestaurantId, setCartRestaurantId } =
-    useCart();
+  const { addToCart, clearCart, cartRestaurantId, setCartRestaurantId } = useCart();
+  const [selectedModifierOptions, setSelectedModifierOptions] = useState({});
+  const [primaryModifiers, setPrimaryModifiers] = useState([]);
 
   useEffect(() => {
     const fetchMenuItemDetails = async () => {
@@ -41,7 +42,8 @@ const MenuAboutScreen = ({ route, navigation }) => {
         setMenuItem(response.data.menu_item);
         setModifiers(response.data.modifiers);
 
-        // Initialize modifier counts
+        checkPrimaryModifiers(response.data.modifiers);
+
         const initialCounts = (response.data.modifiers || []).reduce(
           (counts, modifier) => {
             counts[modifier.id] = {};
@@ -53,6 +55,7 @@ const MenuAboutScreen = ({ route, navigation }) => {
           {}
         );
         setModifierCounts(initialCounts);
+        console.log('modifiers', initialCounts)
 
         // Set recommended items excluding the selected item
         // const recommended = response.data.filter(item => item.id !== menuItemId);
@@ -65,36 +68,46 @@ const MenuAboutScreen = ({ route, navigation }) => {
     fetchMenuItemDetails();
   }, [menuItemId, restaurantId]);
 
+  const checkPrimaryModifiers = async (allModifiers) => {
+    let primary = [];
+    allModifiers.map((modifier) => {
+      if(modifier.primary) primary.push(`${modifier.id}`)
+    })
+    setPrimaryModifiers(primary);
+
+    console.log('primary modifiers', primary);
+  }
+
   const handleAddToCart = () => {
     AsyncStorage.setItem("selectedRestaurantId", `${restaurantId}`);
 
-    const selectedModifiers = Object.entries(modifierCounts)
+    const selectedModifiers = Object.entries(selectedModifierOptions)
       .map(([modifierId, optionsCounts]) => ({
         modifierId,
-        options: Object.entries(optionsCounts)
-          .filter(([_, count]) => count > 0)
-          .map(([optionId, count]) => {
+        options: optionsCounts
+          .map((optionId) => {
+            console.log('options id', optionId);
             const option = modifiers
               ?.find((modifier) => modifier.id === parseInt(modifierId))
               ?.modifier_options?.find(
-                (option) => option.id === parseInt(optionId)
+                (option) => option.id === optionId
               );
-            return { ...option, count };
+            return { ...option };
           }),
       }))
       .filter((modifier) => modifier.options.length > 0);
 
-    // Safely access item_prices
     const price =
       menuItem.item_prices?.length > 0
         ? parseFloat(menuItem.item_prices[0])
         : "0.0";
 
-    // Ensure the imageUrl is correctly set
+        console.log('selected modifiers', selectedModifiers[0])
+
     const imageUrl = menuItem.image_url
       ? base_url + menuItem.image_url
       : "https://via.placeholder.com/150";
-    console.log("Image URL:", imageUrl); // Log the image URL before adding
+    console.log("Image URL:", imageUrl);
 
     const itemForCart = {
       id: menuItemId,
@@ -105,7 +118,7 @@ const MenuAboutScreen = ({ route, navigation }) => {
           (w, x) =>
             w +
             x.options.reduce(
-              (a, b) => a + parseFloat(b.additional_price * b.count),
+              (a, b) => a + parseFloat(b.additional_price),
               0
             ),
           0
@@ -143,6 +156,22 @@ const MenuAboutScreen = ({ route, navigation }) => {
           : Math.max(currentCount - 1, 0),
       };
       return newCounts;
+    });
+  };
+
+  const handleSelectModifierOption = (modifierId, optionId) => {
+    setSelectedModifierOptions((prevSelectedOptions) => {
+      const currentOptions = prevSelectedOptions[modifierId] || [];
+      const isOptionSelected = currentOptions.includes(optionId);
+
+      const updatedOptions = isOptionSelected
+        ? currentOptions.filter((id) => id !== optionId) // Remove option
+        : [...currentOptions, optionId]; // Add option
+
+        if(updatedOptions.length === 0) delete prevSelectedOptions[modifierId]
+
+      return updatedOptions.length > 0 ? { ...prevSelectedOptions, [modifierId]: updatedOptions } :
+              { ...prevSelectedOptions }
     });
   };
 
@@ -261,13 +290,26 @@ const MenuAboutScreen = ({ route, navigation }) => {
             <Text style={styles.modifiersTitle}>Available Modifiers:</Text>
             {modifiers.map((modifier) => (
               <Card key={modifier.id} style={styles.card}>
-                <Card.Title style={styles.modifierName} title={modifier.name} />
+                <Card.Title titleStyle={styles.modifierName} title={modifier.name + (modifier.primary ? '( required )' : '')} />
                 <Card.Content>
                   {(modifier.modifier_options || []).map((option) => (
-                    <View key={option.id} style={styles.optionContainer}>
+                    <TouchableOpacity key={option.id} style={styles.optionContainer} onPress={() => handleSelectModifierOption(modifier.id, option.id)}>
+                      <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
+                        <Ionicons
+                          name={ !selectedModifierOptions[modifier.id]?.includes(option.id) ?
+                               "radio-button-off" :
+                               "radio-button-on"
+                          }
+                          size={24}
+                        />
+                        <Text>
+                          {option.name}
+                        </Text>
+                      </View>
                       <Text>
-                        {option.name} (+${option.additional_price || "0.00"})
+                        {option.additional_price !== '0.0' ? `+$${option.additional_price}` : 'Free'}
                       </Text>
+                      {/* will remove this and respective function after discussuion
                       <View style={styles.counterContainer}>
                         <TouchableOpacity
                           onPress={() =>
@@ -286,8 +328,8 @@ const MenuAboutScreen = ({ route, navigation }) => {
                         >
                           <AntDesign name="plus" size={20} />
                         </TouchableOpacity>
-                      </View>
-                    </View>
+                      </View> */}
+                    </TouchableOpacity>
                   ))}
                 </Card.Content>
               </Card>
@@ -326,8 +368,9 @@ const MenuAboutScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
         <TouchableOpacity
-          style={styles.addToCartButton}
           onPress={handleAddToCart}
+          disabled={primaryModifiers.length > 0 && JSON.stringify(primaryModifiers) !== JSON.stringify(Object.keys(selectedModifierOptions))}
+          style={primaryModifiers.length > 0 && JSON.stringify(primaryModifiers) !== JSON.stringify(Object.keys(selectedModifierOptions)) ? styles.offAddToCartButton : styles.addToCartButton}
         >
           <Text style={styles.addToCartText}>
             <FontAwesome name="shopping-cart" size={20} color="white" /> Add To
@@ -398,7 +441,7 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   modifierName: {
-    fontWeight: "bold",
+    fontWeight: 600,
   },
   recommendedSection: {
     marginTop: 20,
@@ -511,6 +554,12 @@ const styles = StyleSheet.create({
   },
   addToCartButton: {
     backgroundColor: "#F09B00",
+    borderRadius: 30,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+  },
+  offAddToCartButton: {
+    backgroundColor: "#ccc",
     borderRadius: 30,
     paddingVertical: 15,
     paddingHorizontal: 20,

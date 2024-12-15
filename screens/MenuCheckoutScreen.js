@@ -18,12 +18,14 @@ import useOrder from "../hooks/useOrder";
 import PaymentMethod from "../components/PaymentMethod";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import useUser from "../hooks/useUser";
+import { useCart } from "../context/CartContext";
 
 const MenuCheckoutScreen = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { cartItems } = useCart();
   const { createOrder } = useOrder();
   const { userName } = useUser();
-  const { cartItems = [], orderDetails = {} } = route.params || {};
+  const { orderDetails = {} } = route.params || {};
   const [paymentMethod, setPaymentMethod] = useState({});
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [orderType, setOrderType] = useState(null);
@@ -43,6 +45,8 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   };
 
   useEffect(() => {
+    if(!cartItems.length > 0) navigation.goBack();
+
     fetchPaymentMethods();
 
     const getLocation = async () => {
@@ -57,7 +61,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
       }
     };
     getLocation();
-  }, []);
+  }, [cartItems]);
 
   const fetchPaymentMethods = async () => {
     try {
@@ -114,7 +118,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         restaurant_id: storedRestaurantId,
         delivery_address:
           orderType === "delivery"
-            ? "209 Aspen Leaf Dr, Big Sky, MT 59716"
+            ? address.location_name
             : "",
         total_price: orderDetails.totalPrice,
         payment_method_id: paymentMethod.id,
@@ -125,7 +129,12 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           quantity: item.quantity,
           order_item_modifiers_attributes: item.selectedModifiers.map(
             (modifier) => ({
-              modifier_option_id: modifier.modifierId,
+              modifier_id: modifier.modifierId,
+              order_modifier_options_attributes: modifier.options.map(
+                (modifier_option) => ({
+                  modifier_option_id: modifier_option.id
+                })
+              )
             })
           ),
         })),
@@ -149,7 +158,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
       {isLoading && (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color="#FFA500" />
-            <Text style={styles.loadingText}>Submitting your order...</Text>
+            <Text style={styles.loadingText}>Placing your order...</Text>
           </View>
         )}
       <View style={styles.headerContainer}>

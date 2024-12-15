@@ -417,17 +417,26 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   restaurantCard: {
-    marginBottom: 15,
-    marginStart: 10,
+    width: 120,
+    marginRight: 10,
+    justifyContent: "center",
+    alignItems: "center",
     padding: 10,
+    borderRadius: 8,
+    marginStart: 10
   },
   restaurantImage: {
     width: 100,
-    height: 100,
+    height: 80,
+    borderRadius: 10,
+    marginBottom: 10,
+    alignSelf: "center",
   },
   restaurantTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
   },
   restaurantSubtitle: {
     fontSize: 12,

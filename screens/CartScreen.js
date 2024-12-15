@@ -170,7 +170,7 @@ const CartScreen = ({ navigation }) => {
                           </TouchableOpacity>
                         </View>
                         <TouchableOpacity
-                          onPress={() => removeFromCart(item.id)}
+                          onPress={() => removeFromCart(index)}
                         >
                           <FontAwesome5
                             name="trash-alt"
@@ -261,7 +261,6 @@ const CartScreen = ({ navigation }) => {
               navigation.navigate("Home");
             } else {
               navigation.navigate("MenuCheckoutScreen", {
-                cartItems,
                 orderDetails: {
                   deliveryFee: 0,
                   discount: discount || 0,
