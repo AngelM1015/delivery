@@ -2,7 +2,8 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
-import DashboardScreen from "../screens/DashboardScreen";
+import PartnerDashboardScreen from "../screens/PartnerDashboardScreen";
+import RestaurantDashboardScreen from "../screens/RestaurantDashboardScreen";
 import HomeScreen from "../screens/homescreen";
 import MenuOfRestaurantsScreen from "../screens/MenuOfRestaurantsScreen";
 import MenuStackNavigator from "../screens/MenuStackNavigator";
@@ -87,19 +88,19 @@ const getTabBarIcon = (role, route, focused) => {
       Account: focused ? "person" : "person-outline",
     },
     partner: {
-      Dashboard: focused ? "grid" : "grid-outline",
+      PartnerDashboard: focused ? "grid" : "grid-outline",
       Order: focused ? "list" : "list-outline",
       Metrics: focused ? "bar-chart" : "bar-chart-outline",
       Account: focused ? "person" : "person-outline",
     },
     restaurant_owner: {
-      Dashboard: focused ? "grid" : "grid-outline",
+      RestaurantDashboard: focused ? "grid" : "grid-outline",
       Metrics: focused ? "bar-chart" : "bar-chart-outline",
       Admin: focused ? "people" : "people-outline",
       Account: focused ? "person" : "person-outline",
     },
     admin: {
-      Dashboard: focused ? "grid" : "grid-outline",
+      PartnerDashboard: focused ? "grid" : "grid-outline",
       Metrics: focused ? "bar-chart" : "bar-chart-outline",
       Admin: focused ? "storefront" : "storefront-outline",
       Account: focused ? "person" : "person-outline",
@@ -157,9 +158,13 @@ const MainTabNavigator = ({ role = "guest" }) => {
           tabBarShowLabel: false,
         })}
       >
-        {["partner", "restaurant_owner", "admin"].includes(role) ? (
-          <Tab.Screen name="Dashboard" component={DashboardScreen} />
-        ) : (
+        {["partner", "admin"].includes(role) && (
+          <Tab.Screen name="PartnerDashboard" component={PartnerDashboardScreen} />
+        )}
+        {["restaurant_owner"].includes(role) && (
+          <Tab.Screen name="RestaurantDashboard" component={RestaurantDashboardScreen} />
+        )}
+        {["customer", "guest"].includes(role) && (
           <Tab.Screen name="Home" component={HomeScreen} />
         )}
         {["guest"].includes(role) && (
