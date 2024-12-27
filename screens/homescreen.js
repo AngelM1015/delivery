@@ -15,11 +15,16 @@ import { base_url } from "../constants/api";
 import { Icons } from "../constants/Icons";
 import { COLORS } from "../constants/colors";
 import { Card } from "react-native-paper";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, Fontisto } from "@expo/vector-icons";
 import useRestaurants from "../hooks/useRestaurants";
 import Locations from "../components/Locations";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import client from "../client";
+import * as Location from 'expo-location'
 import { GOOGLE_MAPS_API_KEY } from "@env";
+import axios from "axios";
+import useAddress from "../hooks/useAddress";
+import { useFocusEffect } from '@react-navigation/native';
 
 const HomeScreen = ({ navigation }) => {
   const {
@@ -31,6 +36,7 @@ const HomeScreen = ({ navigation }) => {
     fetchRestaurants,
     fetchMenuItems,
   } = useRestaurants();
+  const {addresses, addAddress} = useAddress();
   const [searchQuery, setSearchQuery] = useState("");
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const [locationModalVisible, setLocationModalVisible] = useState(false);
@@ -44,11 +50,13 @@ const HomeScreen = ({ navigation }) => {
     require("../assets/images/Big_Sky_Resort.webp"),
   ];
 
-  useEffect(() => {
+  useFocusEffect(() => {
     if (selectedRestaurant === null) {
       fetchRestaurants;
     }
+  });
 
+  useEffect(() => {
     const getLocation = async () => {
       try {
         const location = await AsyncStorage.getItem("location");
@@ -61,7 +69,6 @@ const HomeScreen = ({ navigation }) => {
       }
     };
     getLocation();
-
     const changeBackgroundImage = () => {
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -95,49 +102,99 @@ const HomeScreen = ({ navigation }) => {
     return () => clearInterval(intervalId);
   }, [fadeAnim]);
 
+  useEffect(() => {
+    if(selectedLocation !== null)
+      calculateDistance(selectedLocation);
+    else
+      if(addresses.length > 0) setCurrentLocation();
+  }, [selectedLocation, addresses])
+
   const handleSelectLocation = (location) => {
     console.log("location", location);
     setSelectedLocation(location);
     setLocationModalVisible(false);
   };
 
-  const calculateDistance = async (lat1, lon1, lat2, lon2) => {
-    const origin = `${lat1},${lon1}`;
-    const destination = `31.525994718358792,74.34680197329752`;
-    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&key=${GOOGLE_MAPS_API_KEY}`;
+  const calculateDistance = async (location) => {
+
+    const token = AsyncStorage.getItem('userToken');
+    const url = `api/v1/restaurants/fetch_restaurants_mileage`
+    const restaurant = {
+      destination_latitude: location.latitude,
+      destination_longitude: location.longitude
+    }
 
     try {
-      const response = await fetch(url);
-      const data = await response.json();
+      const response = await client.get(url,
+        { params: {
+          restaurant
+        },
+          Header: { Authorization: `Bearer ${token}` }
+        }
+      )
+      console.log('distance response', response.data);
 
-      if (data.rows[0]?.elements[0]?.status === "OK") {
-        const distance = data.rows[0].elements[0].distance.text;
-        return distance;
-      } else {
-        console.error("Distance API error:", data);
-        return;
-      }
+      setDistances(response.data);
     } catch (error) {
-      console.error("Error fetching distance:", error);
-      return;
+        console.error("Error fetching distance:", error);
+        return;
+    }
+  };
+
+  const setCurrentLocation = async () => {
+    const currentLocation = await Location.getCurrentPositionAsync();
+
+    try {
+      const currentLat = currentLocation.coords.latitude;
+      const currentLng = currentLocation.coords.longitude;
+
+      for (const address of addresses) {
+        const isWithinRadius = await checkProximity(
+          { lat: currentLat, lng: currentLng },
+          { lat: address.latitude, lng: address.longitude }
+        );
+
+        if (isWithinRadius) {
+          console.log('Address within 50 meters:', address);
+          setSelectedLocation(address);
+          await AsyncStorage.setItem("location", JSON.stringify(address));
+
+          return;
+        }
+      }
+
+      console.log('current location lat and long in home screen ', { lat: currentLat, long: currentLng});
+      const newAddress = await addAddress(currentLat, currentLng);
+      setSelectedLocation(newAddress);
+      await AsyncStorage.setItem("location", JSON.stringify(newAddress));
+
+      console.log('No addresses within 50 meters of the current location.');
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+    }
+  };
+
+  const checkProximity = async (currentLocation, savedLocation) => {
+    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${currentLocation.lat},${currentLocation.lng}&destinations=${savedLocation.lat},${savedLocation.lng}&key=${GOOGLE_MAPS_API_KEY}`;
+    try {
+      const response = await axios.get(url);
+      if(!response.data.rows[0].elements[0].distance) return false;
+
+      const distanceInMeters = response.data.rows[0].elements[0].distance.value;
+
+      console.log(`Distance to saved location: ${distanceInMeters} meters`);
+      return distanceInMeters <= 50;
+    } catch (error) {
+      console.error('Error checking distance:', error);
+      return false;
     }
   };
 
   const renderRestaurant = ({ item: restaurant }) => {
     const isSelected = selectedRestaurant === restaurant.id;
     const image_url = base_url + restaurant.image_url;
-    let distance = "2km";
-
-    if (selectedLocation && restaurant.latitude && restaurant.longitude) {
-      distance = calculateDistance(
-        selectedLocation.latitude,
-        selectedLocation.longitude,
-        restaurant.latitude,
-        restaurant.longitude
-      );
-    } else if (restaurant.address) {
-      distance = restaurant.address;
-    }
+    const distance = distances[restaurant.id] ? `${distances[restaurant.id].distance.toFixed(1)}km` : "2km";
+    const deliveryPrice = distances[restaurant.id] ? distances[restaurant.id].delivery_price : 15;
 
     return (
       <TouchableOpacity onPress={() => setSelectedRestaurant(restaurant.id)}>
@@ -156,22 +213,20 @@ const HomeScreen = ({ navigation }) => {
             {restaurant.name}
           </Text>
           <View style={styles.distanceContainer}>
-            <FontAwesome name="map-marker" size={14} color="gray" />
-            <Text style={styles.distanceText}>{distance}</Text>
+            <Text style={styles.distanceText}><FontAwesome name="map-marker" size={14} color="gray" /> {distance}</Text>
+            <Text style={styles.distanceText}><Fontisto name="motorcycle" size={14} color="black" /> ${deliveryPrice}</Text>
           </View>
-          <Text style={styles.restaurantSubtitle}>{restaurant.address}</Text>
         </Card>
       </TouchableOpacity>
     );
   };
 
   const renderMenuItem = ({ item }) => {
-    const price =
-      item.item_prices?.length > 0 ? item.item_prices[0] : "Not Available";
+    const price = item.item_prices?.length > 0 ? item.item_prices[0] : "Not Available";
     const imageUrl = item.image_url
       ? base_url + item.image_url
       : "https://via.placeholder.com/150";
-    const rating = "4.9";
+    const deliveryPrice = distances[item.restaurant_id] ? distances[item.restaurant_id].delivery_price : 15;
 
     return (
       <TouchableOpacity
@@ -179,6 +234,7 @@ const HomeScreen = ({ navigation }) => {
           navigation.navigate("MenuAboutScreen", {
             menuItemId: item.id,
             restaurantId: item.restaurant_id,
+            deliveryFee: deliveryPrice
           })
         }
       >
@@ -206,12 +262,6 @@ const HomeScreen = ({ navigation }) => {
           source={require("../assets/images/homeImage.png")}
           style={styles.backgroundImage}
         >
-          {/* <Searchbar
-            placeholder="Search Menu Items"
-            onChangeText={setSearchQuery}
-            value={searchQuery}
-            style={styles.searchBar}
-          /> */}
           <View style={styles.titleOverlay}>
             <View style={styles.notification}>
               <View>
@@ -260,7 +310,7 @@ const HomeScreen = ({ navigation }) => {
           )}
           renderItem={renderMenuItem}
           keyExtractor={(item) => item.id.toString()}
-          numColumns={2} // Display two columns of menu items
+          numColumns={2}
           columnWrapperStyle={{ justifyContent: "space-between" }}
           ListEmptyComponent={<Text>No menu items available</Text>}
         />
@@ -330,13 +380,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 10,
     borderRadius: 8,
-    minHeight: '40%'
+    minHeight: '40%',
   },
   restaurantImage: {
     width: 100,
     height: 80,
     borderRadius: 10,
-    marginBottom: 10,
+    marginBottom: 8,
     alignSelf: "center",
   },
   restaurantTitle: {
@@ -344,15 +394,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     textAlign: "center",
-  },
-  restaurantSubtitle: {
-    fontSize: 12,
-    color: "#666",
-    textAlign: "center",
-  },
-  searchBar: {
-    marginVertical: 10,
-    marginHorizontal: 15,
   },
   card: {
     margin: 8,
@@ -396,11 +437,10 @@ const styles = StyleSheet.create({
   },
   distanceContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
+    justifyContent: 'space-between',
+    marginTop: 14,
   },
   distanceText: {
-    marginLeft: 5,
     fontSize: 12,
     color: "#000",
   },
@@ -409,7 +449,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#F09B00",
-  },
+  }
 });
 
 export default HomeScreen;

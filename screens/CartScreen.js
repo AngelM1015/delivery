@@ -3,31 +3,26 @@ import {
   ScrollView,
   View,
   StyleSheet,
-  TextInput,
   Image,
   TouchableOpacity,
 } from "react-native";
-import { Card, Text, PaperProvider, Checkbox } from "react-native-paper";
+import { Card, Text, PaperProvider } from "react-native-paper";
 import { useCart } from "../context/CartContext";
 import { FontAwesome5, AntDesign } from "@expo/vector-icons";
 import CustomButton from "../components/CustomButton";
 import Header from "../components/Header";
 import Locations from "../components/Locations";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from '@react-navigation/native';
 
 const CartScreen = ({ navigation }) => {
   const { cartItems, removeFromCart, updateItemQuantity } = useCart();
   const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [location, setLocation] = useState(null);
+  const [minOrderFee, setMinOrderFee] = useState(0);
+
   const discount = 0.0;
-  const [extraChecked, setExtraChecked] = useState(false);
-  const [extraOptions, setExtraOptions] = useState([
-    { productName: "Extra Chess", price: "1$" },
-    { productName: "Extra Vegan Chess", price: "0.15$" },
-    { productName: "Extra Sause", price: "0.5$" },
-    { productName: "Extra Garlic Sause", price: "0.75$" },
-  ]);
 
   const handleSelectLocation = (location) => {
     console.log("location", location);
@@ -52,23 +47,24 @@ const CartScreen = ({ navigation }) => {
     );
   };
 
-  const calculateFinalTotal = () => {
-    const cartTotal = calculateCartTotal();
-    // const extrasTotal = extraOptions.reduce((total, option) => total + parseFloat(option.price || 0), 0);
-    return cartTotal - discount;
+  const calculateMinimumOrderFee = (cartTotal) => {
+    const calculatedFee = (cartTotal * 0.2).toFixed(2) < 8.0 ? (8 - cartTotal * 0.2) : 0.0;
+    return parseFloat(calculatedFee.toFixed(2));
   };
 
-  const addExtraOption = () => {
-    setExtraOptions([...extraOptions, { productName: "", price: "" }]);
-  };
-
-  const updateExtraOption = (index, field, value) => {
-    const newOptions = [...extraOptions];
-    newOptions[index][field] = value;
-    setExtraOptions(newOptions);
+  const calculateFinalTotal = (cartTotal, minimumOrderFee) => {
+    return cartTotal - discount + minimumOrderFee;
   };
 
   useEffect(() => {
+    const cartTotal = calculateCartTotal();
+    const minimumOrderFee = calculateMinimumOrderFee(cartTotal);
+    setMinOrderFee(minimumOrderFee);
+  }, [cartItems]);
+
+  const finalTotal = calculateFinalTotal(calculateCartTotal(), minOrderFee);
+
+  useFocusEffect(() => {
     const getLocation = async () => {
       try {
         const location = await AsyncStorage.getItem("location");
@@ -81,15 +77,16 @@ const CartScreen = ({ navigation }) => {
         console.log("Error fetching location:", error);
       }
     };
+
     getLocation();
-  }, []);
+  });
 
   return (
     <PaperProvider>
       <View style={{ flex: 1 }}>
         <View style={{ paddingTop: 50 }}>
           <Header
-            title="About This Menu"
+            title="Your Cart"
             navigation={navigation}
             showShareIcon={true}
           />
@@ -100,18 +97,18 @@ const CartScreen = ({ navigation }) => {
               {" "}
               Delivery Location
             </Text>
+            {selectedLocation &&
             <Text style={styles.locationText} numberOfLines={2}>
-              {selectedLocation
-                ? selectedLocation.location_name
-                : "Your Location"}
+              {selectedLocation.location_name}
             </Text>
+            }
           </View>
           <TouchableOpacity
             onPress={() => setLocationModalVisible(true)}
             style={styles.changeLocation}
           >
             <Text style={{ color: "#F09B00", textAlign: "center" }}>
-              Change Location
+              {selectedLocation ? 'Change Location' : 'Add Location'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -184,46 +181,6 @@ const CartScreen = ({ navigation }) => {
                 </Card>
               ))}
 
-              {/* Add Extra Section with Checkbox */}
-              <View style={styles.extraSection}>
-                <View style={styles.addExtraHeader}>
-                  <Checkbox
-                    status={extraChecked ? "checked" : "unchecked"}
-                    onPress={() => setExtraChecked(!extraChecked)}
-                  />
-                  <Text style={styles.sectionTitle}>Add Extra</Text>
-                </View>
-
-                {/* Extra Input Fields, shown only if checkbox is checked */}
-                {extraChecked && (
-                  <>
-                    {extraOptions.map((option, index) => (
-                      <View key={index} style={styles.extraOptionContainer}>
-                        <View style={styles.extraInputContainer}>
-                          <Text style={styles.inputLabel}>Product Name</Text>
-                          <TextInput
-                            style={styles.productInput}
-                            placeholder={option.productName}
-                            value={option.productName}
-                            editable={false}
-                          />
-                        </View>
-                        <View style={styles.priceInputContainer}>
-                          <Text style={styles.inputLabel}>Price</Text>
-                          <TextInput
-                            style={styles.priceInput}
-                            placeholder={option.price}
-                            keyboardType="numeric"
-                            value={option.price}
-                            editable={false}
-                          />
-                        </View>
-                      </View>
-                    ))}
-                  </>
-                )}
-              </View>
-
               {/* Payment Summary */}
               <View style={styles.paymentSummary}>
                 <Text style={styles.summaryText}>Payment Summary</Text>
@@ -234,6 +191,14 @@ const CartScreen = ({ navigation }) => {
                     ${calculateCartTotal().toFixed(2)}
                   </Text>
                 </View>
+                {minOrderFee > 0 && (
+                  <View style={styles.summaryRow}>
+                    <Text>Small Order Fee:</Text>
+                    <Text style={styles.summaryValue}>
+                      +${minOrderFee}
+                    </Text>
+                  </View>
+                )}
 
                 <View style={styles.summaryRow}>
                   <Text>Discount:</Text>
@@ -245,7 +210,7 @@ const CartScreen = ({ navigation }) => {
                 <View style={styles.summaryRow}>
                   <Text>Total:</Text>
                   <Text style={styles.summaryValue}>
-                    ${calculateFinalTotal().toFixed(2)}
+                    ${finalTotal.toFixed(2)}
                   </Text>
                 </View>
               </View>
@@ -264,7 +229,7 @@ const CartScreen = ({ navigation }) => {
                 orderDetails: {
                   deliveryFee: 0,
                   discount: discount || 0,
-                  totalPrice: calculateFinalTotal(),
+                  totalPrice: finalTotal,
                   imageUrl: cartItems[0].imageUrl,
                   itemName: cartItems[0].name,
                   itemPrice: cartItems[0].price,
