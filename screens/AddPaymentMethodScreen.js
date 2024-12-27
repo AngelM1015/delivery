@@ -1,50 +1,26 @@
-import React, { useState } from "react";
-import { View, Alert, StyleSheet } from "react-native";
-import { Button, Card } from "react-native-paper";
-import { CardField, useStripe } from "@stripe/stripe-react-native";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { base_url } from "../constants/api";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import client from "../client";
+import AddPaymentMethod from "../components/AddPaymentMethod";
 
-const AddPaymentMethodScreen = ({ navigation }) => {
-  const [cardDetails, setCardDetails] = useState({});
-  const { createToken } = useStripe();
+const AddPaymentMethodScreen = () => {
+  const [addPaymentMethodsModal, setAddPaymentMethodModal] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState();
 
-  const handleCardDetailsChange = (details) => {
-    setCardDetails(details);
-  };
-
-  const addPaymentMethod = async () => {
-    if (!cardDetails.complete) {
-      Alert.alert("Error", "Please complete the card details");
-      return;
-    }
-
+  const fetchPaymentMethods = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
-      if (!token) {
-        Alert.alert("Error", "No token found");
-        return;
-      }
-
-      const { token: paymentToken, error } = await createToken({
-        type: "Card",
-        card: cardDetails,
-      });
-
-      if (error) {
-        console.error("Error creating token:", error);
-        Alert.alert("Error", error.message);
-        return;
-      }
-
-      console.log("Payment method token:", paymentToken);
-
-      const response = await axios.post(
-        `${base_url}api/v1/payments/add_payment_method`,
-        {
-          payment_method_token: paymentToken.id,
-        },
+      const response = await client.get(
+        `api/v1/payments/get_payment_methods`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -52,82 +28,126 @@ const AddPaymentMethodScreen = ({ navigation }) => {
         }
       );
 
-      if (response.data.success) {
-        Alert.alert("Success", "Payment method added successfully");
-        navigation.goBack();
-      } else {
-        Alert.alert("Error", response.data.message);
-      }
+      setPaymentMethods(response.data);
     } catch (error) {
-      console.error(
-        "Error adding payment method:",
-        error.response.data.message
-      );
-      Alert.alert("Oops!", error.response.data.message);
+      console.error("Error fetching payment methods:", error);
+      Alert.alert("Error", "Failed to fetch payment methods");
     }
   };
 
+  useEffect(() => {
+    fetchPaymentMethods();
+  })
+
   return (
-    <View style={styles.container}>
-      <Card style={styles.card}>
-        <Card.Title
-          title="Add a New Payment Method"
-          titleStyle={styles.cardTitle}
-        />
-        <Card.Content>
-          <CardField
-            postalCodeEnabled={false}
-            placeholder={{
-              number: "4242 4242 4242 4242",
-              expiry: "MM/YY",
-              cvc: "CVC",
-            }}
-            cardStyle={styles.cardField}
-            style={styles.cardFieldContainer}
-            onCardChange={handleCardDetailsChange}
+      <View style={styles.container}>
+        <View style={styles.content}>
+          {/* <Text style={styles.title}>Payment Methods</Text> */}
+          <FlatList
+            style={{height: '80%'}}
+            data={paymentMethods}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View
+                style={styles.paymentMethodItem}
+              >
+                <View style={styles.paymentMethod}>
+                  {item.brand === "Cash" ? (
+                    <Ionicons name="cash" size={28} color="black" />
+                  ) : (
+                    <FontAwesome
+                      name={"cc-" + item.brand.toLowerCase()}
+                      size={24}
+                      color="black"
+                    />
+                  )}
+                  <View style={{ gap: 6 }}>
+                    <Text style={styles.paymentMethodText}>{item.brand}</Text>
+                    {item.last4 !== "N/A" && (
+                      <Text>**** **** {item.last4}</Text>
+                    )}
+                  </View>
+                </View>
+              </View>
+            )}
           />
-        </Card.Content>
-        <Card.Actions>
-          <Button
-            mode="contained"
-            onPress={addPaymentMethod}
-            disabled={!cardDetails.complete}
-            style={styles.button}
+          <TouchableOpacity
+            style={styles.extraCard}
+            onPress={() => setAddPaymentMethodModal(true)}
           >
-            Add Payment Method
-          </Button>
-        </Card.Actions>
-      </Card>
-    </View>
+            <MaterialCommunityIcons
+              name="credit-card-plus"
+              size={30}
+              color="white"
+            />
+            <Text style={styles.extraCardText}>Add New Card</Text>
+          </TouchableOpacity>
+        </View>
+        <AddPaymentMethod
+          isVisible={addPaymentMethodsModal}
+          onClose={() => setAddPaymentMethodModal(false)}
+        />
+      </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#F5F5F5",
+    flex: 1
   },
-  card: {
-    borderRadius: 10,
-    elevation: 5,
-    backgroundColor: "#eeeee4",
+  content: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+    height: '100%',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
-  cardTitle: {
-    fontSize: 20,
+  title: {
+    fontSize: 18,
     fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
   },
-  cardField: {
-    backgroundColor: "#ccc",
-    textColor: "#000000",
+  paymentMethodItem: {
+    flexDirection: "row",
+    paddingVertical: 14,
+    paddingHorizontal: 15,
+    marginVertical: 4,
+    borderWidth: 0.2,
+    borderRadius: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.1,
+    width: "100%",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  cardFieldContainer: {
-    height: 50,
-    marginVertical: 30,
+  paymentMethod: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
   },
-  button: {
-    marginVertical: 10,
+  paymentMethodText: {
+    fontSize: 16,
+    alignItems: "center",
+  },
+  extraCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    gap: 10,
+    backgroundColor: "#333",
+    borderRadius: 8,
+    marginTop: 20,
+    width: "100%",
+    justifyContent: "center",
+  },
+  extraCardText: {
+    fontSize: 18,
+    color: "#fff",
   },
 });
 

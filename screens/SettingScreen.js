@@ -18,28 +18,27 @@ import { COLORS } from "../constants/colors";
 import { base_url, orders } from "../constants/api";
 import useUser from "../hooks/useUser";
 import useOrders from "../hooks/useOrders";
+import useOrder from "../hooks/useOrder";
 
 const SettingScreen = ({ route }) => {
   const navigation = useNavigation();
 
   const { role, userEmail, userName } = useUser();
-  const { orders, fetchOrders } = useOrders();
-  const [isActivityActive, setIsActivityActive] = useState(false);
-  const [statusPopupVisible, setStatusPopupVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // const { orders, fetchOrders } = useOrders();
+  const { lastOrder, fetchLastOrder } = useOrder();
   const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     if (role === "customer") {
-      fetchOrders();
+      fetchLastOrder();
     }
-  }, []);
+  }, [role]);
 
-  const renderOrderItem = ({ item }) => {
+  const renderOrderItem = () => {
     let statusText = "";
     let statusColor = "";
 
-    switch (item.status) {
+    switch (lastOrder.status) {
       case "delivered":
         statusText = "Completed";
         statusColor = "black";
@@ -63,7 +62,7 @@ const SettingScreen = ({ route }) => {
             justifyContent: "space-between",
           }}
         >
-          <Text style={styles.orderTitle}>Order ID {item.id}</Text>
+          <Text style={styles.orderTitle}>Order ID {lastOrder.id}</Text>
           <View
             style={{
               backgroundColor: "#f0f0f0",
@@ -93,8 +92,8 @@ const SettingScreen = ({ route }) => {
           >
             <Image
               source={{
-                uri: item.image_url
-                  ? base_url + item.image_url
+                uri: lastOrder.image_url
+                  ? base_url + lastOrder.image_url
                   : "../assets/images/icon.png",
               }}
               style={{ width: 80, height: 80, borderRadius: 10 }}
@@ -107,40 +106,28 @@ const SettingScreen = ({ route }) => {
                   fontWeight: "bold",
                 }}
               >
-                {item.restaurant_name}
+                {lastOrder.restaurant_name}
               </Text>
               <Text style={{ color: COLORS.black, fontSize: 14 }}>
-                {item.order_items
+                {lastOrder.order_items
                   .map((orderItem) => orderItem.menu_item)
                   .join(", ")}
               </Text>
               <Text
                 style={{ color: "#F09B00", fontSize: 14, fontWeight: "400" }}
               >
-                ${item.total_price}
+                ${lastOrder.total_price}
               </Text>
             </View>
           </View>
           <Text
             style={{ color: COLORS.black, fontWeight: "400", fontSize: 12 }}
           >
-            {item.order_items.length} item
+            {lastOrder.order_items.length} item
           </Text>
         </View>
       </View>
     );
-  };
-
-  const toggleSwitch = async () => {
-    try {
-      setIsActivityActive((previousState) => !previousState);
-      setStatusPopupVisible(true);
-      setTimeout(() => {
-        setStatusPopupVisible(false);
-      }, 2000);
-    } catch (error) {
-      console.error("Error toggling activity status:", error);
-    }
   };
 
   const handleLogout = () => {
@@ -191,7 +178,7 @@ const SettingScreen = ({ route }) => {
       ? [
           {
             icon: <Icons.ExtraCard />,
-            text: "Extra Card",
+            text: "Payment Methods",
             navigateTo: "AddPaymentMethod",
           },
         ]
@@ -249,13 +236,13 @@ const SettingScreen = ({ route }) => {
                 <Text style={styles.ordersToggleText}>See All</Text>
               </TouchableOpacity>
             </View>
-            <FlatList
-              data={orders.slice(0, 1)}
-              renderItem={renderOrderItem}
-              keyExtractor={(item) => item.id.toString()}
-              ListEmptyComponent={<Text>No orders available</Text>}
-              refreshing={loading}
-            />
+            {lastOrder ?
+              renderOrderItem()
+             : (
+              <Text>
+                No Order Available
+              </Text>
+            )}
           </View>
         )}
 
