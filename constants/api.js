@@ -12,4 +12,5 @@ export const restaurants = {
 export const orders = {
   order: "api/v1/orders",
   partnerOrders: "api/v1/orders/partner_pending_orders",
+  lastOrder: "api/v1/orders/last_order",
 };

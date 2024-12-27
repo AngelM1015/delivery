@@ -19,6 +19,7 @@ import PaymentMethod from "../components/PaymentMethod";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import useUser from "../hooks/useUser";
 import { useCart } from "../context/CartContext";
+import client from "../client";
 
 const MenuCheckoutScreen = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +31,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [orderType, setOrderType] = useState(null);
   const [deliveryFee, setDeliveryFee] = useState(null);
+  const [restaurantDelivery, setRestaurantDelivery] = useState({})
   const [address, setAddress] = useState({
     id: 0,
     location_name: "",
@@ -63,6 +65,36 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
     getLocation();
   }, [cartItems]);
 
+  useEffect(() => {
+    if( address.location_name !== "") calculateDistance(address);
+  }, [address])
+
+  const calculateDistance = async (location) => {
+    const token = AsyncStorage.getItem('userToken');
+    const restaurantId = await AsyncStorage.getItem("selectedRestaurantId");
+    const url = `api/v1/restaurants/${restaurantId}/delivery_mileage`
+    const restaurant = {
+      destination_latitude: location.latitude,
+      destination_longitude: location.longitude
+    }
+
+    try {
+      const response = await client.get(url,
+        { params: {
+          restaurant
+        },
+          Header: { Authorization: `Bearer ${token}` }
+        }
+      )
+      console.log('distance response', response.data);
+
+      setRestaurantDelivery(response.data)
+    } catch (error) {
+        console.error("Error fetching distance:", error);
+        return;
+    }
+  }
+
   const fetchPaymentMethods = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
@@ -85,7 +117,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   const orderTypeSelection = (value) => {
     console.log("value of order type", value);
     if (value === "delivery") {
-      setDeliveryFee(20);
+      setDeliveryFee(restaurantDelivery.delivery_price);
     } else {
       setDeliveryFee(0);
     }
@@ -105,9 +137,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 
     console.log("payment method", paymentMethod);
 
-    const storedRestaurantId = await AsyncStorage.getItem(
-      "selectedRestaurantId"
-    );
+    const storedRestaurantId = await AsyncStorage.getItem("selectedRestaurantId");
     if (!storedRestaurantId) {
       Alert.alert("Error", "No associated restaurant found");
       return;
@@ -120,10 +150,12 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           orderType === "delivery"
             ? address.location_name
             : "",
-        total_price: orderDetails.totalPrice,
+        total_price: orderDetails.totalPrice + deliveryFee,
+        delivery_fee: deliveryFee,
         payment_method_id: paymentMethod.id,
         address_id: address.id,
         order_type: orderType,
+        delivery_mileage: restaurantDelivery.distance,
         order_items_attributes: cartItems.map((item) => ({
           menu_item_id: item.id,
           quantity: item.quantity,
@@ -143,13 +175,13 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 
     route.params;
 
-    setIsLoading(true); // Start loader
+    setIsLoading(true);
     try {
       await createOrder(navigation, orderData.order);
     } catch (error) {
       Alert.alert("Error", "Failed to create order. Please try again.");
     } finally {
-      setIsLoading(false); // Stop loader
+      setIsLoading(false);
     }
   };
 
@@ -248,28 +280,6 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         </Text>
         <View style={styles.orderTypeContainer}>
           <View style={styles.orderTypeWrapper}>
-            {/* <ToggleButton.Group
-                style={styles.orderTypeGroup}
-                onValueChange={value => {
-                  orderTypeSelection(value);
-                  if (value === 'delivery') {
-                    setDeliveryFee(15);
-                  } else {
-                    setDeliveryFee(0);
-                  }
-                }}
-                value={orderType}
-              >
-                <View style={styles.orderTypeItem}>
-                  <ToggleButton icon="bike" value="delivery"/>
-                  <Text style={styles.orderTypeLabel}>Delivery</Text>
-                </View>
-
-                <View style={styles.orderTypeItem}>
-                  <ToggleButton icon="storefront" value="pickup"/>
-                  <Text style={styles.orderTypeLabel}>Pick-Up</Text>
-                </View>
-              </ToggleButton.Group> */}
             <TouchableOpacity
               style={[
                 styles.orderType,

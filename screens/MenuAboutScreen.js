@@ -5,7 +5,6 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
   ScrollView,
   SafeAreaView,
   ActivityIndicator,
@@ -15,12 +14,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { base_url } from "../constants/api";
 import { useCart } from "../context/CartContext";
-import { FontAwesome, AntDesign, Ionicons } from "@expo/vector-icons";
+import { FontAwesome, AntDesign, Ionicons, Fontisto} from "@expo/vector-icons";
 import Header from "../components/Header";
 import Toast from "react-native-toast-message";
 
 const MenuAboutScreen = ({ route, navigation }) => {
-  const { menuItemId, restaurantId } = route.params;
+  const { menuItemId, restaurantId, deliveryFee } = route.params;
   const [menuItem, setMenuItem] = useState(null);
   const [recommendedItems, setRecommendedItems] = useState([]);
   const [modifierCounts, setModifierCounts] = useState({});
@@ -97,12 +96,11 @@ const MenuAboutScreen = ({ route, navigation }) => {
       }))
       .filter((modifier) => modifier.options.length > 0);
 
-    const price =
-      menuItem.item_prices?.length > 0
-        ? parseFloat(menuItem.item_prices[0])
-        : "0.0";
+    const price = menuItem.item_prices?.length > 0
+                  ? parseFloat(menuItem.item_prices[0])
+                  : "0.0";
 
-        console.log('selected modifiers', selectedModifiers[0])
+    console.log('selected modifiers', selectedModifiers[0])
 
     const imageUrl = menuItem.image_url
       ? base_url + menuItem.image_url
@@ -145,20 +143,6 @@ const MenuAboutScreen = ({ route, navigation }) => {
     });
   };
 
-  const handleQuantityChange = (modifierId, optionId, increment) => {
-    setModifierCounts((prevCounts) => {
-      const newCounts = { ...prevCounts };
-      const currentCount = newCounts[modifierId]?.[optionId] || 0;
-      newCounts[modifierId] = {
-        ...newCounts[modifierId],
-        [optionId]: increment
-          ? currentCount + 1
-          : Math.max(currentCount - 1, 0),
-      };
-      return newCounts;
-    });
-  };
-
   const handleSelectModifierOption = (modifierId, optionId) => {
     setSelectedModifierOptions((prevSelectedOptions) => {
       const currentOptions = prevSelectedOptions[modifierId] || [];
@@ -174,6 +158,16 @@ const MenuAboutScreen = ({ route, navigation }) => {
               { ...prevSelectedOptions }
     });
   };
+
+  const enableCartButton = () => {
+    if(!primaryModifiers.length > 0) return false;
+
+    const selectedIds = Object.keys(selectedModifierOptions)
+
+    for(let id of primaryModifiers){
+      if(!selectedIds.includes(id)) return true
+    }
+  }
 
   const renderRecommendedItem = ({ item }) => {
     const imageUrl = menuItem.image_url
@@ -238,8 +232,7 @@ const MenuAboutScreen = ({ route, navigation }) => {
   }
 
   const incrementQuantity = () => setQuantity((prev) => prev + 1);
-  const decrementQuantity = () =>
-    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  const decrementQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -270,7 +263,7 @@ const MenuAboutScreen = ({ route, navigation }) => {
             </Text>
             <View style={styles.metaDetails}>
               <Text>
-                <FontAwesome name="bicycle" color="#F09B00" /> Free Delivery
+              <Fontisto name="motorcycle" size={14} color="#F09B00" /> ${deliveryFee}
               </Text>
               <Text>
                 <FontAwesome name="clock-o" color="#F09B00" />{" "}
@@ -309,26 +302,6 @@ const MenuAboutScreen = ({ route, navigation }) => {
                       <Text>
                         {option.additional_price !== '0.0' ? `+$${option.additional_price}` : 'Free'}
                       </Text>
-                      {/* will remove this and respective function after discussuion
-                      <View style={styles.counterContainer}>
-                        <TouchableOpacity
-                          onPress={() =>
-                            handleQuantityChange(modifier.id, option.id, false)
-                          }
-                        >
-                          <AntDesign name="minus" size={20} />
-                        </TouchableOpacity>
-                        <Text style={styles.countText}>
-                          {modifierCounts[modifier.id]?.[option.id] || 0}
-                        </Text>
-                        <TouchableOpacity
-                          onPress={() =>
-                            handleQuantityChange(modifier.id, option.id, true)
-                          }
-                        >
-                          <AntDesign name="plus" size={20} />
-                        </TouchableOpacity>
-                      </View> */}
                     </TouchableOpacity>
                   ))}
                 </Card.Content>
@@ -350,7 +323,6 @@ const MenuAboutScreen = ({ route, navigation }) => {
         </View> */}
       </ScrollView>
 
-      {/* Footer - Quantity and Add to Cart */}
       <View style={styles.footer}>
         <View style={styles.quantityContainer}>
           <TouchableOpacity
@@ -369,8 +341,8 @@ const MenuAboutScreen = ({ route, navigation }) => {
         </View>
         <TouchableOpacity
           onPress={handleAddToCart}
-          disabled={primaryModifiers.length > 0 && JSON.stringify(primaryModifiers) !== JSON.stringify(Object.keys(selectedModifierOptions))}
-          style={primaryModifiers.length > 0 && JSON.stringify(primaryModifiers) !== JSON.stringify(Object.keys(selectedModifierOptions)) ? styles.offAddToCartButton : styles.addToCartButton}
+          disabled={enableCartButton()}
+          style={enableCartButton() ? styles.offAddToCartButton : styles.addToCartButton}
         >
           <Text style={styles.addToCartText}>
             <FontAwesome name="shopping-cart" size={20} color="white" /> Add To
