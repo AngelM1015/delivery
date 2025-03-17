@@ -11,6 +11,7 @@ import {
   SafeAreaView,
   Image,
 } from "react-native";
+import { ProgressBar } from "react-native-paper";
 import { COLORS } from "../constants/colors";
 import useOrders from "../hooks/useOrders";
 import { base_url } from "../constants/api";
@@ -22,8 +23,6 @@ const OrdersScreen = ({ navigation }) => {
     loading,
     fetchOrders,
     cancelOrder,
-    pickUpOrder,
-    deliverOrder,
   } = useOrders();
 
   const handleOrderClick = (order) => {
@@ -53,6 +52,22 @@ const OrdersScreen = ({ navigation }) => {
         break;
     }
 
+    const getProgress = () => {
+      if (order.status === "restaurant_pending_approval") return 0;
+      if (order.status === "partner_assigned") return 0.5; // First section filled
+      if (order.status === "picked_up") return 1; // Both sections filled
+      return 0;
+    };
+
+    const progressMessage =
+      order.status === "partner_assigned"
+        ? "Order is being prepared"
+        : order.status === "picked_up"
+        ? "Order is on the way"
+        : order.status === "restaurant_pending_approval"
+        ? "waiting for restaurant approval"
+        : "";
+
     return (
       <TouchableOpacity
         onPress={() => handleOrderClick(order)}
@@ -67,18 +82,36 @@ const OrdersScreen = ({ navigation }) => {
             }}
           >
             <Text style={styles.orderTitle}>Order ID {order.id}</Text>
-            <View
-              style={{
-                backgroundColor: "#f0f0f0",
-                padding: 10,
-                borderRadius: 16,
-                width: "30%",
-              }}
-            >
-              <Text style={{ color: statusColor, textAlign: "center" }}>
-                {statusText}
-              </Text>
-            </View>
+            {/* {statusText} */}
+            {role === "customer" && statusText == "In Progress" ?
+              (
+                order.status !== "canceled" &&
+                order.status !== "delivered" &&
+                order.status !== "picked_up" && (
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => cancelOrder(order.id)}
+                  >
+                    <Text style={{ color: "white" }}>Cancel Order</Text>
+                  </TouchableOpacity>
+                )
+              )
+                :
+                (
+                  <View
+                    style={{
+                      backgroundColor: "#f0f0f0",
+                      padding: 10,
+                      borderRadius: 16,
+                      width: "30%",
+                    }}
+                  >
+                    <Text style={{ color: statusColor, textAlign: "center" }}>
+                      {statusText}
+                    </Text>
+                  </View>
+                )
+              }
           </View>
           <View
             style={{
@@ -126,31 +159,39 @@ const OrdersScreen = ({ navigation }) => {
               {order.order_items.length} item
             </Text>
           </View>
-          {role === "customer" &&
-            order.status !== "canceled" &&
-            order.status !== "delivered" &&
-            order.status !== "picked_up" && (
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => cancelOrder(order.id)}
-              >
-                <Text style={{ color: "white" }}>Cancel Order</Text>
-              </TouchableOpacity>
-            )}
-        </View>
+          {/* Progress Bar */}
+          {(order.status === "partner_assigned" || order.status === "picked_up" || order.status === "restaurant_pending_approval") && (
+            <View>
+              <View style={{flexDirection: 'row', gap: 4}}>
+                <ProgressBar
+                  progress={getProgress() > 0 ? 1 : 0}
+                  color="#4caf50" style={{marginTop: 20}}
+                  indeterminate={order.status === "restaurant_pending_approval"}
+                  containerHeight={100}
+                  width={"32%"}
+                />
+                <ProgressBar
+                  progress={getProgress() >= 0.5 ? 1 : 0}
+                  color="#4caf50" style={{marginTop: 20}}
+                  indeterminate={order.status === "partner_assigned"}
+                  containerHeight={100}
+                  width={"32%"}
+                />
+                <ProgressBar
+                  progress={getProgress() === 1 ? 1 : 0}
+                  color="#4caf50" style={{marginTop: 20}}
+                  indeterminate={order.status === "picked_up"}
+                  containerHeight={100}
+                  width={"32%"}
+                />
+              </View>
 
-        {role === "partner" && (
-          <View>
-            <Button
-              title="Pick Up Order"
-              onPress={() => pickUpOrder(order.id)}
-            />
-            <Button
-              title="Deliver Order"
-              onPress={() => deliverOrder(order.id)}
-            />
-          </View>
-        )}
+              <Text style={{ textAlign: "center", marginTop: 5 }}>
+                {progressMessage}
+              </Text>
+            </View>
+          )}
+        </View>
       </TouchableOpacity>
     );
   };
@@ -218,11 +259,9 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: "#FF4040",
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 12,
     alignItems: "center",
-    marginTop: 20,
-    width: "30%",
   },
 });
 

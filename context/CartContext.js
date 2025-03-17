@@ -15,7 +15,7 @@ export const CartProvider = ({ children }) => {
 
   const removeFromCart = (itemId) => {
     setCartItems((currentItems) =>
-      currentItems.filter((item) => item.id !== itemId)
+      currentItems.filter((item, index) => index !== itemId)
     );
   };
 

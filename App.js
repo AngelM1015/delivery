@@ -3,8 +3,6 @@ import {
   StyleSheet,
   View,
   AppState,
-  ToastAndroid,
-  Platform,
   Alert,
 } from "react-native";
 import {
@@ -41,6 +39,7 @@ import OngoingOrderScreen from "./screens/OngoingOrderScreen";
 import { LogBox } from "react-native";
 import ChatScreen from "./screens/ChatScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import NetInfo from '@react-native-community/netinfo';
 
 const themeColors = {
   activeTintColor: "#e23744",
@@ -80,6 +79,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const appState = useRef(AppState.currentState);
   const [isRoleChanged, setIsRoleChanged] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
 
   LogBox.ignoreAllLogs(true);
 
@@ -97,12 +97,6 @@ function App() {
 
         const token = await AsyncStorage.getItem("userToken");
         setIsAuthenticated(!!token);
-
-        // Check for active orders here
-        // const activeOrders = await checkActiveOrders();
-        // if (activeOrders) {
-        //   handleActiveOrders(activeOrders);
-        // }
       } catch (error) {
         console.error("Error fetching user data:", error);
       } finally {
@@ -133,13 +127,16 @@ function App() {
     };
   }, [isRoleChanged]);
 
-  if (!isReady) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={themeColors.activeTintColor} />
-      </View>
-    );
-  }
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected);
+      if (!state.isConnected) {
+        Alert.alert("No Internet Connection", "Please check your connection.");
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   if (!isReady) {
     return (

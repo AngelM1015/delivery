@@ -64,6 +64,8 @@ const LoginScreen = ({ navigation, route }) => {
         await AsyncStorage.setItem("userId", response.data.user_id.toString());
         await AsyncStorage.setItem("userEmail", response.data.email);
         await AsyncStorage.setItem("userName", response.data.name);
+        if(response.data.role === 'partner') AsyncStorage.setItem('status', 'active' ? 'true' : 'false');
+
         setIsRoleChanged(!isRoleChanged);
         navigation.replace("Main");
       } else {

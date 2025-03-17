@@ -19,6 +19,18 @@ export class OrderService {
     return response.data;
   }
 
+  async fetchLastOrder() {
+    if (this.role !== "customer") {
+      return [];
+    }
+
+    const response = await client.get(orders.lastOrder, {
+      headers: { Authorization: `Bearer ${this.token}` },
+    });
+
+    return response.data;
+  }
+
   async fetchPartnerPendingOrders() {
     if (this.role !== "partner") {
       return [];

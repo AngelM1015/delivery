@@ -6,6 +6,9 @@ import {
   RefreshControl,
   Switch,
   TouchableOpacity,
+  TextInput,
+  Button as RNButton,
+  Modal
 } from "react-native";
 import {
   Button,
@@ -13,12 +16,14 @@ import {
   Portal,
   Provider,
   Snackbar,
-  Modal,
+  Modal as HistoryModal,
 } from "react-native-paper";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import cable from "../cable";
 import { base_url } from "../constants/api";
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
 
 const formatStatus = (status) => {
   return status
@@ -61,6 +66,8 @@ const NewOrderScreen = ({ navigation }) => {
   const [restaurant, setRestaurant] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [historyVisible, setHistoryVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState('');
 
   const toggleStatus = () => {
     setIsActive(!isActive);
@@ -162,13 +169,13 @@ const NewOrderScreen = ({ navigation }) => {
     }
   };
 
-  const updateOrderStatus = async (id, status) => {
+  const updateOrderStatus = async (id, status, cancellationReason = null) => {
     const token = await AsyncStorage.getItem("userToken");
 
     try {
       await axios.put(
         `${base_url}api/v1/orders/${id}/update_status`,
-        { status },
+        { status, cancellation_reason: cancellationReason },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -183,7 +190,6 @@ const NewOrderScreen = ({ navigation }) => {
       setNewOrders((prevNewOrders) =>
         prevNewOrders.filter((order) => order.id !== id)
       );
-
       setSnackbarMessage(
         `Status updated to ${status.replace(/_|-|\\. /g, " ")}`
       );
@@ -193,8 +199,19 @@ const NewOrderScreen = ({ navigation }) => {
     }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.menuItem}>
+  const handleCancelOrder = () => {
+    setModalVisible(true);
+  };
+
+  const handleConfirmCancel = () => {
+    if (cancellationReason) {
+      updateOrderStatus(item.id, "canceled", cancellationReason);
+      setModalVisible(false);
+    }
+  };
+
+  const renderOrder = ({ item }) => (
+    <View style={styles.orderItem}>
       <View
         style={{
           display: "flex",
@@ -229,26 +246,65 @@ const NewOrderScreen = ({ navigation }) => {
       </View>
       <View style={{ flexDirection: "row", gap: 5 }}>
         <Text style={{ fontSize: 16, fontWeight: "bold" }}> Restaurant: </Text>
-        <Text style={styles.menuText}>{item.restaurant_name}</Text>
+        <Text style={styles.textValue}>{item.restaurant_name}</Text>
       </View>
       <View style={styles.actions}>
-        <Button
-          mode="contained"
-          onPress={() => updateOrderStatus(item.id, "canceled")}
-          style={styles.cancelButton}
-          labelStyle={styles.cancelButtonText}
-        >
-          Cancel order
-        </Button>
-        <Button
-          mode="contained"
-          onPress={() => updateOrderStatus(item.id, "restaurant_approved")}
-          style={styles.acceptButton}
-          labelStyle={styles.acceptButtonText}
-        >
-          Accept order
-        </Button>
-      </View>
+      <Button
+        mode="contained"
+        onPress={handleCancelOrder}
+        style={styles.cancelButton}
+        labelStyle={styles.cancelButtonText}
+      >
+        Cancel order
+      </Button>
+      <Button
+        mode="contained"
+        onPress={() => updateOrderStatus(item.id, "restaurant_approved")}
+        style={styles.acceptButton}
+        labelStyle={styles.acceptButtonText}
+      >
+        Accept order
+      </Button>
+
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.cancelModalContainer}>
+          <View style={styles.cancelModalContent}>
+            <TouchableOpacity
+              style={styles.crossButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Icon name="close" size={24} color="#000" />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', marginVertical: 5 }}>
+              Cancellation Reason
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter cancellation reason"
+              value={cancellationReason}
+              onChangeText={setCancellationReason}
+            />
+            <RNButton
+              title="Confirm Cancel"
+              onPress={handleConfirmCancel}
+              disabled={!cancellationReason}
+            />
+            <RNButton
+              title="Accept Order"
+              onPress={() => {
+                updateOrderStatus(item.id, "restaurant_approved");
+                setModalVisible(false);
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
+    </View>
     </View>
   );
 
@@ -256,9 +312,9 @@ const NewOrderScreen = ({ navigation }) => {
     navigation.navigate("OrderDetails", { orderId: orderId })
   }
 
-  const renderHistoryItem = ({ item }) => (
+  const renderOrderHistory = ({ item }) => (
     <TouchableOpacity onPress={() => showDetails(item.id)}>
-    <View style={styles.menuItem}>
+    <View style={styles.orderItem}>
       <View
         style={{
           display: "flex",
@@ -291,11 +347,11 @@ const NewOrderScreen = ({ navigation }) => {
       </View>
       <View style={{ flexDirection: "row", gap: 5 }}>
         <Text style={{ fontSize: 16, fontWeight: "bold" }}> Status: </Text>
-        <Text style={styles.menuText}>{formatStatus(item.status)}</Text>
+        <Text style={styles.textValue}>{formatStatus(item.status)}</Text>
       </View>
       <View style={{ flexDirection: "row", gap: 5 }}>
         <Text style={{ fontSize: 16, fontWeight: "bold" }}> Restaurant: </Text>
-        <Text style={styles.menuText}>{item.restaurant_name}</Text>
+        <Text style={styles.textValue}>{item.restaurant_name}</Text>
       </View>
     </View>
     </TouchableOpacity>
@@ -317,7 +373,7 @@ const NewOrderScreen = ({ navigation }) => {
         </View>
         <FlatList
           data={newOrders}
-          renderItem={renderItem}
+          renderItem={renderOrder}
           keyExtractor={(item) => item.id.toString()}
           style={styles.flatList}
           refreshControl={
@@ -332,7 +388,7 @@ const NewOrderScreen = ({ navigation }) => {
           >
             {snackbarMessage}
           </Snackbar>
-          <Modal
+          <HistoryModal
             animationType="slide"
             visible={historyVisible}
             onRequestClose={() => setHistoryVisible(false)}
@@ -348,11 +404,11 @@ const NewOrderScreen = ({ navigation }) => {
               data={orders.filter(
                 (order) => order.status !== "restaurant_pending_approval"
               )}
-              renderItem={renderHistoryItem}
+              renderItem={renderOrderHistory}
               keyExtractor={(item) => item.id.toString()}
               style={styles.flatList}
             />
-          </Modal>
+          </HistoryModal>
         </Portal>
       </View>
       <Button
@@ -392,7 +448,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: "#FF0B5C",
   },
-  menuItem: {
+  orderItem: {
     marginVertical: 8,
     marginHorizontal: 4,
     backgroundColor: "#ffffff",
@@ -404,7 +460,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     padding: 10,
   },
-  menuText: {
+  textValue: {
     fontSize: 18,
     color: "grey",
   },
@@ -495,6 +551,31 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 24,
     fontWeight: "bold",
+  },
+  cancelModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  cancelModalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  },
+  crossButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
   },
 });
 

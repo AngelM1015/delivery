@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
-  Button,
 } from "react-native";
 import { base_url } from "../constants/api";
 import axios from "axios";
@@ -59,10 +58,11 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
         {
           params: {
             input: query,
-            key: GOOGLE_MAPS_API_KEY,
             location: `${bigSkyRegion.latitude},${bigSkyRegion.longitude}`,
             region: "us",
-            radius: 10000,
+            radius: 1000,
+            strictbounds: true,
+            key: GOOGLE_MAPS_API_KEY,
           },
         }
       );

@@ -16,18 +16,22 @@ import axios from "axios";
 import { base_url } from "../constants/api";
 import useOrder from "../hooks/useOrder";
 import PaymentMethod from "../components/PaymentMethod";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons";
 import useUser from "../hooks/useUser";
+import { useCart } from "../context/CartContext";
+import client from "../client";
 
 const MenuCheckoutScreen = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { cartItems } = useCart();
   const { createOrder } = useOrder();
   const { userName } = useUser();
-  const { cartItems = [], orderDetails = {} } = route.params || {};
+  const { orderDetails = {} } = route.params || {};
   const [paymentMethod, setPaymentMethod] = useState({});
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [orderType, setOrderType] = useState(null);
   const [deliveryFee, setDeliveryFee] = useState(null);
+  const [restaurantDelivery, setRestaurantDelivery] = useState({})
   const [address, setAddress] = useState({
     id: 0,
     location_name: "",
@@ -43,6 +47,8 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   };
 
   useEffect(() => {
+    if(!cartItems.length > 0) navigation.goBack();
+
     fetchPaymentMethods();
 
     const getLocation = async () => {
@@ -57,7 +63,37 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
       }
     };
     getLocation();
-  }, []);
+  }, [cartItems]);
+
+  useEffect(() => {
+    if( address.location_name !== "") calculateDistance(address);
+  }, [address])
+
+  const calculateDistance = async (location) => {
+    const token = AsyncStorage.getItem('userToken');
+    const restaurantId = await AsyncStorage.getItem("selectedRestaurantId");
+    const url = `api/v1/restaurants/${restaurantId}/delivery_mileage`
+    const restaurant = {
+      destination_latitude: location.latitude,
+      destination_longitude: location.longitude
+    }
+
+    try {
+      const response = await client.get(url,
+        { params: {
+          restaurant
+        },
+          Header: { Authorization: `Bearer ${token}` }
+        }
+      )
+      console.log('distance response', response.data);
+
+      setRestaurantDelivery(response.data)
+    } catch (error) {
+        console.error("Error fetching distance:", error);
+        return;
+    }
+  }
 
   const fetchPaymentMethods = async () => {
     try {
@@ -81,7 +117,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   const orderTypeSelection = (value) => {
     console.log("value of order type", value);
     if (value === "delivery") {
-      setDeliveryFee(20);
+      setDeliveryFee(restaurantDelivery.delivery_price);
     } else {
       setDeliveryFee(0);
     }
@@ -101,9 +137,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 
     console.log("payment method", paymentMethod);
 
-    const storedRestaurantId = await AsyncStorage.getItem(
-      "selectedRestaurantId"
-    );
+    const storedRestaurantId = await AsyncStorage.getItem("selectedRestaurantId");
     if (!storedRestaurantId) {
       Alert.alert("Error", "No associated restaurant found");
       return;
@@ -114,18 +148,25 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         restaurant_id: storedRestaurantId,
         delivery_address:
           orderType === "delivery"
-            ? "209 Aspen Leaf Dr, Big Sky, MT 59716"
+            ? address.location_name
             : "",
-        total_price: orderDetails.totalPrice,
+        total_price: orderDetails.totalPrice + deliveryFee,
+        delivery_fee: deliveryFee,
         payment_method_id: paymentMethod.id,
         address_id: address.id,
         order_type: orderType,
+        delivery_mileage: restaurantDelivery.distance,
         order_items_attributes: cartItems.map((item) => ({
           menu_item_id: item.id,
           quantity: item.quantity,
           order_item_modifiers_attributes: item.selectedModifiers.map(
             (modifier) => ({
-              modifier_option_id: modifier.modifierId,
+              modifier_id: modifier.modifierId,
+              order_modifier_options_attributes: modifier.options.map(
+                (modifier_option) => ({
+                  modifier_option_id: modifier_option.id
+                })
+              )
             })
           ),
         })),
@@ -134,13 +175,13 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 
     route.params;
 
-    setIsLoading(true); // Start loader
+    setIsLoading(true);
     try {
       await createOrder(navigation, orderData.order);
     } catch (error) {
       Alert.alert("Error", "Failed to create order. Please try again.");
     } finally {
-      setIsLoading(false); // Stop loader
+      setIsLoading(false);
     }
   };
 
@@ -149,7 +190,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
       {isLoading && (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color="#FFA500" />
-            <Text style={styles.loadingText}>Submitting your order...</Text>
+            <Text style={styles.loadingText}>Placing your order...</Text>
           </View>
         )}
       <View style={styles.headerContainer}>
@@ -239,28 +280,6 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         </Text>
         <View style={styles.orderTypeContainer}>
           <View style={styles.orderTypeWrapper}>
-            {/* <ToggleButton.Group
-                style={styles.orderTypeGroup}
-                onValueChange={value => {
-                  orderTypeSelection(value);
-                  if (value === 'delivery') {
-                    setDeliveryFee(15);
-                  } else {
-                    setDeliveryFee(0);
-                  }
-                }}
-                value={orderType}
-              >
-                <View style={styles.orderTypeItem}>
-                  <ToggleButton icon="bike" value="delivery"/>
-                  <Text style={styles.orderTypeLabel}>Delivery</Text>
-                </View>
-
-                <View style={styles.orderTypeItem}>
-                  <ToggleButton icon="storefront" value="pickup"/>
-                  <Text style={styles.orderTypeLabel}>Pick-Up</Text>
-                </View>
-              </ToggleButton.Group> */}
             <TouchableOpacity
               style={[
                 styles.orderType,

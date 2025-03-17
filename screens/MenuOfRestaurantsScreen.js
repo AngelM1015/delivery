@@ -17,11 +17,11 @@ import useRestaurants from "../hooks/useRestaurants";
 
 const MenuOfRestaurantsScreen = ({ navigation }) => {
   const { orders } = useOrders();
-  const { restaurants, fetchRestaurants } = useRestaurants();
+  const { restaurants, menuItems, selectedRestaurant, setSelectedRestaurant, fetchRestaurants } = useRestaurants();
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  // const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [recentSearches, setRecentSearches] = useState([]);
 
   const handleSearch = (query) => {
@@ -127,7 +127,6 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              marginTop: 15,
             }}
           >
             <Image
@@ -159,6 +158,40 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
     );
   };
 
+  const renderMenuItem = ({ item }) => {
+    const price =
+      item.item_prices?.length > 0 ? item.item_prices[0] : "Not Available";
+    const imageUrl = item.image_url
+      ? base_url + item.image_url
+      : "https://via.placeholder.com/150";
+    const rating = "4.9";
+
+    return (
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("MenuAboutScreen", {
+            menuItemId: item.id,
+            restaurantId: item.restaurant_id,
+          })
+        }
+      >
+        <Card style={styles.menuCard}>
+          <View style={styles.innerCardContainer}>
+            <View style={styles.menuCardTop}>
+              <Image source={{ uri: imageUrl }} style={styles.menuImage} />
+            </View>
+            <View style={styles.menuDetails}>
+              <Text style={styles.menuTitle} numberOfLines={1}>
+                {item.name}
+              </Text>
+              <Text style={styles.priceText}>${price}</Text>
+            </View>
+          </View>
+        </Card>
+      </TouchableOpacity>
+    );
+  };
+
   const renderRecentSearch = ({ item }) => (
     <View style={styles.recentSearchItem}>
       <View style={{ alignItems: "center", flexDirection: "row" }}>
@@ -178,7 +211,7 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={{ paddingHorizontal: 10 }}>
+      <View style={{ paddingHorizontal: 10, flex: 1 }}>
         <Searchbar
           placeholder="Search"
           onChangeText={handleSearch}
@@ -194,12 +227,32 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           style={styles.horizontalList}
           contentContainerStyle={{ paddingVertical: 10 }}
-          refreshControl={
-            <RefreshControl loading={loading} onRefresh={fetchRestaurants} />
-          }
+        />
+        <Text style={styles.recentText}>My recent orders</Text>
+        <FlatList
+          data={filteredOrders.filter((order) => order.restaurant_id == selectedRestaurant)}
+          renderItem={renderOrderItem}
+          keyExtractor={(item) => item.id.toString()}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          ListEmptyComponent={<Text>No orders available</Text>}
+          refreshing={loading}
+          style={styles.orderHorizontalList}
         />
 
-        {recentSearches.length > 0 && (
+        <Text style={{marginStart: 10, fontWeight: "bold"}}>MENU</Text>
+        <FlatList
+          data={menuItems.filter((item) =>
+            item.name.toLowerCase().includes(searchQuery.toLowerCase())
+          )}
+          renderItem={renderMenuItem}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
+          ListEmptyComponent={<Text>No menu items available</Text>}
+        />
+
+        {/* {recentSearches.length > 0 && (
           <View style={styles.recentSearchContainer}>
             <View style={styles.recentSearchHeader}>
               <Text style={styles.recentSearchTitle}>Recent Searches</Text>
@@ -215,15 +268,7 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
               style={styles.recentSearchList}
             />
           </View>
-        )}
-        <Text style={styles.recentText}>My recent orders</Text>
-        <FlatList
-          data={filteredOrders}
-          renderItem={renderOrderItem}
-          keyExtractor={(item) => item.id.toString()}
-          ListEmptyComponent={<Text>No orders available</Text>}
-          refreshing={loading}
-        />
+        )} */}
       </View>
     </SafeAreaView>
   );
@@ -240,7 +285,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   horizontalList: {
-    minHeight: 250,
+    minHeight: 180,
+    maxHeight: 180,
   },
   restaurantCard: {
     width: 120,
@@ -249,7 +295,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 10,
     borderRadius: 8,
-    marginBottom: 30,
   },
   restaurantImage: {
     width: 100,
@@ -269,6 +314,47 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
   },
+  menuCard: {
+    marginVertical: 10,
+    marginHorizontal: 2,
+    padding: 6,
+    borderRadius: 10,
+    borderWidth: 0.1,
+    shadowOpacity: 0,
+    backgroundColor: "#fff",
+    elevation: 3,
+    width: "180",
+  },
+  innerCardContainer: {
+    overflow: "hidden",
+    borderRadius: 10,
+    gap: 8,
+  },
+  menuCardTop: {
+    position: "relative",
+  },
+  menuImage: {
+    width: "100%",
+    height: 100,
+  },
+  heartIcon: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
+  menuDetails: {
+    padding: 2,
+    gap: 4,
+  },
+  menuTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  orderHorizontalList: {
+    minHeight: 110,
+    maxHeight: 110,
+    marginBottom: 14
+  },
   orderItem: {
     padding: 10,
     marginBottom: 10,
@@ -276,6 +362,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 5,
+    marginEnd: 8,
+    height: '100%'
   },
   orderTitle: {
     fontSize: 16,

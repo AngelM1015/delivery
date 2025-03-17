@@ -26,6 +26,7 @@ const useUser = () => {
     setUserEmail(userEmail);
     setUserName(userName);
   };
+
   return {
     role,
     loading,
