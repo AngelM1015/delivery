@@ -112,7 +112,7 @@ const AddPaymentMethod = ({ isVisible, onClose }) => {
               disabled={!cardDetails.complete}
               style={styles.button}
             >
-              <Text style={styles.ButtonText}>Add Payment Method</Text>
+              <Text style={[styles.ButtonText, {color: "white"}]}>Add Payment Method</Text>
             </TouchableOpacity>
           </Card.Actions>
         </Card>
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     marginVertical: 30,
   },
   button: {
-    backgroundColor: "pink",
+    backgroundColor: "green",
     padding: 10,
     marginVertical: 10,
     borderRadius: 8,
@@ -161,7 +161,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   ButtonText: {
-    color: "black",
     fontSize: 16,
     fontWeight: "bold",
     alignSelf: "center",

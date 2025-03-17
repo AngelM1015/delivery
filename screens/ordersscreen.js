@@ -167,18 +167,20 @@ const OrdersScreen = ({ navigation }) => {
                   progress={getProgress() > 0 ? 1 : 0}
                   color="#4caf50" style={{marginTop: 20}}
                   indeterminate={order.status === "restaurant_pending_approval"}
-                  containerHeight={100} width={"32%"}
+                  containerHeight={100}
+                  width={"32%"}
                 />
                 <ProgressBar
                   progress={getProgress() >= 0.5 ? 1 : 0}
                   color="#4caf50" style={{marginTop: 20}}
-                  indeterminate={order.status === "picked_up"}
-                  containerHeight={100} width={"32%"}
+                  indeterminate={order.status === "partner_assigned"}
+                  containerHeight={100}
+                  width={"32%"}
                 />
                 <ProgressBar
                   progress={getProgress() === 1 ? 1 : 0}
                   color="#4caf50" style={{marginTop: 20}}
-                  indeterminate={order.status === "partner_assigned"}
+                  indeterminate={order.status === "picked_up"}
                   containerHeight={100}
                   width={"32%"}
                 />

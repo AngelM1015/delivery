@@ -61,10 +61,8 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
             received(data) {
               console.log("new order message:", data);
               if (data.partner_message) setPartnerMessage(data.partner_message);
-              if (data.customer_message)
-                setCustomerMessage(data.customer_message);
-              if (data.partner_location)
-                setPartnerLocation(data.partner_location);
+              if (data.customer_message) setCustomerMessage(data.customer_message);
+              if (data.partner_location) setPartnerLocation(data.partner_location);
             },
           }
         );

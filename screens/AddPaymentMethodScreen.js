@@ -27,7 +27,7 @@ const AddPaymentMethodScreen = () => {
           },
         }
       );
-
+      console.log('payment methods fetched');
       setPaymentMethods(response.data);
     } catch (error) {
       console.error("Error fetching payment methods:", error);
@@ -37,12 +37,12 @@ const AddPaymentMethodScreen = () => {
 
   useEffect(() => {
     fetchPaymentMethods();
-  })
+  }, []);
 
   return (
       <View style={styles.container}>
         <View style={styles.content}>
-          {/* <Text style={styles.title}>Payment Methods</Text> */}
+          <Text style={styles.title}>Available Payment Methods</Text>
           <FlatList
             style={{height: '80%'}}
             data={paymentMethods}

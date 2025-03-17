@@ -371,7 +371,8 @@ const styles = StyleSheet.create({
     marginTop: 5,
     paddingHorizontal: 10,
     marginBottom: 20,
-    minHeight: '40%'
+    minHeight: '45%',
+    maxHeight: '45%'
   },
   restaurantCard: {
     width: 120,
@@ -380,7 +381,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 10,
     borderRadius: 8,
-    minHeight: '40%',
+    minHeight: 160,
+    maxHeight: 160,
   },
   restaurantImage: {
     width: 100,

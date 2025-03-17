@@ -16,7 +16,7 @@ import axios from "axios";
 import { base_url } from "../constants/api";
 import useOrder from "../hooks/useOrder";
 import PaymentMethod from "../components/PaymentMethod";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons";
 import useUser from "../hooks/useUser";
 import { useCart } from "../context/CartContext";
 import client from "../client";

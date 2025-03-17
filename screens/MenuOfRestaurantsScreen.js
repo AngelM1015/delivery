@@ -285,7 +285,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   horizontalList: {
-    minHeight: 160,
+    minHeight: 180,
+    maxHeight: 180,
   },
   restaurantCard: {
     width: 120,
@@ -294,7 +295,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 10,
     borderRadius: 8,
-    marginBottom: 30,
   },
   restaurantImage: {
     width: 100,
@@ -315,15 +315,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   menuCard: {
-    flex: 1,
-    margin: 10,
+    marginVertical: 10,
+    marginHorizontal: 2,
     padding: 6,
     borderRadius: 10,
     borderWidth: 0.1,
     shadowOpacity: 0,
     backgroundColor: "#fff",
     elevation: 3,
-    width: 180,
+    width: "180",
   },
   innerCardContainer: {
     overflow: "hidden",
@@ -352,6 +352,7 @@ const styles = StyleSheet.create({
   },
   orderHorizontalList: {
     minHeight: 110,
+    maxHeight: 110,
     marginBottom: 14
   },
   orderItem: {
