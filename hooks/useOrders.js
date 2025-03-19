@@ -59,7 +59,11 @@ const useOrders = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        fetchOrders();
+
+        if(role === 'partner')
+          fetchPartnerPendingOrders();
+        else
+          fetchOrders();
       } catch (error) {
         console.error(`Error performing ${action} on order ${id}:`, error);
       }
