@@ -65,7 +65,7 @@ const PartnerOrderScreen = ({ navigation }) => {
         }}
       >
         <Text style={styles.orderId}>Order ID {item.id}</Text>
-        {item.status === "partner_assigned" && (
+        {item.status === "partner_assigned" || item.status === "picked_up" ? (
           <View
             style={{
               backgroundColor: "#F09B00",
@@ -84,7 +84,7 @@ const PartnerOrderScreen = ({ navigation }) => {
               }
             />
           </View>
-        )}
+        ) : ('')}
       </View>
       <View
         style={{
