@@ -8,14 +8,9 @@ import {
 } from "react-native";
 import {
   Card,
-  Button,
   Text,
-  Modal,
-  Portal,
   Provider,
-  Snackbar,
 } from "react-native-paper";
-import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -90,9 +85,6 @@ const MetricScreen = ({ navigation }) => {
   const { partnerOrders, fetchAllPartnerOrders } = usePartnerOrders();
   const [orders, setOrders] = useState([]);
   const { role } = useUser();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [refreshing, setRefreshing] = useState(false);
@@ -175,22 +167,6 @@ const MetricScreen = ({ navigation }) => {
     }
   };
 
-  const updateOrderStatus = async (id) => {
-    if (!selectedOrderId) return;
-
-    const token = await AsyncStorage.getItem("userToken");
-
-    const response = await axios.put(
-      `${base_url}api/v1/orders/${id}/update_status`,
-      { status: selectedStatus },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
-    setModalVisible(false);
-  };
-
   const chartData = processChartData(orders, role);
 
   const renderItem = ({ item }) => (
@@ -211,19 +187,10 @@ const MetricScreen = ({ navigation }) => {
       {role === "restaurant_owner" && (
         <Card.Actions>
           <Ionicons
-            name="create-outline"
-            size={24}
-            onPress={() => {
-              setModalVisible(true);
-              setSelectedStatus(item.status);
-              setSelectedOrderId(item.id);
-            }}
-          />
-          <Ionicons
             name="information-circle-outline"
             size={24}
             onPress={() =>
-              navigation.navigate("OrderDetailScreen", { orderId: item.id })
+              navigation.navigate("OrderDetails", { orderId: item.id })
             }
           />
         </Card.Actions>
@@ -268,47 +235,6 @@ const MetricScreen = ({ navigation }) => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         />
-        <Portal>
-          <Modal
-            visible={modalVisible}
-            onDismiss={() => setModalVisible(false)}
-          >
-            <Card style={styles.modalContent}>
-              <Card.Title
-                title="Update Order Status"
-                right={(props) => (
-                  <Ionicons
-                    {...props}
-                    name="close"
-                    onPress={() => setModalVisible(false)}
-                  />
-                )}
-              />
-              <Card.Content>
-                <Picker
-                  selectedValue={selectedStatus}
-                  onValueChange={(itemValue) => setSelectedStatus(itemValue)}
-                >
-                  <Picker.Item label="Approved" value="restaurant_approved" />
-                  <Picker.Item label="Delivered" value="delivered" />
-                  <Picker.Item label="Canceled" value="canceled" />
-                </Picker>
-              </Card.Content>
-              <Card.Actions>
-                <Button onPress={() => updateOrderStatus(selectedOrderId)}>
-                  Update Status
-                </Button>
-              </Card.Actions>
-            </Card>
-          </Modal>
-          <Snackbar
-            visible={snackbarVisible}
-            onDismiss={() => setSnackbarVisible(false)}
-            duration={3000}
-          >
-            {snackbarMessage}
-          </Snackbar>
-        </Portal>
       </View>
     </Provider>
   );
