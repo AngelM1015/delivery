@@ -203,7 +203,7 @@ const NewOrderScreen = ({ navigation }) => {
     setModalVisible(true);
   };
 
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = (item) => {
     if (cancellationReason) {
       updateOrderStatus(item.id, "canceled", cancellationReason);
       setModalVisible(false);
@@ -291,7 +291,7 @@ const NewOrderScreen = ({ navigation }) => {
             />
             <RNButton
               title="Confirm Cancel"
-              onPress={handleConfirmCancel}
+              onPress={() => handleConfirmCancel(item)}
               disabled={!cancellationReason}
             />
             <RNButton
