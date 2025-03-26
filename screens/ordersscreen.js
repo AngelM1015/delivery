@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  Button,
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
@@ -15,6 +14,7 @@ import { ProgressBar } from "react-native-paper";
 import { COLORS } from "../constants/colors";
 import useOrders from "../hooks/useOrders";
 import { base_url } from "../constants/api";
+import { Icons } from "../constants/Icons";
 
 const OrdersScreen = ({ navigation }) => {
   const {
@@ -54,8 +54,8 @@ const OrdersScreen = ({ navigation }) => {
 
     const getProgress = () => {
       if (order.status === "restaurant_pending_approval") return 0;
-      if (order.status === "partner_assigned") return 0.5; // First section filled
-      if (order.status === "picked_up") return 1; // Both sections filled
+      if (order.status === "partner_assigned") return 0.5;
+      if (order.status === "picked_up") return 1;
       return 0;
     };
 
@@ -71,7 +71,6 @@ const OrdersScreen = ({ navigation }) => {
     return (
       <TouchableOpacity
         onPress={() => handleOrderClick(order)}
-        style={{ paddingHorizontal: 10 }}
       >
         <View style={styles.orderItem}>
           <View
@@ -205,17 +204,23 @@ const OrdersScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView>
-      <Text
-        style={{
-          color: COLORS.black,
-          fontSize: 20,
-          fontWeight: "bold",
-          margin: 10,
-        }}
-      >
-        Past orders
-      </Text>
+    <SafeAreaView style={{ marginHorizontal: 10 }}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Icons.BackIcon />
+        </TouchableOpacity>
+
+        <Text
+          style={{
+            color: COLORS.black,
+            fontSize: 20,
+            fontWeight: "bold",
+            marginLeft: 10,
+          }}
+        >
+          Past orders
+        </Text>
+      </View>
       <FlatList
         data={orders}
         renderItem={renderOrderItem}
@@ -230,6 +235,10 @@ const OrdersScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   orderItem: {
     padding: 10,
     marginVertical: 8,

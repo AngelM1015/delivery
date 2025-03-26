@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { View } from "react-native";
-import { FAB, Badge } from "react-native-paper";
+import { Badge } from "react-native-paper";
 import MenuOfRestaurantsScreen from "./MenuOfRestaurantsScreen";
 import RestaurantMenuScreen from "./RestaurantMenuScreen";
 import MenuItemDetailScreen from "./MenuItemDetailScreen";
@@ -40,14 +40,14 @@ function MenuStackNavigator() {
   const [isOrderScreenVisible, setOrderScreenVisible] = useState(true);
   const [orderDetails, setOrderDetails] = useState(null);
 
-  const handleOpenOrderScreen = (order) => {
-    setOrderDetails(order);
-    setOrderScreenVisible(true);
-  };
+  // const handleOpenOrderScreen = (order) => {
+  //   setOrderDetails(order);
+  //   setOrderScreenVisible(true);
+  // };
 
-  const handleCloseOrderScreen = () => {
-    setOrderScreenVisible(false);
-  };
+  // const handleCloseOrderScreen = () => {
+  //   setOrderScreenVisible(false);
+  // };
 
   return (
     <>
