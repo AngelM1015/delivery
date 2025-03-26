@@ -130,8 +130,12 @@ const SettingScreen = ({ route }) => {
     );
   };
 
-  const handleLogout = () => {
+  const handleSubmit = () => {
+    if (role === "guest") {
+      navigation.navigate("SignupScreen");
+    } else {
     setModalVisible(true);
+    }
   };
 
   const handleConfirmLogout = async () => {
@@ -151,24 +155,13 @@ const SettingScreen = ({ route }) => {
     }
   };
 
-  const confirmLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Logout", onPress: handleLogout, style: "destructive" },
-      ],
-      { cancelable: true }
-    );
-  };
-
   const profileOptions = [
+    ...(role != "guest" ? [
     {
       icon: <Icons.PersonalData />,
       text: "Personal Data",
       navigateTo: "PersonalData",
-    },
+    }] : []),
     {
       icon: <Icons.SettingsIcon />,
       text: "Settings",
@@ -300,10 +293,14 @@ const SettingScreen = ({ route }) => {
           ))}
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleSubmit}>
           <View style={styles.buttonContent}>
             <Icons.LogoutIcon style={styles.icon} />
+            {role === "guest" ? (
+              <Text style={styles.logoutButtonText}>Sign Up</Text>
+            ) : (
             <Text style={styles.logoutButtonText}>Logout</Text>
+            )}
           </View>
         </TouchableOpacity>
         <Modal

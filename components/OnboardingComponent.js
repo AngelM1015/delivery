@@ -26,11 +26,10 @@ const OnboardingComponent = ({ navigation }) => {
       [
         {
           text: "Skip",
-          onPress: () => navigation.replace("Main", { role: "guest" }),
         },
         {
           text: "Make an Account",
-          onPress: () => navigation.navigate("SettingScreen"),
+          onPress: () => navigation.navigate("SignupScreen"),
         },
       ]
     );

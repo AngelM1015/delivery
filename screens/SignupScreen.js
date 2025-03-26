@@ -11,17 +11,51 @@ import {
 } from "react-native";
 import CustomInput from "../components/CustomInput";
 import CustomButton from "../components/CustomButton";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { base_url, auth } from "../constants/api";
 
-const SignupScreen = ({ navigation }) => {
-  const [fullName, setFullName] = useState("");
+const SignupScreen = ({ navigation, route }) => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { isRoleChanged, setIsRoleChanged } = route?.params;
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     // Handle the sign-up logic here, such as calling an API
-    console.log("Full Name:", fullName);
+      let url = `${base_url}${auth.register}`;
+
+      const response = await axios.post(url, {
+        auth: {
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        password,
+        role: "customer",
+        }
+      });
+
+      if (response.data && response.data.token) {
+        console.log("Sign Up Successful:", response.data);
+
+        await AsyncStorage.setItem("userToken", response.data.token);
+        await AsyncStorage.setItem("userRole", response.data.role);
+        await AsyncStorage.setItem("userId", response.data.user_id.toString());
+        await AsyncStorage.setItem("userEmail", response.data.email);
+        await AsyncStorage.setItem("userName", response.data.name);
+        if(response.data.role === 'partner') AsyncStorage.setItem('status', 'active' ? 'true' : 'false');
+
+        setIsRoleChanged(!isRoleChanged);
+        navigation.replace("Main");
+      } else {
+          Alert.alert("Sign Up Failed", "Try Again");
+      }
+    console.log("Full Name:", firstName);
     console.log("Email:", email);
     console.log("Password:", password);
+    console.log("Role:", response.data.role);
+    console.log("token", response.data.token);
   };
 
   return (
@@ -39,9 +73,14 @@ const SignupScreen = ({ navigation }) => {
 
             <View style={styles.inputContainer}>
               <CustomInput
-                placeholder="Full Name"
-                value={fullName}
-                onChangeText={setFullName}
+                placeholder="First Name"
+                value={firstName}
+                onChangeText={setFirstName}
+              />
+              <CustomInput
+                placeholder="Last Name"
+                value={lastName}
+                onChangeText={setLastName}
               />
               <CustomInput
                 placeholder="Email"

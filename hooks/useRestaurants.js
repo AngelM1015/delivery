@@ -14,8 +14,11 @@ const useRestaurants = () => {
   const RestaurantServiceClient = useMemo(() => {
     if (token) {
       return new RestaurantService(token);
+    } else if (role === "guest") {
+      return new RestaurantService('');
+    } else {
+      return null;
     }
-    return null;
   }, [token]);
 
   const fetchRestaurants = async () => {

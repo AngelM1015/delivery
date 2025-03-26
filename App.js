@@ -178,6 +178,10 @@ function App() {
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen
+                    initialParams={{
+                      setIsRoleChanged: setIsRoleChanged,
+                      isRoleChanged: isRoleChanged,
+                    }}
                     name="SignupScreen"
                     component={SignupScreen}
                     options={{ headerShown: false }}

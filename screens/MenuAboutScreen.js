@@ -35,7 +35,7 @@ const MenuAboutScreen = ({ route, navigation }) => {
         const token = await AsyncStorage.getItem("userToken");
         const headers = { Authorization: `Bearer ${token}` };
         const url = `${base_url}api/v1/restaurants/${restaurantId}/menu_items/${menuItemId}`;
-        const response = await axios.get(url, { headers });
+        const response = await axios.get(url);
         console.log("menu item", response.data);
 
         setMenuItem(response.data.menu_item);
