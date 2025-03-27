@@ -18,7 +18,7 @@ import { GOOGLE_MAPS_API_KEY } from "@env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Locations = ({ isVisible, onClose, onSelectLocation }) => {
-  const { token } = useUser();
+  const { token, role } = useUser();
   const [locations, setLocations] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [newLocation, setNewLocation] = useState("");
@@ -41,6 +41,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
   }, [isVisible]);
 
   const fetchLocations = async () => {
+    if (role === "guest") return;
     try {
       const response = await axios.get(`${base_url}api/v1/addresses`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -84,6 +85,12 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
       : { location: newLocation };
 
     console.log("location data", locationData);
+
+    if(role === 'guest') {
+      saveSelectedLocation(locationData);
+      onSelectLocation(locationData);
+      return;
+    }
 
     try {
       const response = await axios.post(
