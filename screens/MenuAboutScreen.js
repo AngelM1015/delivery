@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   SafeAreaView,
   ActivityIndicator,
+  Alert
 } from "react-native";
 import { Card } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -17,11 +18,13 @@ import { useCart } from "../context/CartContext";
 import { FontAwesome, AntDesign, Ionicons, Fontisto} from "@expo/vector-icons";
 import Header from "../components/Header";
 import Toast from "react-native-toast-message";
+import { UserContext } from "../context/UserContext";
 
 const MenuAboutScreen = ({ route, navigation }) => {
   const { menuItemId, restaurantId, deliveryFee } = route.params;
   const [menuItem, setMenuItem] = useState(null);
-  const [recommendedItems, setRecommendedItems] = useState([]);
+  // const [recommendedItems, setRecommendedItems] = useState([]);
+  const { userRole } = useContext(UserContext);
   const [modifierCounts, setModifierCounts] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [modifiers, setModifiers] = useState([]);
@@ -78,6 +81,11 @@ const MenuAboutScreen = ({ route, navigation }) => {
   }
 
   const handleAddToCart = () => {
+    if(userRole === 'guest')
+    {
+      Alert.alert("You cannot add items to cart. Please sign in to continue.");
+      return;
+    }
     AsyncStorage.setItem("selectedRestaurantId", `${restaurantId}`);
 
     const selectedModifiers = Object.entries(selectedModifierOptions)
