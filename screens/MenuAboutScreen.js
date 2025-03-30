@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,13 +18,13 @@ import { useCart } from "../context/CartContext";
 import { FontAwesome, AntDesign, Ionicons, Fontisto} from "@expo/vector-icons";
 import Header from "../components/Header";
 import Toast from "react-native-toast-message";
-import { UserContext } from "../context/UserContext";
+import useUser from "../hooks/useUser";
 
 const MenuAboutScreen = ({ route, navigation }) => {
   const { menuItemId, restaurantId, deliveryFee } = route.params;
   const [menuItem, setMenuItem] = useState(null);
   // const [recommendedItems, setRecommendedItems] = useState([]);
-  const { userRole } = useContext(UserContext);
+  const { role } = useUser();
   const [modifierCounts, setModifierCounts] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [modifiers, setModifiers] = useState([]);
@@ -81,7 +81,7 @@ const MenuAboutScreen = ({ route, navigation }) => {
   }
 
   const handleAddToCart = () => {
-    if(userRole === 'guest')
+    if(role === 'guest')
     {
       Alert.alert("You cannot add items to cart. Please sign in to continue.");
       return;
@@ -135,6 +135,7 @@ const MenuAboutScreen = ({ route, navigation }) => {
     };
 
     console.log("Item being added to cart:", itemForCart);
+
     if (cartRestaurantId !== menuItem.restaurant_id) {
       clearCart();
       setCartRestaurantId(menuItem.restaurant_id);
@@ -142,10 +143,13 @@ const MenuAboutScreen = ({ route, navigation }) => {
     } else {
       addToCart(itemForCart);
     }
+
+    navigation.navigate("Cart");
+
     Toast.show({
       type: "success",
       text1: "Success!",
-      text2: "Item added to the cart 👋",
+      text2: "Item added to the cart successfully 🎉",
       position: "top",
       visibilityTime: 1000,
     });

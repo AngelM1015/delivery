@@ -30,8 +30,9 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   const [paymentMethod, setPaymentMethod] = useState({});
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [orderType, setOrderType] = useState(null);
-  const [deliveryFee, setDeliveryFee] = useState(null);
+  const [deliveryFee, setDeliveryFee] = useState(0.0);
   const [restaurantDelivery, setRestaurantDelivery] = useState({})
+  const [bigSkyTax, setBigSkyTax] = useState(orderDetails.totalPrice * 0.04);
   const [address, setAddress] = useState({
     id: 0,
     location_name: "",
@@ -150,7 +151,11 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           orderType === "delivery"
             ? address.location_name
             : "",
-        total_price: orderDetails.totalPrice + deliveryFee,
+        total_price: (
+          parseFloat(orderDetails.totalPrice || 0) +
+          parseFloat(bigSkyTax || 0) +
+          parseFloat(deliveryFee || 0)
+        ).toFixed(2),
         delivery_fee: deliveryFee,
         payment_method_id: paymentMethod.id,
         address_id: address.id,
@@ -213,7 +218,9 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
                   <Text style={styles.itemName}>
                     {item.name || "Unknown Item"}
                   </Text>
-                  <Text style={styles.itemPrice}>${item.price || "0.00"}</Text>
+                  <Text style={styles.itemPrice}>
+                    ${parseFloat(item.price || 0).toFixed(2)}
+                  </Text>
                 </View>
                 <Text style={styles.itemQuantity}>
                   {item.quantity || 1} items
@@ -229,15 +236,17 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           <Text style={styles.subHeader}>Details Transaction</Text>
           <View style={styles.transactionDetails}>
             <View style={styles.transactionRow}>
-              <Text style={styles.detailText}>Cherry Healthy</Text>
+              <Text style={styles.detailText}>Big Sky Tax 4%</Text>
               <Text style={styles.detailAmount}>
-                ${orderDetails.cherryHealthyPrice || "0.00"}
+                ${bigSkyTax.toFixed(2)}
               </Text>
             </View>
             {deliveryFee > 0 && (
               <View style={styles.transactionRow}>
                 <Text style={styles.detailText}>Driver</Text>
-                <Text style={styles.detailAmount}>$20.00</Text>
+                <Text style={styles.detailAmount}>
+                  ${parseFloat(deliveryFee).toFixed(2)}
+                </Text>
               </View>
             )}
 
@@ -250,7 +259,11 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
             <View style={styles.transactionRow}>
               <Text style={styles.totalText}>Total Price</Text>
               <Text style={styles.totalAmount}>
-                ${orderDetails.totalPrice + deliveryFee || "0.00"}
+              ${(
+                parseFloat(orderDetails.totalPrice || 0) +
+                parseFloat(bigSkyTax || 0) +
+                parseFloat(deliveryFee || 0)
+              ).toFixed(2)}
               </Text>
             </View>
           </View>

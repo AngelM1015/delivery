@@ -254,7 +254,7 @@ function App() {
                 </Stack.Navigator>
               </CartProvider>
             </UserProvider>
-            {/* <Toast ref={(ref) => Toast.setRef(ref)} /> */}
+            <Toast ref={(ref) => Toast.setRef(ref)} />
           </NavigationContainer>
         </PaperProvider>
       </StripeProvider>

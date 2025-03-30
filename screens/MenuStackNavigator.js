@@ -11,11 +11,13 @@ import { useCart } from "../context/CartContext";
 import AddPaymentMethodScreen from "./AddPaymentMethodScreen";
 import OngoingOrderScreen from "./OngoingOrderScreen";
 import ChatScreen from "./ChatScreen";
+import MenuAboutScreen from "./MenuAboutScreen";
 
 const MenuStack = createStackNavigator();
 
 const CartIcon = ({ navigation }) => {
   const { cartItems } = useCart();
+  console.log("cart icon");
 
   return (
     <View style={{ position: "absolute", bottom: 20, right: 20 }}>
@@ -37,17 +39,6 @@ const CartIcon = ({ navigation }) => {
 };
 
 function MenuStackNavigator() {
-  const [isOrderScreenVisible, setOrderScreenVisible] = useState(true);
-  const [orderDetails, setOrderDetails] = useState(null);
-
-  // const handleOpenOrderScreen = (order) => {
-  //   setOrderDetails(order);
-  //   setOrderScreenVisible(true);
-  // };
-
-  // const handleCloseOrderScreen = () => {
-  //   setOrderScreenVisible(false);
-  // };
 
   return (
     <>
@@ -55,10 +46,6 @@ function MenuStackNavigator() {
         <MenuStack.Screen
           name="MenuOfRestaurantsScreen"
           component={MenuOfRestaurantsScreen}
-          options={({ navigation }) => ({
-            headerLeft: () => null,
-            headerRight: () => <CartIcon navigation={navigation} />,
-          })}
         />
         <MenuStack.Screen
           name="OngoingOrderScreen"
@@ -73,14 +60,12 @@ function MenuStackNavigator() {
         <MenuStack.Screen
           name="RestaurantMenuScreen"
           component={RestaurantMenuScreen}
-          options={({ navigation }) => ({
-            headerRight: () => <CartIcon navigation={navigation} />,
-          })}
         />
         <MenuStack.Screen
-          name="MenuItemDetailScreen"
-          component={MenuItemDetailScreen}
+          name="MenuAboutScreen"
+          component={MenuAboutScreen}
           options={({ navigation }) => ({
+            headerLeft: () => null,
             headerRight: () => <CartIcon navigation={navigation} />,
           })}
         />

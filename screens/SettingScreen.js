@@ -6,7 +6,6 @@ import {
   Alert,
   TouchableOpacity,
   Image,
-  FlatList,
   ScrollView,
   Platform,
   Modal,
@@ -17,14 +16,12 @@ import { Icons } from "../constants/Icons";
 import { COLORS } from "../constants/colors";
 import { base_url, orders } from "../constants/api";
 import useUser from "../hooks/useUser";
-import useOrders from "../hooks/useOrders";
 import useOrder from "../hooks/useOrder";
 
 const SettingScreen = ({ route }) => {
   const navigation = useNavigation();
 
   const { role, userEmail, userName } = useUser();
-  // const { orders, fetchOrders } = useOrders();
   const { lastOrder, fetchLastOrder } = useOrder();
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -210,96 +207,127 @@ const SettingScreen = ({ route }) => {
           )}
         </>
       )} */}
-        <View style={styles.header}>
-          <Text style={styles.settingText}>Profile Setting</Text>
-          <Image
-            source={require("../assets/images/icon.png")}
-            style={styles.profileImage}
-          />
-          <View style={{ marginTop: 15 }}>
-            <Text style={styles.name}>{userName}</Text>
-            <Text style={styles.email}>{userEmail}</Text>
-          </View>
-        </View>
-        {role === "customer" && (
-          <View style={styles.ordersContainer}>
-            <View style={styles.ordersHeader}>
-              <Text style={styles.ordersHeaderText}>My Orders</Text>
-              <TouchableOpacity onPress={() => navigation.navigate("Orders")}>
-                <Text style={styles.ordersToggleText}>See All</Text>
-              </TouchableOpacity>
+      {role != "guest" ? (
+        <>
+          <View style={styles.header}>
+            <Text style={styles.settingText}>Profile Setting</Text>
+            <Image
+              source={require("../assets/images/icon.png")}
+              style={styles.profileImage}
+            />
+            <View style={{ marginTop: 15 }}>
+              <Text style={styles.name}>{userName}</Text>
+              <Text style={styles.email}>{userEmail}</Text>
             </View>
-            {lastOrder ?
-              renderOrderItem()
-             : (
-              <Text>
-                No Order Available
-              </Text>
-            )}
+          </View>
+          {role === "customer" && (
+            <View style={styles.ordersContainer}>
+              <View style={styles.ordersHeader}>
+                <Text style={styles.ordersHeaderText}>My Orders</Text>
+                <TouchableOpacity onPress={() => navigation.navigate("Orders")}>
+                  <Text style={styles.ordersToggleText}>See All</Text>
+                </TouchableOpacity>
+              </View>
+              {lastOrder ?
+                renderOrderItem()
+              : (
+                <Text>
+                  No Order Available
+                </Text>
+              )}
+            </View>
+          )}
+
+          <View style={styles.separator}></View>
+
+          <Text style={{ marginLeft: 20, paddingTop: 10 }}>Profile</Text>
+          <View style={styles.profileOptionsContainer}>
+            {profileOptions.map((option) => (
+              <TouchableOpacity
+                key={option.text}
+                style={styles.profileOption}
+                onPress={() => navigation.navigate(option.navigateTo)}
+              >
+                {option.icon}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    width: "90%",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={styles.profileOptionText}>{option.text}</Text>
+                  <Icons.GotoIcon />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={{ marginLeft: 20, paddingTop: 10 }}>Support</Text>
+          <View style={styles.profileOptionsContainer}>
+            {support.map((option) => (
+              <TouchableOpacity
+                key={option.text}
+                style={styles.profileOption}
+                onPress={() =>
+                  Alert.alert(
+                    "This feature is currently unavailable, it will be added soon!"
+                  )
+                }
+              >
+                {option.icon}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    width: "90%",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={styles.profileOptionText}>{option.text}</Text>
+                  <Icons.GotoIcon />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+          </>
+        ) : (
+          <View style={{ flexDirection: "column", gap: 25 }}>
+            <Image
+              source={require("../assets/images/emptyCart.png")}
+              style={{ alignSelf: "center", height: '75%' }}
+              resizeMode="contain"
+            />
+            <Text
+              style={{
+                fontWeight: "bold",
+                fontSize: 26,
+                textAlign: "center",
+              }}
+            >
+              {" "}
+              Ouch! Hungry
+            </Text>
+            <Text style={styles.displayMessage}>
+              Seems like you have not ordered any food yet
+            </Text>
           </View>
         )}
 
-        <View style={styles.separator}></View>
-
-        <Text style={{ marginLeft: 20, paddingTop: 10 }}>Profile</Text>
-        <View style={styles.profileOptionsContainer}>
-          {profileOptions.map((option) => (
-            <TouchableOpacity
-              key={option.text}
-              style={styles.profileOption}
-              onPress={() => navigation.navigate(option.navigateTo)}
-            >
-              {option.icon}
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  width: "90%",
-                  alignItems: "center",
-                }}
-              >
-                <Text style={styles.profileOptionText}>{option.text}</Text>
-                <Icons.GotoIcon />
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={{ marginLeft: 20, paddingTop: 10 }}>Support</Text>
-        <View style={styles.profileOptionsContainer}>
-          {support.map((option) => (
-            <TouchableOpacity
-              key={option.text}
-              style={styles.profileOption}
-              onPress={() =>
-                Alert.alert(
-                  "This feature is currently unavailable, it will be added soon!"
-                )
-              }
-            >
-              {option.icon}
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  width: "90%",
-                  alignItems: "center",
-                }}
-              >
-                <Text style={styles.profileOptionText}>{option.text}</Text>
-                <Icons.GotoIcon />
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity style={styles.logoutButton} onPress={handleSubmit}>
+        <TouchableOpacity
+          style={[
+            styles.logoutButton,
+            role === 'guest' && { position: 'absolute', bottom: 4 },
+          ]}
+          onPress={handleSubmit}
+        >
           <View style={styles.buttonContent}>
             <Icons.LogoutIcon style={styles.icon} />
             {role === "guest" ? (
-              <Text style={styles.logoutButtonText}>Sign Up</Text>
+              <Text style={styles.logoutButtonText}>Register To Order Food</Text>
             ) : (
-            <Text style={styles.logoutButtonText}>Logout</Text>
+              <Text style={styles.logoutButtonText}>Logout</Text>
             )}
           </View>
         </TouchableOpacity>
@@ -589,6 +617,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     flex: 1,
     marginLeft: 5,
+  },
+  displayMessage: {
+    textAlign: "center",
+    margin: "auto",
+    fontSize: 16,
+    color: "gray",
+    maxWidth: "70%",
   },
 });
 

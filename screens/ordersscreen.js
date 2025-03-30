@@ -15,6 +15,7 @@ import { COLORS } from "../constants/colors";
 import useOrders from "../hooks/useOrders";
 import { base_url } from "../constants/api";
 import { Icons } from "../constants/Icons";
+import { max } from "moment";
 
 const OrdersScreen = ({ navigation }) => {
   const {
@@ -216,6 +217,8 @@ const OrdersScreen = ({ navigation }) => {
             fontSize: 20,
             fontWeight: "bold",
             marginLeft: 10,
+            minWidth: "80%",
+            textAlign: "center",
           }}
         >
           Past orders
@@ -238,6 +241,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
+    marginVertical: 8
   },
   orderItem: {
     padding: 10,
