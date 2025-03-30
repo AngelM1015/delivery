@@ -1,9 +1,12 @@
+// we are no longer using this screen, we are using menuOfRestaurantScreen.js instead --- saad
+
 import React, { useState, useEffect } from "react";
 import { FlatList } from "react-native";
 import { Card, Title, Paragraph, Searchbar } from "react-native-paper";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { base_url } from "../constants/api";
+
 const RestaurantMenuScreen = ({ route, navigation }) => {
   const { restaurantId } = route.params;
   const [menuItems, setMenuItems] = useState([]);

@@ -112,8 +112,9 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
     return (
       <TouchableOpacity
         style={styles.orderItem}
-        onPress={() =>
-          navigation.navigate("OngoingOrderScreen", { id: item.id })
+        onPress={() => statusText == "In Progress" ?
+          navigation.navigate("OngoingOrder" , { id: item.id }) :
+          navigation.navigate("OrderDetails", { orderId: item.id })
         }
       >
         <View

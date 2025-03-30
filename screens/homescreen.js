@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import {
   View,
   Text,
@@ -25,17 +25,19 @@ import { GOOGLE_MAPS_API_KEY } from "@env";
 import axios from "axios";
 import useAddress from "../hooks/useAddress";
 import { useFocusEffect } from '@react-navigation/native';
+import useUser from "../hooks/useUser";
+import { UserContext } from "../context/UserContext";
 
 const HomeScreen = ({ navigation }) => {
   const {
-    loading,
     restaurants,
     menuItems,
     selectedRestaurant,
     setSelectedRestaurant,
     fetchRestaurants,
-    fetchMenuItems,
   } = useRestaurants();
+  const { role: userRole } = useUser();
+  // const { userRole } = useContext(UserContext);
   const {addresses, addAddress} = useAddress();
   const [searchQuery, setSearchQuery] = useState("");
   const [backgroundIndex, setBackgroundIndex] = useState(0);
@@ -57,6 +59,7 @@ const HomeScreen = ({ navigation }) => {
   });
 
   useEffect(() => {
+    // console.log('user role in home screen', userRole);
     const getLocation = async () => {
       try {
         const location = await AsyncStorage.getItem("location");
@@ -287,9 +290,19 @@ const HomeScreen = ({ navigation }) => {
                 <Icons.NotificationIcon />
               </TouchableOpacity>
             </View>
-            <Text style={styles.subtitle}>
-              Provide the best {"\n"}food for you
-            </Text>
+            <View style={styles.title}>
+              <Text style={styles.subtitle}>
+                Provide the best {"\n"}food for you
+              </Text>
+              { userRole === 'guest' && (
+                <TouchableOpacity
+                  style={styles.signUpButton}
+                  onPress={() => navigation.navigate("SignupScreen")}
+                >
+                  <Text style={styles.signUpText}>Create Account</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </ImageBackground>
       </Animated.View>
@@ -362,10 +375,35 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     marginLeft: 5,
   },
+  title: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    top: 25,
+
+  },
   subtitle: {
     fontSize: 32,
     color: COLORS.white,
-    top: 25,
+  },
+  signUpButton: {
+    padding: 8,
+    backgroundColor: "#F09B00",
+    alignSelf: "center",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 4,
+      height: 4,
+    },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 5,
+  },
+  signUpText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    textAlign: "center",
   },
   horizontalListContainer: {
     marginTop: 5,

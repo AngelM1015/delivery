@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, FlatList } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { base_url } from "../constants/api";
+import { Icons } from "../constants/Icons";
 
-const OrderDetailScreen = ({ route }) => {
+const OrderDetailScreen = ({ navigation, route }) => {
   const { orderId } = route.params;
   const [orderDetails, setOrderDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,7 +61,14 @@ const OrderDetailScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Order Details</Text>
+      <View
+        style={styles.header}
+      >
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Icons.BackIcon />
+        </TouchableOpacity>
+        <Text style={styles.title}>Order Details</Text>
+      </View>
 
       <View style={styles.detailRow}>
         <Text style={styles.keyText}>Order ID:</Text>
@@ -124,11 +132,16 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     marginTop: '5%'
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 8
+    },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
     textAlign: "center",
+    minWidth: "80%"
   },
   detailRow: {
     marginBottom: 10,

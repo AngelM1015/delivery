@@ -60,8 +60,6 @@ const OrderStackNavigator = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="CartScreen" component={CartScreen} />
     <Stack.Screen name="MenuCheckoutScreen" component={MenuCheckoutScreen} />
-    <Stack.Screen name="ChatScreen" component={ChatScreen} />
-    <Stack.Screen name="OrderDetailScreen" component={OrderDetailScreen} />
   </Stack.Navigator>
 );
 
@@ -167,12 +165,12 @@ const MainTabNavigator = ({ role = "guest" }) => {
         {["customer", "guest"].includes(role) && (
           <Tab.Screen name="Home" component={HomeScreen} />
         )}
-        {["guest"].includes(role) && (
+        {["customer", "guest"].includes(role) && (
           <Tab.Screen name="Browse" component={MenuOfRestaurantsScreen} />
         )}
-        {["customer"].includes(role) && (
+        {/* {["customer"].includes(role) && (
           <Tab.Screen name="Browse" component={MenuStackNavigator} />
-        )}
+        )} */}
         {["customer", "partner"].includes(role) && (
           <Tab.Screen
             name="Cart"
