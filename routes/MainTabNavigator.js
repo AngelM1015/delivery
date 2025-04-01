@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,6 +21,8 @@ import { Badge } from "react-native-paper";
 import { useCart } from "../context/CartContext";
 import OngoingOrderDrawer from "../components/OngoingOrderDrawer";
 import NewOrderScreen from "../screens/NewOrderScreen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { UserContext } from "../context/UserContext";
 
 const themeColors = {
   activeTintColor: "#F09B00",
@@ -104,11 +106,38 @@ const getTabBarIcon = (role, route, focused) => {
       Account: focused ? "person" : "person-outline",
     },
   };
-  return iconMap[role][route.name] || "alert-circle-outline";
+  return iconMap[role]?.[route.name] || "alert-circle-outline";
 };
 
-const MainTabNavigator = ({ role = "guest" }) => {
+const MainTabNavigator = ({ route }) => {
   const { cartItems } = useCart();
+  const { userRole } = useContext(UserContext);
+  const [role, setRole] = useState(route?.params?.role || "guest");
+
+  // Sync role with context and AsyncStorage
+  useEffect(() => {
+    const syncRole = async () => {
+      try {
+        // If userRole from context is available and different, use it
+        if (userRole && userRole !== role) {
+          console.log("Using role from context:", userRole);
+          setRole(userRole);
+          return;
+        }
+        
+        // Otherwise try to get from AsyncStorage
+        const storedRole = await AsyncStorage.getItem("userRole");
+        if (storedRole && storedRole !== role) {
+          console.log("Using role from AsyncStorage:", storedRole);
+          setRole(storedRole);
+        }
+      } catch (error) {
+        console.error("Error syncing role:", error);
+      }
+    };
+    
+    syncRole();
+  }, [userRole]); // Only re-run when userRole changes
 
   return (
     <View style={{ flex: 1 }}>

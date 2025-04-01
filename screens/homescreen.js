@@ -145,37 +145,53 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const setCurrentLocation = async () => {
-    const currentLocation = await Location.getCurrentPositionAsync();
-
     try {
+      // Try to get current location
+      const currentLocation = await Location.getCurrentPositionAsync();
+      
       const currentLat = currentLocation.coords.latitude;
       const currentLng = currentLocation.coords.longitude;
-
+      
       for (const address of addresses) {
         const isWithinRadius = await checkProximity(
           { lat: currentLat, lng: currentLng },
           { lat: address.latitude, lng: address.longitude }
         );
-
+        
         if (isWithinRadius) {
           console.log('Address within 50 meters:', address);
           setSelectedLocation(address);
           await AsyncStorage.setItem("location", JSON.stringify(address));
-
           return;
         }
       }
-
+      
       console.log('current location lat and long in home screen ', { lat: currentLat, long: currentLng});
       const newAddress = await addAddress(currentLat, currentLng);
       setSelectedLocation(newAddress);
       await AsyncStorage.setItem("location", JSON.stringify(newAddress));
-
-      console.log('No addresses within 50 meters of the current location.');
-    } catch (error) {
-      console.error('Error fetching addresses:', error);
+      
+    } catch (locationError) {
+      console.log('Error getting current location:', locationError);
+      
+      // Instead of using default location, check if we have any saved addresses
+      if (addresses.length > 0) {
+        // Use the most recent saved address
+        const mostRecentAddress = addresses[0];
+        console.log('Using most recent saved address:', mostRecentAddress);
+        setSelectedLocation(mostRecentAddress);
+        await AsyncStorage.setItem("location", JSON.stringify(mostRecentAddress));
+      } else {
+        // If no addresses available, prompt user to enter location manually
+        setLocationModalVisible(true);
+        Alert.alert(
+          "Location Required",
+          "We couldn't access your current location. Please select a delivery location manually.",
+          [{ text: "OK" }]
+        );
+      }
     }
-  };
+  };  
 
   const checkProximity = async (currentLocation, savedLocation) => {
     const url = `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${currentLocation.lat},${currentLocation.lng}&destinations=${savedLocation.lat},${savedLocation.lng}&key=${GOOGLE_MAPS_API_KEY}`;

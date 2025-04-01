@@ -33,7 +33,7 @@ const DashboardScreen = () => {
     try {
       const currentLocation = await Location.getCurrentPositionAsync();
       console.log("location fetched: ", currentLocation.coords);
-
+  
       if (subscription && typeof subscription.sendLocation === "function") {
         subscription.sendLocation({ location: currentLocation.coords });
         console.log("location sent: ", currentLocation.coords);
@@ -43,7 +43,7 @@ const DashboardScreen = () => {
     } catch (error) {
       console.error("Error sending location to backend:", error);
     }
-  };
+  };  
 
   useEffect(() => {
     const fetchRoleAndData = async () => {

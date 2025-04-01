@@ -45,13 +45,12 @@ const restaurant_owner3 = {
 const LoginScreen = ({ navigation }) => {
   // DEFENSIVE: Safely access context values with default fallbacks
   const contextValue = useContext(UserContext) || {};
-  const { 
-    setUserRole = () => {}, 
-    setUserId = () => {}, 
-    isRoleChanged = false, 
-    setIsRoleChanged = () => {} 
+  const {
+    setUserRole = () => {},
+    setUserId = () => {},
+    isRoleChanged = false,
+    setIsRoleChanged = () => {}
   } = contextValue;
-  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -61,7 +60,6 @@ const LoginScreen = ({ navigation }) => {
       Alert.alert("Login Error", "Please enter both email and password");
       return;
     }
-    
     try {
       console.log(`email ${email}`);
       let url = `${base_url}${auth.login}`;
@@ -82,7 +80,6 @@ const LoginScreen = ({ navigation }) => {
           await AsyncStorage.setItem("userId", (response.data.user_id || "").toString());
           await AsyncStorage.setItem("userEmail", response.data.email || "");
           await AsyncStorage.setItem("userName", response.data.name || "");
-          
           // DEFENSIVE: Check role before setting partner status
           if (response.data.role === 'partner') {
             const isActive = !!response.data.active; // Convert to boolean
@@ -97,11 +94,9 @@ const LoginScreen = ({ navigation }) => {
         if (typeof setUserRole === 'function') {
           setUserRole(response.data.role || "guest");
         }
-        
         if (typeof setUserId === 'function') {
           setUserId((response.data.user_id || "").toString());
         }
-        
         if (typeof setIsRoleChanged === 'function') {
           setIsRoleChanged(!isRoleChanged);
         }
@@ -120,7 +115,6 @@ const LoginScreen = ({ navigation }) => {
       console.log("Error details:", error);
       console.log("Error response:", error?.response);
       console.log("Error message:", error?.message);
-      
       // DEFENSIVE: Safely extract error message
       let errorMessage = "An error occurred. Please try again.";
       if (error?.response?.data?.error) {
@@ -128,7 +122,6 @@ const LoginScreen = ({ navigation }) => {
       } else if (error?.message?.includes("Network")) {
         errorMessage = "Network error. Please check your connection.";
       }
-      
       Alert.alert("Login Error", errorMessage);
     }
   };
@@ -141,7 +134,6 @@ const LoginScreen = ({ navigation }) => {
       Alert.alert("Error", "Customer login information is missing");
     }
   };
-  
   const loginAsAdmin = () => {
     // DEFENSIVE: Check if admin object is valid
     if (admin?.email && admin?.password) {
@@ -150,7 +142,6 @@ const LoginScreen = ({ navigation }) => {
       Alert.alert("Error", "Admin login information is missing");
     }
   };
-  
   const loginAsPartner = () => {
     // DEFENSIVE: Check if partner object is valid
     if (partner?.email && partner?.password) {
@@ -159,7 +150,6 @@ const LoginScreen = ({ navigation }) => {
       Alert.alert("Error", "Partner login information is missing");
     }
   };
-  
   const loginAsRestaurantOwner1 = () => {
     // DEFENSIVE: Check if restaurant_owner1 object is valid
     if (restaurant_owner1?.email && restaurant_owner1?.password) {
@@ -168,7 +158,6 @@ const LoginScreen = ({ navigation }) => {
       Alert.alert("Error", "Restaurant owner 1 login information is missing");
     }
   };
-  
   const loginAsRestaurantOwner3 = () => {
     // DEFENSIVE: Check if restaurant_owner3 object is valid
     if (restaurant_owner3?.email && restaurant_owner3?.password) {

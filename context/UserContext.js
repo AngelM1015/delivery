@@ -1,58 +1,45 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAuth } from "../authContext";
 
 export const UserContext = createContext(null);
 
 export const UserProvider = ({ children }) => {
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState("guest");
-  const [userName, setUserName] = useState(null);
-  const [userEmail, setUserEmail] = useState(null);
-  
-  // Get auth state from AuthContext
-  const { isSignedIn, isLoading } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Reset user state when auth state changes
+  // Load user data on mount
   useEffect(() => {
-    if (!isLoading) {
-      if (!isSignedIn) {
-        // Reset to default state when logged out
-        resetUserState();
-      } else {
-        // Fetch user data when logged in
-        fetchUserData();
+    const fetchUserData = async () => {
+      try {
+        const storedUserId = await AsyncStorage.getItem("userId");
+        const storedUserRole = await AsyncStorage.getItem("userRole");
+        console.log("UserContext loading - userRole:", storedUserRole, "userId:", storedUserId);
+        
+        if (storedUserId) {
+          setUserId(storedUserId);
+        }
+        
+        if (storedUserRole) {
+          setUserRole(storedUserRole);
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-  }, [isSignedIn, isLoading]);
+    };
 
-  // Reset all user state to defaults
-  const resetUserState = () => {
-    setUserId(null);
-    setUserRole("guest");
-    setUserName(null);
-    setUserEmail(null);
-  };
+    fetchUserData();
+  }, []);
 
-  // Fetch user data from AsyncStorage
-  const fetchUserData = async () => {
-    try {
-      const storedUserId = await AsyncStorage.getItem("userId");
-      const storedUserRole = await AsyncStorage.getItem("userRole");
-      const storedUserName = await AsyncStorage.getItem("userName");
-      const storedUserEmail = await AsyncStorage.getItem("userEmail");
-      
-      console.log("in context user, userRole is: ", storedUserRole);
-      
-      if (storedUserId) setUserId(storedUserId);
-      if (storedUserRole) setUserRole(storedUserRole);
-      if (storedUserName) setUserName(storedUserName);
-      if (storedUserEmail) setUserEmail(storedUserEmail);
-      
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      // If there's an error, reset to defaults
-      resetUserState();
+  // Enhanced role setter that also updates AsyncStorage
+  const updateUserRole = async (role) => {
+    console.log("Setting user role to:", role);
+    setUserRole(role);
+    
+    if (role) {
+      await AsyncStorage.setItem("userRole", role);
     }
   };
 
@@ -62,20 +49,11 @@ export const UserProvider = ({ children }) => {
         userId, 
         setUserId, 
         userRole, 
-        setUserRole,
-        userName,
-        setUserName,
-        userEmail,
-        setUserEmail,
-        resetUserState
+        setUserRole: updateUserRole,
+        isLoading 
       }}
     >
       {children}
     </UserContext.Provider>
   );
 };
-
-// Custom hook for using user context
-export const useUser = () => useContext(UserContext);
-
-export default UserContext;
