@@ -3,12 +3,15 @@ import {
   View,
   Text,
   Image,
+  Linking,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   Alert,
   ActivityIndicator
 } from "react-native";
+import LottieView from 'lottie-react-native';
+import * as Location from 'expo-location';
 import CustomButton from "../components/CustomButton";
 import Header from "../components/Header";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -40,6 +43,8 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
     longitude: 0,
   });
   const [showPaymentMethodsModal, setShowPaymentMethodsModal] = useState(false);
+
+  const [isFeatureTypeSelected, setIsFeatureTypeSelected] = useState(false);
 
   const deliveryDetails = {
     name: userName,
@@ -125,6 +130,40 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
     setOrderType(value);
   };
 
+  const requestLocationPermissions = async () => {
+    const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
+    if (foregroundStatus !== 'granted') {
+      Alert.alert(
+        "Permission Denied",
+        "You need to grant location permissions to place an order."
+      );
+      return;
+    }
+    
+    // Then in your function:
+    const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
+    if (backgroundStatus !== 'granted') {
+      Alert.alert(
+        "Background Location Required",
+        "To find drivers while you're not using the app, please set to [Always] background location must be granted.",
+        [
+          {
+            text: "Cancel",
+            style: "cancel"
+          },
+          {
+            text: "Open Settings",
+            onPress: () => {
+              // This will open the app settings on iOS or app details on Android
+              Linking.openSettings();
+            }
+          }
+        ]
+      );
+      return;
+    }
+  };
+
   const submitOrder = async () => {
     if (!orderType || paymentMethod.length < 1) {
       Alert.alert("Error", "Please select an order type and payment method");
@@ -134,6 +173,29 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
     if (orderType === "delivery" && deliveryDetails.address === "") {
       Alert.alert("Error", "Please add delivery address");
       return;
+    }
+
+    if (orderType === "delivery") {
+      const { status: foregroundStatus } = await Location.getForegroundPermissionsAsync();
+      const { status: backgroundStatus } = await Location.getBackgroundPermissionsAsync();
+      
+      if (foregroundStatus !== 'granted' || backgroundStatus !== 'granted') {
+        Alert.alert(
+          "Location Permission Required",
+          "To find drivers while you're not using the app, background location must be granted.",
+          [
+            {
+              text: "Cancel",
+              style: "cancel"
+            },
+            {
+              text: "Enable Location",
+              onPress: requestLocationPermissions
+            }
+          ]
+        );
+        return;
+      }
     }
 
     console.log("payment method", paymentMethod);
@@ -298,26 +360,37 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
                 styles.orderType,
                 orderType === "delivery" && styles.selectedOrderType,
               ]}
-              onPress={() => orderTypeSelection("delivery")}
+              onPress={() => {
+                orderTypeSelection("delivery");
+                setIsFeatureTypeSelected(true);
+              }}
             >
-              <Image
-                source={require("../assets/images/delivery.png")}
-                style={{ height: 50, width: 50 }}
+              <LottieView 
+                source={require("./../assets/lottie-images/Order-On-The-Way.json")}
+                autoPlay={orderType === "delivery"}
+                loop={false}
+                style={{ height: 120, width: 120 }}
               />
-              <Text>delivery</Text>
+              <Text>DELIVERY ORDER</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               style={[
                 styles.orderType,
                 orderType === "pickup" && styles.selectedOrderType,
               ]}
-              onPress={() => orderTypeSelection("pickup")}
+              onPress={() => {
+                orderTypeSelection("pickup");
+                setIsFeatureTypeSelected(true);
+              }}
             >
-              <Image
-                source={require("../assets/images/take-away.png")}
-                style={{ height: 50, width: 50 }}
+              <LottieView 
+                source={require("./../assets/lottie-images/Ready-Food-Order.json")}
+                autoPlay={orderType === "pickup"}
+                loop={false}
+                style={{ height: 120, width: 120 }}
               />
-              <Text>pickup</Text>
+              <Text>PICK-UP ORDER</Text>
             </TouchableOpacity>
           </View>
         </View>

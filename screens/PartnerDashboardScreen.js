@@ -202,34 +202,39 @@ const DashboardScreen = () => {
             />
           </View>
           <ScrollView style={styles.newOrdersContainer}>
-            {newOrders.map((order) => (
-              <View key={order.order_id} style={styles.newOrderCard}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                  <Text style={styles.orderIdText}> {`Order # ${order.order_id}`}</Text>
-                  <View style={{ flexDirection: "row", gap: 2 }}>
-                    <Text style={{ fontSize: 16, fontWeight: "bold" }}> Price: </Text>
-                    <Text style={styles.priceText}> {`$${order.price}`} </Text>
-                  </View>
+          {newOrders.map((order) => (
+            <View key={order.order_id} style={styles.newOrderCard}>
+              <View style={styles.orderHeader}>
+                <Text style={styles.orderIdText}>{`Order # ${order.order_id}`}</Text>
+                <View style={styles.priceContainer}>
+                  <Text style={styles.priceLabel}>Price: </Text>
+                  <Text style={styles.priceText}>{`$${order.price}`}</Text>
                 </View>
-                <View style={{ flexDirection: "column", gap: 2, alignItems: "center" }}>
-                  <Text style={{ fontSize: 16, fontWeight: "bold" }}> Order For </Text>
-                  <Text style={{fontSize: 24, fontWeight: "bold", color: "#F09B00"}}>{order.restaurant_name}</Text>
-                </View>
-                <View style={{ flexDirection: "row", gap: 2, marginTop: 10 }}>
-                  <Text style={{ fontSize: 16, fontWeight: "bold" }}> Delivery Address:</Text>
-                  <Text style={styles.deliveryAddressText}> {order.delivery_address}</Text>
-                </View>
-                <Button
-                  mode="contained"
-                  onPress={() => handleAcceptOrder(order.order_id)}
-                  style={styles.acceptButton}
-                  labelStyle={styles.acceptButtonText}
-                >
-                  Accept order
-                </Button>
               </View>
-            ))}
-          </ScrollView>
+
+              <View style={styles.orderForContainer}>
+                <Text style={styles.orderForLabel}>Order For</Text>
+                <Text style={styles.orderForValue}>{order.restaurant_name}</Text>
+              </View>
+
+              <View style={styles.addressContainer}>
+                <Text style={styles.deliveryAddressContainer}>
+                  <Text style={styles.deliveryAddressLabel}>Delivery Address: </Text>
+                  {order.delivery_address}
+                </Text>
+              </View>
+
+              <Button
+                mode="contained"
+                onPress={() => handleAcceptOrder(order.order_id)}
+                style={styles.acceptButton}
+                labelStyle={styles.acceptButtonText}
+              >
+                Accept order
+              </Button>
+            </View>
+          ))}
+        </ScrollView>
           <View style={styles.footer}>
             <View style={styles.orderGroups}>
               <Text style={styles.canceledOrders}> {canceledOrders} Cancel</Text>
@@ -270,12 +275,11 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 40,
     backgroundColor: "#f0f0f0",
-    padding: 4
+    padding: 4,
   },
   activeContainer: {
-    display: "flex",
-    justifyContent: "space-between",
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     padding: 8,
     backgroundColor: "#f0f0f0",
@@ -310,27 +314,77 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { height: 4 },
     shadowOpacity: 0.15,
-    padding: 10,
+    padding: 12,
   },
-  deliveryAddressText: {
-    fontSize: 14,
-    color: "grey",
-    maxWidth: "70%"
+  orderHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
   },
-  orderIdText:{
+  orderIdText: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#F09B00",
+  },
+  priceContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  priceLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  priceText: {
+    fontWeight: "bold",
+    fontSize: 18,
+    color: "red",
+  },
+  orderForContainer: {
+    paddingVertical: 12,
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  orderForLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  orderForValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#F09B00",
+  },
+  addressContainer: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
+  deliveryAddressContainer: {
+    fontSize: 14,
+    color: "grey",
+    lineHeight: 20,
+  },
+  deliveryAddressLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#000",
   },
   acceptButton: {
     flex: 1,
     marginHorizontal: 'auto',
     backgroundColor: "#F09B00",
-    marginTop: 10
+    marginTop: 12,
+    paddingVertical: 8, // ↓ was 12
+    borderRadius: 8, // Optional: tighter rounding
   },
   acceptButtonText: {
     color: "#fff",
-  },
+    fontWeight: "bold",
+    paddingVertical: 6,
+    fontSize: 15    
+  },  
   footer: {
     backgroundColor: "#FFF",
     padding: 20,
@@ -361,11 +415,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
-  },
-  priceText: {
-    fontWeight: "bold",
-    fontSize: 18,
-    color: "red",
   },
 });
 

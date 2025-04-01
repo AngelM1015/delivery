@@ -1,19 +1,26 @@
-// Header.js
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { View, Text, TouchableOpacity, StyleSheet, Linking } from "react-native";
+import { Ionicons } from "@expo/vector-icons"; // Change from FontAwesome to Ionicons
 import BackIcon from "../assets/svgs/backIcon.svg";
 
-const Header = ({ title, navigation, showShareIcon = false }) => {
+const Header = ({ title, navigation, showBackIcon = true, showShareIcon = false }) => {
+  // Function to open the website when share icon is clicked
+  const openWebsite = () => {
+    Linking.openURL('https://www.bigskyeats.delivery');
+  };
+
   return (
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-        <BackIcon size={34} />
-      </TouchableOpacity>
+      {showBackIcon && (
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <BackIcon size={34} />
+        </TouchableOpacity>
+      )}
       <Text style={styles.headerTitle}>{title}</Text>
       {showShareIcon && (
-        <TouchableOpacity>
-          <FontAwesome name="share-alt" size={24} color="black" />
+        <TouchableOpacity onPress={openWebsite}>
+          {/* Replace FontAwesome with Ionicons */}
+          <Ionicons name="share-social-outline" size={24} color="#F09B00" />
         </TouchableOpacity>
       )}
     </View>

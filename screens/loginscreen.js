@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import CustomButton from "../components/CustomButton";
 import CustomInput from "../components/CustomInput";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { base_url, auth } from "../constants/api";
+import { UserContext } from "../context/UserContext";
 
 const admin = {
   email: "mobileadmin@example.com",
@@ -41,12 +42,26 @@ const restaurant_owner3 = {
   password: "encrypted_password",
 };
 
-const LoginScreen = ({ navigation, route }) => {
-  const { isRoleChanged, setIsRoleChanged } = route?.params;
+const LoginScreen = ({ navigation }) => {
+  // DEFENSIVE: Safely access context values with default fallbacks
+  const contextValue = useContext(UserContext) || {};
+  const { 
+    setUserRole = () => {}, 
+    setUserId = () => {}, 
+    isRoleChanged = false, 
+    setIsRoleChanged = () => {} 
+  } = contextValue;
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async (email, password) => {
+    // DEFENSIVE: Validate inputs
+    if (!email || !password) {
+      Alert.alert("Login Error", "Please enter both email and password");
+      return;
+    }
+    
     try {
       console.log(`email ${email}`);
       let url = `${base_url}${auth.login}`;
@@ -56,41 +71,112 @@ const LoginScreen = ({ navigation, route }) => {
         password,
       });
 
-      if (response.data && response.data.token) {
+      // DEFENSIVE: Verify response data exists
+      if (response?.data?.token) {
         console.log("Login Successful:", response.data);
 
-        await AsyncStorage.setItem("userToken", response.data.token);
-        await AsyncStorage.setItem("userRole", response.data.role);
-        await AsyncStorage.setItem("userId", response.data.user_id.toString());
-        await AsyncStorage.setItem("userEmail", response.data.email);
-        await AsyncStorage.setItem("userName", response.data.name);
-        if(response.data.role === 'partner') AsyncStorage.setItem('status', 'active' ? 'true' : 'false');
+        // DEFENSIVE: Wrap AsyncStorage operations in try/catch
+        try {
+          await AsyncStorage.setItem("userToken", response.data.token);
+          await AsyncStorage.setItem("userRole", response.data.role || "guest");
+          await AsyncStorage.setItem("userId", (response.data.user_id || "").toString());
+          await AsyncStorage.setItem("userEmail", response.data.email || "");
+          await AsyncStorage.setItem("userName", response.data.name || "");
+          
+          // DEFENSIVE: Check role before setting partner status
+          if (response.data.role === 'partner') {
+            const isActive = !!response.data.active; // Convert to boolean
+            await AsyncStorage.setItem('status', isActive ? 'true' : 'false');
+          }
+        } catch (storageError) {
+          console.error("Storage error:", storageError);
+          // Continue with login even if storage fails
+        }
 
-        setIsRoleChanged(!isRoleChanged);
-        navigation.replace("Main");
+        // DEFENSIVE: Safely call context functions
+        if (typeof setUserRole === 'function') {
+          setUserRole(response.data.role || "guest");
+        }
+        
+        if (typeof setUserId === 'function') {
+          setUserId((response.data.user_id || "").toString());
+        }
+        
+        if (typeof setIsRoleChanged === 'function') {
+          setIsRoleChanged(!isRoleChanged);
+        }
+
+        // DEFENSIVE: Check navigation before using
+        if (navigation && typeof navigation.replace === 'function') {
+          navigation.replace("Main");
+        } else {
+          console.error("Navigation is unavailable");
+          Alert.alert("Error", "Navigation failed. Please restart the app.");
+        }
       } else {
         Alert.alert("Login Failed", "No token received");
       }
     } catch (error) {
       console.log("Error details:", error);
-      console.log("Error response:", error.response);
-      console.log("Error message:", error.message);
-      Alert.alert(
-        "Login Error",
-        error.response && error.response.data && error.response.data.error
-          ? error.response.data.error
-          : "An error occurred. Please try again."
-      );
+      console.log("Error response:", error?.response);
+      console.log("Error message:", error?.message);
+      
+      // DEFENSIVE: Safely extract error message
+      let errorMessage = "An error occurred. Please try again.";
+      if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.message?.includes("Network")) {
+        errorMessage = "Network error. Please check your connection.";
+      }
+      
+      Alert.alert("Login Error", errorMessage);
     }
   };
 
-  const loginAsCustomer = () => handleLogin(customer.email, customer.password);
-  const loginAsAdmin = () => handleLogin(admin.email, admin.password);
-  const loginAsPartner = () => handleLogin(partner.email, partner.password);
-  const loginAsRestaurantOwner1 = () =>
-    handleLogin(restaurant_owner1.email, restaurant_owner1.password);
-  const loginAsRestaurantOwner3 = () =>
-    handleLogin(restaurant_owner3.email, restaurant_owner3.password);
+  const loginAsCustomer = () => {
+    // DEFENSIVE: Check if customer object is valid
+    if (customer?.email && customer?.password) {
+      handleLogin(customer.email, customer.password);
+    } else {
+      Alert.alert("Error", "Customer login information is missing");
+    }
+  };
+  
+  const loginAsAdmin = () => {
+    // DEFENSIVE: Check if admin object is valid
+    if (admin?.email && admin?.password) {
+      handleLogin(admin.email, admin.password);
+    } else {
+      Alert.alert("Error", "Admin login information is missing");
+    }
+  };
+  
+  const loginAsPartner = () => {
+    // DEFENSIVE: Check if partner object is valid
+    if (partner?.email && partner?.password) {
+      handleLogin(partner.email, partner.password);
+    } else {
+      Alert.alert("Error", "Partner login information is missing");
+    }
+  };
+  
+  const loginAsRestaurantOwner1 = () => {
+    // DEFENSIVE: Check if restaurant_owner1 object is valid
+    if (restaurant_owner1?.email && restaurant_owner1?.password) {
+      handleLogin(restaurant_owner1.email, restaurant_owner1.password);
+    } else {
+      Alert.alert("Error", "Restaurant owner 1 login information is missing");
+    }
+  };
+  
+  const loginAsRestaurantOwner3 = () => {
+    // DEFENSIVE: Check if restaurant_owner3 object is valid
+    if (restaurant_owner3?.email && restaurant_owner3?.password) {
+      handleLogin(restaurant_owner3.email, restaurant_owner3.password);
+    } else {
+      Alert.alert("Error", "Restaurant owner 3 login information is missing");
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -115,7 +201,12 @@ const LoginScreen = ({ navigation, route }) => {
               secureTextEntry
             />
             <TouchableOpacity
-              onPress={() => navigation.navigate("EmailVerificationScreen")}
+              onPress={() => {
+                // DEFENSIVE: Check navigation before using
+                if (navigation && typeof navigation.navigate === 'function') {
+                  navigation.navigate("EmailVerificationScreen");
+                }
+              }}
               style={styles.forgotPasswordContainer}
             >
               <Text style={styles.forgotPasswordText}>Forgot password?</Text>
@@ -127,29 +218,16 @@ const LoginScreen = ({ navigation, route }) => {
             <View style={styles.footer}>
               <Text style={styles.footerText}>Don't have an account? </Text>
               <TouchableOpacity
-                onPress={() => navigation.navigate("SignupScreen")}
+                onPress={() => {
+                  // DEFENSIVE: Check navigation before using
+                  if (navigation && typeof navigation.navigate === 'function') {
+                    navigation.navigate("SignupScreen");
+                  }
+                }}
               >
                 <Text style={styles.registerText}>Register</Text>
               </TouchableOpacity>
             </View>
-            {/* <View style={styles.quickLoginContainer}>
-          <Text style={styles.quickLoginText}>Role Dev-tool component, Login as:</Text>
-          <TouchableOpacity style={styles.quickLoginButton} onPress={loginAsCustomer}>
-            <Text style={styles.quickLoginButtonText}>Customer</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickLoginButton} onPress={loginAsPartner}>
-            <Text style={styles.quickLoginButtonText}>Partner/Employee</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickLoginButton} onPress={loginAsRestaurantOwner1}>
-            <Text style={styles.quickLoginButtonText}>Restaurant Owner #1</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickLoginButton} onPress={loginAsRestaurantOwner3}>
-            <Text style={styles.quickLoginButtonText}>Restaurant Owner #3</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickLoginButton} onPress={loginAsAdmin}>
-            <Text style={styles.quickLoginButtonText}>Admin</Text>
-          </TouchableOpacity>
-        </View> */}
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -162,6 +240,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     backgroundColor: "#FFFFFF",
+  },
+  inner: {
+    flex: 1,
   },
   title: {
     fontSize: 32,

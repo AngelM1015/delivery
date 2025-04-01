@@ -17,6 +17,7 @@ import { COLORS } from "../constants/colors";
 import { base_url, orders } from "../constants/api";
 import useUser from "../hooks/useUser";
 import useOrder from "../hooks/useOrder";
+import LottieView from "lottie-react-native";
 
 const SettingScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -293,26 +294,29 @@ const SettingScreen = ({ route }) => {
           </View>
           </>
         ) : (
-          <View style={{ flexDirection: "column", gap: 25 }}>
-            <Image
-              source={require("../assets/images/emptyCart.png")}
-              style={{ alignSelf: "center", height: '75%' }}
-              resizeMode="contain"
-            />
+          <View style={styles.emptyCartContainer}>
+            <View style={styles.lottieContainer}>
+              <LottieView
+                source={require("../assets/lottie-images/404-Error.json")}
+                style={styles.lottieAnimation}
+                autoPlay
+                speed={0.5} // Slightly slower than normal (1.0)
+              />
+            </View>
             <Text
               style={{
                 fontWeight: "bold",
                 fontSize: 26,
                 textAlign: "center",
+                color: '#333',
               }}
             >
-              {" "}
               Ouch! Hungry
             </Text>
             <Text style={styles.displayMessage}>
               Seems like you have not ordered any food yet
             </Text>
-          </View>
+          </View>               
         )}
 
         <TouchableOpacity
@@ -618,13 +622,33 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 5,
   },
+  emptyCartContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    gap: 25,
+    flex: 1,
+  },  
   displayMessage: {
     textAlign: "center",
-    margin: "auto",
     fontSize: 16,
     color: "gray",
     maxWidth: "70%",
+    alignSelf: 'center',
+    marginTop: 10,
+  },  
+  lottieContainer: {
+    width: 250,
+    height: 250,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginVertical: 20,
   },
+  lottieAnimation: {
+    width: '100%',
+    height: '100%',
+  }
 });
 
 export default SettingScreen;

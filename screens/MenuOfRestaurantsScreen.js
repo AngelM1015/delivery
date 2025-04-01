@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -21,8 +21,19 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  // const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [recentSearches, setRecentSearches] = useState([]);
+
+  // Use useEffect to update filteredOrders when orders or selectedRestaurant changes
+  useEffect(() => {
+    setFilteredOrders(orders);
+  }, [orders]);
+
+  // Use useEffect to update filteredOrders when selectedRestaurant changes
+  useEffect(() => {
+    if (selectedRestaurant) {
+      console.log("Selected restaurant changed, updating filtered orders");
+    }
+  }, [selectedRestaurant]);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -63,7 +74,7 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
   };
 
   const renderRestaurant = ({ item: restaurant }) => {
-    setFilteredOrders(orders);
+    // Removed the setFilteredOrders call from here to fix the warning
     const isSelected = selectedRestaurant === restaurant.id;
     const image_url = restaurant.image_url
       ? base_url + restaurant.image_url

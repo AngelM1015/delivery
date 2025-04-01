@@ -7,66 +7,72 @@ import * as Notifications from "expo-notifications";
 import Lottie from "lottie-react-native";
 import { Provider, Button, Text } from "react-native-paper";
 
+// Get screen dimensions for responsive layout
 const { width, height } = Dimensions.get("window");
 
 const OnboardingComponent = ({ navigation }) => {
+  // ✅ Called when onboarding is completed via swipe flow
   const handleCompleteOnboarding = async () => {
-    console.log("Completing onboarding...");
-    await AsyncStorage.setItem("hasOnboarded", "true");
-    navigation.replace("Login");
+    await AsyncStorage.setItem("hasOnboarded", "true"); // Track completion
+    navigation.replace("Login"); // Go to login screen
   };
 
+  // ✅ Called when user taps "Skip" — sets guest role and routes to main
   const handleSkipOnboarding = async () => {
-    await AsyncStorage.setItem("hasOnboarded", "false");
-    await AsyncStorage.setItem("userRole", "guest");
-    navigation.replace("Main", { role: "guest" });
+    await AsyncStorage.setItem("hasOnboarded", "false"); // Still track skip
+    await AsyncStorage.setItem("userRole", "guest");     // Guest fallback
+    navigation.replace("Main", { role: "guest" });       // Send to main UI
     Alert.alert(
       "Hey! We've noticed you hit skip",
       "We're glad you're excited to use our platform but we need access to some phone functionality. You can sign up at any time through the account page.",
       [
-        {
-          text: "Skip",
-        },
+        { text: "Skip" },
         {
           text: "Make an Account",
-          onPress: () => navigation.navigate("SignupScreen"),
+          onPress: () => navigation.navigate("SignupScreen"), // CTA for conversion
         },
       ]
     );
   };
 
+  // ✅ Only shows alert if permission denied — no longer forces redirection
   const requestLocationPermission = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      alert(
-        "Permission to access location was denied. Unfortunately, you cannot use this app without allowing location access. You will be redirected to the main screen as a guest."
+      Alert.alert(
+        "Location Required",
+        "To use BigSkyEats fully, you’ll need to enable location in your phone settings later."
       );
-      navigation.replace("Main", { role: "guest" });
       return;
     }
 
-    let { status: backgroundStatus } =
-      await Location.requestBackgroundPermissionsAsync();
+    let { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
     if (backgroundStatus !== "granted") {
-      alert(
-        "Background location access is required to get the driver to you. You will be redirected to the main screen as a guest."
+      Alert.alert(
+        "Background Location",
+        "To find drivers while you're not using the app, background location must be granted. You can update this in settings."
       );
-      navigation.replace("Main", { role: "guest" });
       return;
     }
 
-    alert(
-      "Location access granted. You can now use the app with full functionality."
+    Alert.alert(
+      "Location Enabled",
+      "You've enabled location services. You're all set!"
     );
   };
 
+  // ✅ Non-blocking request for notification permission
   const requestNotificationPermission = async () => {
     const { status } = await Notifications.requestPermissionsAsync();
     if (status !== "granted") {
-      alert("Permission to send notifications was denied");
+      Alert.alert(
+        "Notifications Blocked",
+        "You won’t receive updates unless notifications are enabled in system settings."
+      );
     }
   };
 
+  // ✅ Array of pages for the onboarding swiper
   const onboardingPages = [
     {
       backgroundColor: "#373837",
@@ -90,13 +96,12 @@ const OnboardingComponent = ({ navigation }) => {
       subtitle: (
         <View style={styles.subtitleContainer}>
           <Text style={styles.subtitleText}>
-            Allow location access to discover nearby restaurants and get faster
-            delivery.
+            Allow location access to discover nearby restaurants and get faster delivery.
           </Text>
           <View style={styles.buttonContainer}>
             <Button
               mode="contained"
-              onPress={requestLocationPermission}
+              onPress={requestLocationPermission} // Call permission logic
               style={styles.enableButton}
             >
               Enable Location
@@ -121,13 +126,12 @@ const OnboardingComponent = ({ navigation }) => {
       subtitle: (
         <View style={styles.subtitleContainer}>
           <Text style={styles.subtitleText}>
-            Enable notifications to receive order updates, special offers, and
-            important alerts.
+            Enable notifications to receive order updates, special offers, and important alerts.
           </Text>
           <View style={styles.buttonContainer}>
             <Button
               mode="contained"
-              onPress={requestNotificationPermission}
+              onPress={requestNotificationPermission} // Call permission logic
               style={styles.enableButton}
             >
               Enable Notifications
@@ -184,17 +188,18 @@ const OnboardingComponent = ({ navigation }) => {
     <Provider>
       <Onboarding
         containerStyles={{ paddingHorizontal: 15 }}
-        onDone={handleCompleteOnboarding}
-        onSkip={handleSkipOnboarding}
+        onDone={handleCompleteOnboarding}     // Triggered when swiper is completed
+        onSkip={handleSkipOnboarding}         // Triggered when "Skip" is pressed
         showSkip={true}
         showNext={true}
         showDone={true}
-        pages={onboardingPages}
+        pages={onboardingPages}               // Custom pages with animations & actions
       />
     </Provider>
   );
 };
 
+// Styles for Lottie, text, and buttons
 const styles = StyleSheet.create({
   lottieContainer: {
     justifyContent: "center",
@@ -222,6 +227,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 10,
+    backgroundColor: "#f09b00"
   },
 });
 

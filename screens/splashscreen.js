@@ -18,12 +18,16 @@ const SplashScreen = ({ navigation }) => {
 
     const timer = setTimeout(async () => {
       const token = await AsyncStorage.getItem("userToken");
-      const hasOnboarded =
-        (await AsyncStorage.getItem("hasOnboarded")) === "true";
+      const hasOnboarded = await AsyncStorage.getItem("hasOnboarded") === "true";
 
       if (token) {
+        // User is authenticated, go to Main
         navigation.replace("Main");
+      } else if (hasOnboarded) {
+        // User has completed onboarding but isn't logged in, go to Login
+        navigation.replace("Login");
       } else {
+        // First-time user, go to Onboarding
         navigation.replace("Onboarding");
       }
     }, 3000);

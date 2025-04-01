@@ -17,10 +17,8 @@ import { CartProvider } from "./context/CartContext";
 import { UserProvider } from "./context/UserContext";
 import OngoingOrderDrawer from "./components/OngoingOrderDrawer";
 import SplashScreen from "./screens/splashscreen";
-import LoginScreen from "./screens/loginscreen";
+import LoginScreen from "./screens/LoginScreen";
 import SignupScreen from "./screens/SignupScreen";
-// import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
-// import EmailVerificationScreen from './screens/EmailVerificationScreen';
 import OnboardingComponent from "./components/OnboardingComponent";
 import RestaurantMenuScreen from "./screens/RestaurantMenuScreen";
 import MenuItemDetailScreen from "./screens/MenuItemDetailScreen";
@@ -36,8 +34,9 @@ import AddPaymentMethodScreen from "./screens/AddPaymentMethodScreen";
 import OrdersScreen from "./screens/ordersscreen";
 import OrderDetailScreen from "./screens/OrderDetailScreen";
 import OngoingOrderScreen from "./screens/OngoingOrderScreen";
-import { LogBox } from "react-native";
 import ChatScreen from "./screens/ChatScreen";
+import NotificationSettingScreen from './screens/NotificationSettingScreen';
+import { LogBox } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import NetInfo from '@react-native-community/netinfo';
 
@@ -78,7 +77,8 @@ function App() {
   const [hasOnboarded, setHasOnboarded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const appState = useRef(AppState.currentState);
-  const [isRoleChanged, setIsRoleChanged] = useState(false);
+  // Remove this line - we'll use the context instead
+  // const [isRoleChanged, setIsRoleChanged] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
 
   LogBox.ignoreAllLogs(true);
@@ -125,7 +125,7 @@ function App() {
       if (window.intervalId) clearInterval(intervalId);
       // AppState.remove('change', handleAppStateChange);
     };
-  }, [isRoleChanged]);
+  }); // Remove isRoleChanged from dependencies
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -163,8 +163,8 @@ function App() {
                     isAuthenticated
                       ? "Main"
                       : hasOnboarded
-                        ? "Login"
-                        : "Onboarding"
+                      ? "Login"
+                      : "Onboarding"
                   }
                 >
                   <Stack.Screen
@@ -178,21 +178,11 @@ function App() {
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen
-                    initialParams={{
-                      setIsRoleChanged: setIsRoleChanged,
-                      isRoleChanged: isRoleChanged,
-                    }}
                     name="SignupScreen"
                     component={SignupScreen}
                     options={{ headerShown: false }}
                   />
-                  {/* <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} options={{ headerShown: false }}/>
-              <Stack.Screen name="EmailVerificationScreen" component={ EmailVerificationScreen} options={{ headerShown: false }}/> */}
                   <Stack.Screen
-                    initialParams={{
-                      setIsRoleChanged: setIsRoleChanged,
-                      isRoleChanged: isRoleChanged,
-                    }}
                     name="Login"
                     component={LoginScreen}
                     options={{ headerShown: false }}
@@ -200,21 +190,16 @@ function App() {
                   <Stack.Screen name="Main" options={{ headerShown: false }}>
                     {(props) => (
                       <>
-                        {/* {userRole === 'customer' && (
-                        <OngoingOrderDrawer />
-                      )} */}
                         <MainTabNavigator {...props} role={userRole} />
                       </>
                     )}
                   </Stack.Screen>
 
                   <Stack.Screen
-                    initialParams={{ setIsRoleChanged, isRoleChanged }}
                     name="SettingScreen"
                     component={SettingScreen}
                   />
                   <Stack.Screen
-                    initialParams={{ setIsRoleChanged, isRoleChanged }}
                     name="PersonalData"
                     component={PersonalData}
                   />
@@ -251,10 +236,11 @@ function App() {
                     component={OngoingOrderScreen}
                   />
                   <Stack.Screen name="Chat" component={ChatScreen} />
+                  <Stack.Screen name="NotificationSettingScreen" component={NotificationSettingScreen} />
                 </Stack.Navigator>
               </CartProvider>
+              <Toast/>
             </UserProvider>
-            <Toast ref={(ref) => Toast.setRef(ref)} />
           </NavigationContainer>
         </PaperProvider>
       </StripeProvider>

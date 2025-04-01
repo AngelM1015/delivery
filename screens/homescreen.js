@@ -286,9 +286,9 @@ const HomeScreen = ({ navigation }) => {
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity>
-                <Icons.NotificationIcon />
-              </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('NotificationSettingScreen')}>
+        <Icons.NotificationIcon />
+          </TouchableOpacity>
             </View>
             <View style={styles.title}>
               <Text style={styles.subtitle}>
@@ -407,8 +407,8 @@ const styles = StyleSheet.create({
   },
   horizontalListContainer: {
     marginTop: 5,
+    marginBottom: 40,
     paddingHorizontal: 10,
-    marginBottom: 20,
     minHeight: '45%',
     maxHeight: '45%'
   },
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
   distanceContainer: {
     flexDirection: "row",
     justifyContent: 'space-between',
-    marginTop: 14,
+    marginTop: 14
   },
   distanceText: {
     fontSize: 12,

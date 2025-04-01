@@ -7,6 +7,7 @@ const CustomInput = ({
   placeholder,
   value,
   onChangeText,
+  setValue, // Add this prop to handle both naming conventions
   secureTextEntry = false,
   keyboardType = "default",
   isPassword = false,
@@ -17,22 +18,34 @@ const CustomInput = ({
     setIsSecure(!isSecure);
   };
 
+  // Handle both onChangeText and setValue props
+  const handleChangeText = (text) => {
+    // Try onChangeText first
+    if (typeof onChangeText === 'function') {
+      onChangeText(text);
+    } 
+    // Fall back to setValue if onChangeText is not provided
+    else if (typeof setValue === 'function') {
+      setValue(text);
+    }
+  };
+
   return (
     <View style={styles.inputContainer}>
       <TextInput
         style={styles.input}
-        placeholder={placeholder}
-        value={value}
-        onChangeText={onChangeText}
+        placeholder={placeholder || ""}
+        value={value || ""}
+        onChangeText={handleChangeText}
         secureTextEntry={isSecure}
-        keyboardType={keyboardType}
+        keyboardType={keyboardType || "default"}
         autoCapitalize="none"
       />
-      {/* Conditionally Render Icons */}
-      {placeholder === "Email" && (
+      {/* Conditionally Render Icons with defensive checks */}
+      {placeholder === "Email" && EmailIcon && (
         <EmailIcon style={styles.icon} width={24} height={24} />
       )}
-      {placeholder === "Password" && (
+      {placeholder === "Password" && PasswordIcon && (
         <TouchableOpacity
           onPress={toggleSecureEntry}
           style={styles.iconContainer}

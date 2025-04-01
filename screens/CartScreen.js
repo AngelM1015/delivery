@@ -14,6 +14,7 @@ import Header from "../components/Header";
 import Locations from "../components/Locations";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from '@react-navigation/native';
+import LottieView from "lottie-react-native";
 
 const CartScreen = ({ navigation }) => {
   const { cartItems, removeFromCart, updateItemQuantity } = useCart();
@@ -64,32 +65,35 @@ const CartScreen = ({ navigation }) => {
 
   const finalTotal = calculateFinalTotal(calculateCartTotal(), minOrderFee);
 
-  useFocusEffect(() => {
-    const getLocation = async () => {
-      try {
-        const location = await AsyncStorage.getItem("location");
-        if (location) {
-          const parsedLocation = JSON.parse(location);
-          setLocation(parsedLocation);
-          setSelectedLocation(parsedLocation);
+  useFocusEffect(
+    React.useCallback(() => {
+      const getLocation = async () => {
+        try {
+          const location = await AsyncStorage.getItem("location");
+          if (location) {
+            const parsedLocation = JSON.parse(location);
+            setLocation(parsedLocation);
+            setSelectedLocation(parsedLocation);
+          }
+        } catch (error) {
+          console.log("Error fetching location:", error);
         }
-      } catch (error) {
-        console.log("Error fetching location:", error);
-      }
-    };
+      };
 
-    getLocation();
-  });
+      getLocation();
+    }, [])
+  );
 
   return (
     <PaperProvider>
       <View style={{ flex: 1 }}>
         <View style={{ paddingTop: 50 }}>
-          <Header
-            title="Your Cart"
-            navigation={navigation}
-            showShareIcon={true}
-          />
+        <Header
+      title="Your Cart"
+      navigation={navigation}
+      showBackIcon={true}
+      showShareIcon={true}
+    />
         </View>
         <View style={styles.locationContainer}>
           <View style={{ gap: 10 }}>
@@ -98,9 +102,9 @@ const CartScreen = ({ navigation }) => {
               Delivery Location
             </Text>
             {selectedLocation &&
-            <Text style={styles.locationText} numberOfLines={2}>
-              {selectedLocation.location_name}
-            </Text>
+              <Text style={styles.locationText} numberOfLines={2}>
+                {selectedLocation.location_name}
+              </Text>
             }
           </View>
           <TouchableOpacity
@@ -115,21 +119,20 @@ const CartScreen = ({ navigation }) => {
 
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
           {cartItems.length === 0 ? (
-            <View style={{ flexDirection: "column", gap: 25 }}>
-              <Image
-                source={require("../assets/images/emptyCart.png")}
-                style={{ alignSelf: "center", marginVertical: 40 }}
-              />
-              <Text
-                style={{
-                  fontWeight: "bold",
-                  fontSize: 26,
-                  textAlign: "center",
-                }}
-              >
-                {" "}
-                Ouch! Hungry
-              </Text>
+            <View style={styles.emptyCartContainer}>
+              <View style={styles.lottieContainer}>
+                {/* <Image
+                  source={require("../assets/images/emptyCart.png")}
+                  style={{ alignSelf: "center", marginVertical: 40 }}
+                /> */}
+                <LottieView
+                  source={require("../assets/lottie-images/404-Error.json")}
+                  style={styles.lottieAnimation}
+                  autoPlay
+                  speed={0.5} // Slightly slower than normal (1.0)
+                />
+              </View>
+              <Text style={styles.emptyCartTitle}>Ouch! Hungry</Text>
               <Text style={styles.displayMessage}>
                 Seems like you have not ordered any food yet
               </Text>
@@ -395,6 +398,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "gray",
     maxWidth: "70%",
+  },
+  // New styles for the empty cart and Lottie animation
+  emptyCartContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    gap: 25,
+  },
+  lottieContainer: {
+    width: 250,
+    height: 250,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 20,
+  },
+  lottieAnimation: {
+    width: '100%',
+    height: '100%',
+  },
+  emptyCartTitle: {
+    fontWeight: 'bold',
+    fontSize: 26,
+    textAlign: 'center',
+    color: '#333',
   },
 });
 
