@@ -39,6 +39,7 @@ import NotificationSettingScreen from './screens/NotificationSettingScreen';
 import { LogBox } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import NetInfo from '@react-native-community/netinfo';
+import { STRIPE_PUBLIC_KEY } from "@env";
 
 const themeColors = {
   activeTintColor: "#e23744",
@@ -149,7 +150,7 @@ function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StripeProvider
-        publishableKey="pk_test_51Q0mkTEgTqpUY0IgW4AtWE1mfMbHEtxq50HDVdRSBr4R43oG23hhmLf4W57QphaiXJWT7efFKXcxXnJqsYVJ0rUe00lVjPrrrP"
+        publishableKey={STRIPE_PUBLIC_KEY}
         merchantIdentifier="merchant.identifier" // required for Apple Pay
         urlScheme="your-url-scheme" // required for 3D Secure and bank redirects
       >

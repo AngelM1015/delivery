@@ -24,6 +24,10 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
   const [newLocation, setNewLocation] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Debounce timer reference
+  const debounceTimerRef = useRef(null);
 
   const mapRef = useRef(null);
 
@@ -39,6 +43,31 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
       fetchLocations();
     }
   }, [isVisible]);
+  
+  // Effect for debounced search
+  useEffect(() => {
+    // Clear previous timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Only search if query is at least 3 characters
+    if (searchQuery.length >= 3) {
+      // Set a new timer
+      debounceTimerRef.current = setTimeout(() => {
+        fetchSuggestions(searchQuery);
+      }, 500); // 500ms delay
+    } else {
+      setSuggestions([]);
+    }
+    
+    // Cleanup function to clear timer if component unmounts or searchQuery changes
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [searchQuery]);
 
   const fetchLocations = async () => {
     if (role === "guest") return;
@@ -67,7 +96,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
           },
         }
       );
-      setSuggestions(response.data.predictions);
+      setSuggestions(response.data.predictions || []);
     } catch (error) {
       console.error("Error fetching suggestions:", error);
     }
@@ -104,6 +133,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
       setNewLocation("");
       setSelectedLocation(null);
       setIsAdding(false);
+      setSearchQuery("");
     } catch (error) {
       console.error("Error adding new location:", error);
     }
@@ -126,6 +156,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
       setSelectedLocation({ latitude: lat, longitude: lng });
       setNewLocation(formattedAddress);
       setSuggestions([]);
+      setSearchQuery("");
 
       if (mapRef.current) {
         mapRef.current.animateToRegion({
@@ -160,7 +191,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
   const fetchLocationName = async (latitude, longitude) => {
     try {
       const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json`,
+        "https://maps.googleapis.com/maps/api/geocode/json",
         {
           params: {
             latlng: `${latitude},${longitude}`,
@@ -212,22 +243,25 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
                 value={newLocation}
                 onChangeText={(text) => {
                   setNewLocation(text);
-                  fetchSuggestions(text);
+                  setSearchQuery(text); // Update search query for debouncing
                 }}
               />
-              <FlatList
-                data={suggestions}
-                keyExtractor={(item) => item.place_id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    onPress={() => handleSuggestionSelect(item.place_id)}
-                  >
-                    <Text style={styles.suggestionText}>
-                      {item.description}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              />
+              {suggestions.length > 0 && (
+                <FlatList
+                  data={suggestions}
+                  keyExtractor={(item) => item.place_id}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={() => handleSuggestionSelect(item.place_id)}
+                    >
+                      <Text style={styles.suggestionText}>
+                        {item.description}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  style={styles.suggestionsList}
+                />
+              )}
               <CustomButton text="Save Location" onPress={handleAddLocation} />
             </View>
           ) : (
@@ -318,6 +352,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "black",
   },
+  suggestionsList: {
+    width: "100%",
+    maxHeight: 200,
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderRadius: 5,
+    marginBottom: 10,
+  }
 });
 
 export default Locations;

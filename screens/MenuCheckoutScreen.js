@@ -165,38 +165,160 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   };
 
   const submitOrder = async () => {
-    if (!orderType || paymentMethod.length < 1) {
-      Alert.alert("Error", "Please select an order type and payment method");
-      return;
-    }
-
-    if (orderType === "delivery" && deliveryDetails.address === "") {
-      Alert.alert("Error", "Please add delivery address");
-      return;
-    }
-
-    if (orderType === "delivery") {
-      const { status: foregroundStatus } = await Location.getForegroundPermissionsAsync();
-      const { status: backgroundStatus } = await Location.getBackgroundPermissionsAsync();
-      
-      if (foregroundStatus !== 'granted' || backgroundStatus !== 'granted') {
-        Alert.alert(
-          "Location Permission Required",
-          "To find drivers while you're not using the app, background location must be granted.",
-          [
-            {
-              text: "Cancel",
-              style: "cancel"
-            },
-            {
-              text: "Enable Location",
-              onPress: requestLocationPermissions
-            }
-          ]
-        );
+    try {
+      // Validate order requirements
+      if (!orderType) {
+        Alert.alert("Missing Information", "Please select an order type (delivery or pickup)");
         return;
       }
-    }
+      
+      if (!paymentMethod || (Array.isArray(paymentMethod) && paymentMethod.length < 1) || 
+          (!Array.isArray(paymentMethod) && !paymentMethod.id)) {
+        Alert.alert("Payment Required", "Please select a valid payment method");
+        return;
+      }
+  
+      console.log("payment method", paymentMethod);
+      
+      // Get restaurant ID from AsyncStorage
+      try {
+        const storedRestaurantId = await AsyncStorage.getItem("restaurantId");
+        if (!storedRestaurantId) {
+          // Try to get restaurant ID from cart items if available
+          let restaurantIdFromCart = null;
+          if (cartItems && cartItems.length > 0 && cartItems[0].restaurantId) {
+            restaurantIdFromCart = cartItems[0].restaurantId.toString();
+            await AsyncStorage.setItem("restaurantId", restaurantIdFromCart);
+            console.log("Saved restaurant ID from cart:", restaurantIdFromCart);
+          } else {
+            Alert.alert("Error", "No associated restaurant found");
+            return;
+          }
+        }
+        
+        // Validate delivery-specific requirements
+        if (orderType === "delivery") {
+          if (!deliveryDetails.address) {
+            Alert.alert("Address Required", "Please add a delivery address");
+            return;
+          }
+  
+          // Check location permissions for delivery tracking
+          try {
+            const { status: foregroundStatus } = await Location.getForegroundPermissionsAsync();
+            const { status: backgroundStatus } = await Location.getBackgroundPermissionsAsync();
+            
+            if (foregroundStatus !== 'granted' || backgroundStatus !== 'granted') {
+              Alert.alert(
+                "Location Permission Required",
+                "To find drivers while you're not using the app, background location must be granted.",
+                [
+                  {
+                    text: "Cancel",
+                    style: "cancel"
+                  },
+                  {
+                    text: "Enable Location",
+                    onPress: requestLocationPermissions
+                  }
+                ]
+              );
+              return;
+            }
+          } catch (locationError) {
+            console.error("Error checking location permissions:", locationError);
+            Alert.alert(
+              "Location Services Error",
+              "There was a problem accessing location services. Please check your device settings."
+            );
+            return;
+          }
+        }
+  
+        // Use the restaurant ID from AsyncStorage or from cart
+        const restaurantId = await AsyncStorage.getItem("restaurantId");
+        
+        // Prepare order data
+        const orderData = {
+          order: {
+            restaurant_id: parseInt(restaurantId),
+            order_type: orderType,
+            payment_method_id: paymentMethod.id,
+            items: cartItems.map(item => ({
+              menu_item_id: item.id,
+              quantity: item.quantity,
+              modifiers: item.selectedModifiers || []
+            })),
+            ...(orderType === "delivery" && {
+              delivery_address: deliveryDetails.address,
+              delivery_latitude: deliveryDetails.latitude,
+              delivery_longitude: deliveryDetails.longitude
+            })
+          }
+        };
+        
+        console.log("Submitting order with data:", orderData);
+        
+        // Submit the order
+        const response = await axios.post(`${base_url}api/v1/orders`, orderData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        console.log("Order submission successful:", response.data);
+        
+        // Clear cart after successful order
+        await AsyncStorage.removeItem("cart");
+        dispatch(clearCart());
+        
+        // Navigate to order confirmation screen
+        navigation.navigate("OrderConfirmation", { 
+          orderId: response.data.id,
+          orderType: orderType
+        });
+        
+      } catch (asyncError) {
+        console.error("AsyncStorage error:", asyncError);
+        Alert.alert("Error", "Failed to retrieve restaurant information");
+        return;
+      }
+    } catch (error) {
+      // Detailed error logging
+      console.error("Order submission error details:", {
+        message: error?.message || "Unknown error",
+        status: error?.response?.status,
+        data: error?.response?.data,
+        stack: error?.stack
+      });
+  
+      // User-friendly error messages based on error type
+      if (error?.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        const statusCode = error.response.status;
+        const errorMessage = error.response.data?.message || error.response.data?.error;
+        
+        if (statusCode === 401) {
+          Alert.alert("Authentication Error", "Your session has expired. Please log in again.");
+        } else if (statusCode === 400) {
+          Alert.alert("Order Error", errorMessage || "There was a problem with your order information.");
+        } else if (statusCode === 422) {
+          Alert.alert("Validation Error", errorMessage || "Please check your order details and try again.");
+        } else if (statusCode >= 500) {
+          Alert.alert("Server Error", "Our servers are experiencing issues. Please try again later.");
+        } else {
+          Alert.alert("Order Failed", errorMessage || "There was a problem processing your order.");
+        }
+      } else if (error?.request) {
+        // The request was made but no response was received
+        Alert.alert(
+          "Network Error", 
+          "Unable to connect to our servers. Please check your internet connection and try again."
+        );
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        Alert.alert("Order Error", "An unexpected error occurred. Please try again.");
+      }
+    }  
 
     console.log("payment method", paymentMethod);
 
