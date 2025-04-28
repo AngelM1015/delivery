@@ -44,9 +44,15 @@ const RestaurantScreen = ({ navigation }) => {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.menuItem}
-      onPress={() =>
-        navigation.navigate("RestaurantMenuScreen", { restaurantId: item.id })
-      }
+      onPress={() => {
+        // Save the restaurant ID when a restaurant is selected
+        AsyncStorage.setItem("selectedRestaurantId", item.id.toString())
+          .then(() => {
+            console.log("Restaurant ID saved:", item.id);
+            navigation.navigate("RestaurantMenuScreen", { restaurantId: item.id });
+          })
+          .catch(err => console.error("Error saving restaurant ID:", err));
+      }}
     >
       <Ionicons name="restaurant" size={24} style={styles.icon} />
       <Text style={styles.menuText}>{item.name}</Text>

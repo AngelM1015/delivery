@@ -69,55 +69,37 @@ const MenuItemDetailScreen = ({ route }) => {
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
-    AsyncStorage.setItem("selectedRestaurantId", `${restaurantId}`);
-    const selectedModifiers = Object.entries(modifierCounts)
-      .map(([modifierId, optionsCounts]) => ({
-        modifierId,
-        options: Object.entries(optionsCounts)
-          .filter(([_, count]) => count > 0)
-          .map(([optionId, count]) => {
-            const option = menuItemDetails.modifiers
-              .find((modifier) => modifier.id === parseInt(modifierId))
-              .modifier_options.find(
-                (option) => option.id === parseInt(optionId)
-              );
-            return { ...option, count };
-          }),
-      }))
-      .filter((modifier) => modifier.options.length > 0);
-
-    const price =
-      menuItemDetails.item_prices.length > 0
-        ? parseFloat(menuItemDetails.item_prices[0])
-        : "0.0";
-
-    // Ensure the imageUrl is correctly set
-    const imageUrl = menuItemDetails.image_url
-      ? `${base_url}${menuItemDetails.image_url}`
-      : null;
-    console.log("Image URL:", imageUrl); // Log the image URL before adding
-
-    const itemForCart = {
+    const item = {
       id: menuItemId,
       name: menuItemDetails.name,
-      price:
-        price +
-        selectedModifiers.reduce(
-          (w, x) =>
-            w +
-            x.options.reduce(
-              (a, b) => a + parseFloat(b.additional_price * b.count),
-              0
-            ),
-          0
-        ),
-      imageUrl, // Include the imageUrl here
-      selectedModifiers,
+      price: menuItemDetails.item_prices[0],
+      imageUrl: `${base_url}${menuItemDetails.image_url}`,
       quantity: 1,
+      selectedModifiers: Object.entries(modifierCounts)
+        .map(([modifierId, optionsCounts]) => ({
+          modifierId,
+          options: Object.entries(optionsCounts)
+            .filter(([_, count]) => count > 0)
+            .map(([optionId, count]) => {
+              const option = menuItemDetails.modifiers
+                .find((modifier) => modifier.id === parseInt(modifierId))
+                .modifier_options.find(
+                  (option) => option.id === parseInt(optionId)
+                );
+              return { ...option, count };
+            }),
+        }))
+        .filter((modifier) => modifier.options.length > 0),
+      restaurantId: restaurantId
     };
-
-    console.log("Item being added to cart:", itemForCart); // Log the entire item object
-    addToCart(itemForCart);
+    
+    console.log("Item being added to cart:", item);
+    addToCart(item);
+    
+    // Also save the restaurant ID to AsyncStorage
+    AsyncStorage.setItem("selectedRestaurantId", restaurantId.toString());
+    
+    navigation.goBack();
   };
 
   const handleQuantityChange = (modifierId, optionId, increment) => {

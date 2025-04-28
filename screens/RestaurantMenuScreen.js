@@ -22,6 +22,9 @@ const RestaurantMenuScreen = ({ route, navigation }) => {
         const url = `${base_url}api/v1/restaurants/${restaurantId}/menu_items/`;
         const response = await axios.get(url, { headers });
         setMenuItems(response.data);
+        
+        // Save the restaurant ID for checkout
+        await AsyncStorage.setItem("selectedRestaurantId", restaurantId.toString());
       } catch (error) {
         console.error("Error fetching menu items:", error);
       } finally {

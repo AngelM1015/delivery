@@ -24,6 +24,9 @@ import useUser from "../hooks/useUser";
 import { useCart } from "../context/CartContext";
 import client from "../client";
 
+// Increase the timeout for distance calculations
+client.defaults.timeout = 30000; // 30 seconds timeout
+
 const MenuCheckoutScreen = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { cartItems } = useCart();
@@ -52,9 +55,64 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
     address: address.location_name,
   };
 
+  // Add this function to help debug
+  const debugAsyncStorage = async () => {
+    try {
+      const restaurantId = await AsyncStorage.getItem("restaurantId");
+      const selectedRestaurantId = await AsyncStorage.getItem("selectedRestaurantId");
+      console.log("Debug AsyncStorage:", {
+        restaurantId,
+        selectedRestaurantId,
+        cartItems: cartItems.length > 0 ? cartItems[0].restaurantId : null
+      });
+    } catch (error) {
+      console.error("Debug error:", error);
+    }
+  };
+
+  // Add this function at the top of your component
+  const getRestaurantId = async () => {
+    try {
+      // Try all possible sources for restaurant ID
+      let restaurantId = await AsyncStorage.getItem("selectedRestaurantId");
+      
+      if (!restaurantId) {
+        restaurantId = await AsyncStorage.getItem("restaurantId");
+      }
+      
+      // If still not found, try to get from cart items
+      if (!restaurantId && cartItems && cartItems.length > 0) {
+        const firstItem = cartItems[0];
+        if (firstItem.restaurantId) {
+          restaurantId = firstItem.restaurantId.toString();
+          // Save it for future use
+          await AsyncStorage.setItem("selectedRestaurantId", restaurantId);
+          console.log("Saved restaurant ID from cart item:", restaurantId);
+        }
+      }
+      
+      return restaurantId;
+    } catch (error) {
+      console.error("Error retrieving restaurant ID:", error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     if(!cartItems.length > 0) navigation.goBack();
 
+    const checkRestaurantId = async () => {
+      const id = await getRestaurantId();
+      console.log("Current restaurant ID:", id);
+      
+      // If no restaurant ID found, try to extract from cart items
+      if (!id && cartItems.length > 0 && cartItems[0].restaurantId) {
+        await AsyncStorage.setItem("selectedRestaurantId", cartItems[0].restaurantId.toString());
+        console.log("Set restaurant ID from cart:", cartItems[0].restaurantId);
+      }
+    };
+    
+    checkRestaurantId();
     fetchPaymentMethods();
 
     const getLocation = async () => {
@@ -76,25 +134,31 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   }, [address])
 
   const calculateDistance = async (location) => {
-    const token = AsyncStorage.getItem('userToken');
-    const restaurantId = await AsyncStorage.getItem("selectedRestaurantId");
-    const url = `api/v1/restaurants/${restaurantId}/delivery_mileage`
-    const restaurant = {
-      destination_latitude: location.latitude,
-      destination_longitude: location.longitude
-    }
-
     try {
+      const token = await AsyncStorage.getItem('userToken');
+      const restaurantId = await getRestaurantId();
+      
+      if (!restaurantId) {
+        console.error("No restaurant ID available for distance calculation");
+        return;
+      }
+      
+      const url = `api/v1/restaurants/${restaurantId}/delivery_mileage`;
+      const restaurant = {
+        destination_latitude: location.latitude,
+        destination_longitude: location.longitude
+      };
+
       const response = await client.get(url,
         { params: {
           restaurant
         },
           Header: { Authorization: `Bearer ${token}` }
         }
-      )
+      );
       console.log('distance response', response.data);
 
-      setRestaurantDelivery(response.data)
+      setRestaurantDelivery(response.data);
     } catch (error) {
         console.error("Error fetching distance:", error);
         return;
@@ -172,204 +236,102 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         return;
       }
       
-      if (!paymentMethod || (Array.isArray(paymentMethod) && paymentMethod.length < 1) || 
-          (!Array.isArray(paymentMethod) && !paymentMethod.id)) {
+      if (!paymentMethod || !paymentMethod.id) {
         Alert.alert("Payment Required", "Please select a valid payment method");
         return;
       }
-  
-      console.log("payment method", paymentMethod);
+
+      // Get restaurant ID using our helper function
+      const restaurantId = await getRestaurantId();
       
-      // Get restaurant ID from AsyncStorage
-      try {
-        const storedRestaurantId = await AsyncStorage.getItem("restaurantId");
-        if (!storedRestaurantId) {
-          // Try to get restaurant ID from cart items if available
-          let restaurantIdFromCart = null;
-          if (cartItems && cartItems.length > 0 && cartItems[0].restaurantId) {
-            restaurantIdFromCart = cartItems[0].restaurantId.toString();
-            await AsyncStorage.setItem("restaurantId", restaurantIdFromCart);
-            console.log("Saved restaurant ID from cart:", restaurantIdFromCart);
-          } else {
-            Alert.alert("Error", "No associated restaurant found");
-            return;
-          }
+      if (!restaurantId) {
+        Alert.alert(
+          "Restaurant Not Found", 
+          "We couldn't identify which restaurant you're ordering from. Please try selecting a restaurant again."
+        );
+        return;
+      }
+      
+      console.log("Using restaurant ID for order:", restaurantId);
+      
+      // Validate delivery-specific requirements
+      if (orderType === "delivery") {
+        if (!address || !address.location_name) {
+          Alert.alert("Address Required", "Please add a delivery address");
+          return;
         }
-        
-        // Validate delivery-specific requirements
-        if (orderType === "delivery") {
-          if (!deliveryDetails.address) {
-            Alert.alert("Address Required", "Please add a delivery address");
-            return;
-          }
-  
-          // Check location permissions for delivery tracking
-          try {
-            const { status: foregroundStatus } = await Location.getForegroundPermissionsAsync();
-            const { status: backgroundStatus } = await Location.getBackgroundPermissionsAsync();
-            
-            if (foregroundStatus !== 'granted' || backgroundStatus !== 'granted') {
-              Alert.alert(
-                "Location Permission Required",
-                "To find drivers while you're not using the app, background location must be granted.",
-                [
-                  {
-                    text: "Cancel",
-                    style: "cancel"
-                  },
-                  {
-                    text: "Enable Location",
-                    onPress: requestLocationPermissions
-                  }
-                ]
-              );
-              return;
-            }
-          } catch (locationError) {
-            console.error("Error checking location permissions:", locationError);
+
+        // Check location permissions for delivery tracking
+        try {
+          const { status: foregroundStatus } = await Location.getForegroundPermissionsAsync();
+          const { status: backgroundStatus } = await Location.getBackgroundPermissionsAsync();
+          
+          if (foregroundStatus !== 'granted' || backgroundStatus !== 'granted') {
             Alert.alert(
-              "Location Services Error",
-              "There was a problem accessing location services. Please check your device settings."
+              "Location Permission Required",
+              "To find drivers while you're not using the app, background location must be granted.",
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Enable Location", onPress: requestLocationPermissions }
+              ]
             );
             return;
           }
+        } catch (locationError) {
+          console.error("Error checking location permissions:", locationError);
+          Alert.alert(
+            "Location Services Error",
+            "There was a problem accessing location services. Please check your device settings."
+          );
+          return;
         }
-  
-        // Use the restaurant ID from AsyncStorage or from cart
-        const restaurantId = await AsyncStorage.getItem("restaurantId");
-        
-        // Prepare order data
-        const orderData = {
-          order: {
-            restaurant_id: parseInt(restaurantId),
-            order_type: orderType,
-            payment_method_id: paymentMethod.id,
-            items: cartItems.map(item => ({
-              menu_item_id: item.id,
-              quantity: item.quantity,
-              modifiers: item.selectedModifiers || []
-            })),
-            ...(orderType === "delivery" && {
-              delivery_address: deliveryDetails.address,
-              delivery_latitude: deliveryDetails.latitude,
-              delivery_longitude: deliveryDetails.longitude
-            })
-          }
-        };
-        
-        console.log("Submitting order with data:", orderData);
-        
-        // Submit the order
-        const response = await axios.post(`${base_url}api/v1/orders`, orderData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        console.log("Order submission successful:", response.data);
-        
-        // Clear cart after successful order
-        await AsyncStorage.removeItem("cart");
-        dispatch(clearCart());
-        
-        // Navigate to order confirmation screen
-        navigation.navigate("OrderConfirmation", { 
-          orderId: response.data.id,
-          orderType: orderType
-        });
-        
-      } catch (asyncError) {
-        console.error("AsyncStorage error:", asyncError);
-        Alert.alert("Error", "Failed to retrieve restaurant information");
-        return;
+      }
+
+      // Prepare order data
+      const orderData = {
+        order: {
+          restaurant_id: parseInt(restaurantId),
+          delivery_address: orderType === "delivery" ? address.location_name : "",
+          total_price: (
+            parseFloat(orderDetails.totalPrice || 0) +
+            parseFloat(bigSkyTax || 0) +
+            parseFloat(deliveryFee || 0)
+          ).toFixed(2),
+          delivery_fee: deliveryFee,
+          payment_method_id: paymentMethod.id,
+          address_id: address.id,
+          order_type: orderType,
+          delivery_mileage: restaurantDelivery.distance,
+          order_items_attributes: cartItems.map((item) => ({
+            menu_item_id: item.id,
+            quantity: item.quantity,
+            order_item_modifiers_attributes: item.selectedModifiers.map(
+              (modifier) => ({
+                modifier_id: modifier.modifierId,
+                order_modifier_options_attributes: modifier.options.map(
+                  (modifier_option) => ({
+                    modifier_option_id: modifier_option.id
+                  })
+                )
+              })
+            ),
+          })),
+        },
+      };
+
+      console.log("Submitting order with data:", orderData);
+      
+      setIsLoading(true);
+      try {
+        await createOrder(navigation, orderData.order);
+      } catch (error) {
+        Alert.alert("Error", "Failed to create order. Please try again.");
+      } finally {
+        setIsLoading(false);
       }
     } catch (error) {
-      // Detailed error logging
-      console.error("Order submission error details:", {
-        message: error?.message || "Unknown error",
-        status: error?.response?.status,
-        data: error?.response?.data,
-        stack: error?.stack
-      });
-  
-      // User-friendly error messages based on error type
-      if (error?.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        const statusCode = error.response.status;
-        const errorMessage = error.response.data?.message || error.response.data?.error;
-        
-        if (statusCode === 401) {
-          Alert.alert("Authentication Error", "Your session has expired. Please log in again.");
-        } else if (statusCode === 400) {
-          Alert.alert("Order Error", errorMessage || "There was a problem with your order information.");
-        } else if (statusCode === 422) {
-          Alert.alert("Validation Error", errorMessage || "Please check your order details and try again.");
-        } else if (statusCode >= 500) {
-          Alert.alert("Server Error", "Our servers are experiencing issues. Please try again later.");
-        } else {
-          Alert.alert("Order Failed", errorMessage || "There was a problem processing your order.");
-        }
-      } else if (error?.request) {
-        // The request was made but no response was received
-        Alert.alert(
-          "Network Error", 
-          "Unable to connect to our servers. Please check your internet connection and try again."
-        );
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        Alert.alert("Order Error", "An unexpected error occurred. Please try again.");
-      }
-    }  
-
-    console.log("payment method", paymentMethod);
-
-    const storedRestaurantId = await AsyncStorage.getItem("selectedRestaurantId");
-    if (!storedRestaurantId) {
-      Alert.alert("Error", "No associated restaurant found");
-      return;
-    }
-
-    const orderData = {
-      order: {
-        restaurant_id: storedRestaurantId,
-        delivery_address:
-          orderType === "delivery"
-            ? address.location_name
-            : "",
-        total_price: (
-          parseFloat(orderDetails.totalPrice || 0) +
-          parseFloat(bigSkyTax || 0) +
-          parseFloat(deliveryFee || 0)
-        ).toFixed(2),
-        delivery_fee: deliveryFee,
-        payment_method_id: paymentMethod.id,
-        address_id: address.id,
-        order_type: orderType,
-        delivery_mileage: restaurantDelivery.distance,
-        order_items_attributes: cartItems.map((item) => ({
-          menu_item_id: item.id,
-          quantity: item.quantity,
-          order_item_modifiers_attributes: item.selectedModifiers.map(
-            (modifier) => ({
-              modifier_id: modifier.modifierId,
-              order_modifier_options_attributes: modifier.options.map(
-                (modifier_option) => ({
-                  modifier_option_id: modifier_option.id
-                })
-              )
-            })
-          ),
-        })),
-      },
-    };
-
-    route.params;
-
-    setIsLoading(true);
-    try {
-      await createOrder(navigation, orderData.order);
-    } catch (error) {
-      Alert.alert("Error", "Failed to create order. Please try again.");
-    } finally {
+      console.error("Order submission error:", error);
+      Alert.alert("Error", "An unexpected error occurred. Please try again.");
       setIsLoading(false);
     }
   };
