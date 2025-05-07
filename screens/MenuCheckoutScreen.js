@@ -396,13 +396,13 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
               </View>
             )}
 
-            <View style={styles.transactionRow}>
+            {/* <View style={styles.transactionRow}>
               <Text style={styles.detailText}>Tax 10%</Text>
               <Text style={styles.detailAmount}>
                 ${orderDetails.tax || "0.00"}
               </Text>
-            </View>
-            <View style={styles.transactionRow}>
+            </View> */}
+            {/* <View style={styles.transactionRow}>
               <Text style={styles.totalText}>Total Price</Text>
               <Text style={styles.totalAmount}>
               ${(
@@ -411,7 +411,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
                 parseFloat(deliveryFee || 0)
               ).toFixed(2)}
               </Text>
-            </View>
+            </View> */}
           </View>
         </View>
 

@@ -17,6 +17,7 @@ import { CartProvider } from "./context/CartContext";
 import { UserProvider } from "./context/UserContext";
 import OngoingOrderDrawer from "./components/OngoingOrderDrawer";
 import SplashScreen from "./screens/splashscreen";
+import FavoriteFoodMenuItemScreen from "./screens/FavoriteFoodMenuItemScreen";
 import LoginScreen from "./screens/LoginScreen";
 import SignupScreen from "./screens/SignupScreen";
 import OnboardingComponent from "./components/OnboardingComponent";
@@ -168,6 +169,10 @@ function App() {
                       : "Onboarding"
                   }
                 >
+                  <Stack.Screen
+                    name="FavoriteFoodMenuItemScreen"
+                    component={FavoriteFoodMenuItemScreen}
+                  />
                   <Stack.Screen
                     name="Splash"
                     component={SplashScreen}

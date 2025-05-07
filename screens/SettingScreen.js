@@ -9,6 +9,7 @@ import {
   ScrollView,
   Platform,
   Modal,
+  Stack,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
@@ -18,6 +19,14 @@ import { base_url, orders } from "../constants/api";
 import useUser from "../hooks/useUser";
 import useOrder from "../hooks/useOrder";
 import LottieView from "lottie-react-native";
+import FavoriteFoodMenuItemScreen from "../screens/FavoriteFoodMenuItemScreen";
+
+
+  <Stack
+    name="FavoriteFoodMenuItemScreen"
+    component={FavoriteFoodMenuItemScreen}
+    options={{ title: "Favorites" }}
+  />
 
 const SettingScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -266,6 +275,24 @@ const SettingScreen = ({ route }) => {
           </View>
 
           <Text style={{ marginLeft: 20, paddingTop: 10 }}>Support</Text>
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#F09B00",
+              margin: 20,
+              padding: 15,
+              borderRadius: 12,
+              alignItems: "center",
+            }}
+            onPress={() =>
+              navigation.navigate("FavoriteFoodMenuItemScreen", {
+                restaurantId: 1, // replace with dynamic value if needed
+              })
+            }
+          >
+            <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
+              Browse Favorites
+            </Text>
+          </TouchableOpacity>
           <View style={styles.profileOptionsContainer}>
             {support.map((option) => (
               <TouchableOpacity

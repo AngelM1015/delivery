@@ -7,31 +7,27 @@ import {
   StyleSheet,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import client from "../client";
 import AddPaymentMethod from "../components/AddPaymentMethod";
 
 const AddPaymentMethodScreen = () => {
+  const navigation = useNavigation();
   const [addPaymentMethodsModal, setAddPaymentMethodModal] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState();
 
   const fetchPaymentMethods = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
-      const response = await client.get(
-        `api/v1/payments/get_payment_methods`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      console.log('payment methods fetched');
+      const response = await client.get(`api/v1/payments/get_payment_methods`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setPaymentMethods(response.data);
     } catch (error) {
       console.error("Error fetching payment methods:", error);
-      Alert.alert("Error", "Failed to fetch payment methods");
     }
   };
 
@@ -40,114 +36,139 @@ const AddPaymentMethodScreen = () => {
   }, []);
 
   return (
-      <View style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Available Payment Methods</Text>
-          <FlatList
-            style={{height: '80%'}}
-            data={paymentMethods}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View
-                style={styles.paymentMethodItem}
-              >
-                <View style={styles.paymentMethod}>
-                  {item.brand === "Cash" ? (
-                    <Ionicons name="cash" size={28} color="black" />
-                  ) : (
-                    <FontAwesome
-                      name={"cc-" + item.brand.toLowerCase()}
-                      size={24}
-                      color="black"
-                    />
-                  )}
-                  <View style={{ gap: 6 }}>
-                    <Text style={styles.paymentMethodText}>{item.brand}</Text>
-                    {item.last4 !== "N/A" && (
-                      <Text>**** **** {item.last4}</Text>
-                    )}
-                  </View>
+    <View style={styles.container}>
+      {/* Back button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={26} color="#333" />
+        <Text style={styles.backText}>Back</Text>
+      </TouchableOpacity>
+
+      <View style={styles.content}>
+        <Text style={styles.title}>Available Payment Methods</Text>
+
+        <FlatList
+          style={{ height: "80%" }}
+          data={paymentMethods}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.paymentMethodItem}>
+              <View style={styles.paymentMethod}>
+                {item.brand === "Cash" ? (
+                  <Ionicons name="cash" size={28} color="black" />
+                ) : (
+                  <FontAwesome
+                    name={"cc-" + item.brand.toLowerCase()}
+                    size={24}
+                    color="black"
+                  />
+                )}
+                <View style={{ gap: 6 }}>
+                  <Text style={styles.paymentMethodText}>{item.brand}</Text>
+                  {item.last4 !== "N/A" && <Text>**** **** {item.last4}</Text>}
                 </View>
               </View>
-            )}
-          />
-          <TouchableOpacity
-            style={styles.extraCard}
-            onPress={() => setAddPaymentMethodModal(true)}
-          >
-            <MaterialCommunityIcons
-              name="credit-card-plus"
-              size={30}
-              color="white"
-            />
-            <Text style={styles.extraCardText}>Add New Card</Text>
-          </TouchableOpacity>
-        </View>
-        <AddPaymentMethod
-          isVisible={addPaymentMethodsModal}
-          onClose={() => setAddPaymentMethodModal(false)}
+            </View>
+          )}
         />
+
+        <TouchableOpacity
+          style={styles.extraCard}
+          onPress={() => setAddPaymentMethodModal(true)}
+        >
+          <MaterialCommunityIcons
+            name="credit-card-plus"
+            size={30}
+            color="white"
+          />
+          <Text style={styles.extraCardText}>Add New Card</Text>
+        </TouchableOpacity>
       </View>
+
+      <AddPaymentMethod
+        isVisible={addPaymentMethodsModal}
+        onClose={() => setAddPaymentMethodModal(false)}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
+    backgroundColor: "#f9f9f9",
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    backgroundColor: "#fff",
+  },
+  backText: {
+    fontSize: 16,
+    marginLeft: 8,
+    color: "#333",
+    fontWeight: "500",
   },
   content: {
+    flex: 1,
     backgroundColor: "#fff",
-    borderRadius: 8,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 20,
+    marginBottom: 20,
     paddingHorizontal: 20,
-    paddingVertical: 40,
-    height: '100%',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
+    paddingTop: 20,
+    paddingBottom: 20,
+    justifyContent: "flex-start",
   },
   title: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 22,
+    fontWeight: "700",
     marginBottom: 20,
     textAlign: "center",
+    color: "#222",
   },
   paymentMethodItem: {
     flexDirection: "row",
-    paddingVertical: 14,
-    paddingHorizontal: 15,
-    marginVertical: 4,
-    borderWidth: 0.2,
-    borderRadius: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.1,
-    width: "100%",
-    justifyContent: "space-between",
     alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginVertical: 6,
+    borderRadius: 12,
+    backgroundColor: "#f1f1f1",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   paymentMethod: {
     flexDirection: "row",
-    gap: 10,
     alignItems: "center",
+    gap: 12,
   },
   paymentMethodText: {
     fontSize: 16,
-    alignItems: "center",
+    fontWeight: "600",
+    color: "#111",
   },
   extraCard: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    gap: 10,
-    backgroundColor: "#333",
-    borderRadius: 8,
-    marginTop: 20,
-    width: "100%",
     justifyContent: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    backgroundColor: "#333",
+    borderRadius: 10,
+    marginTop: 28,
+    marginBottom: 10,
   },
   extraCardText: {
-    fontSize: 18,
+    fontSize: 17,
+    fontWeight: "600",
     color: "#fff",
+    marginLeft: 10,
   },
 });
 
