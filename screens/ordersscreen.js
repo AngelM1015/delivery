@@ -18,13 +18,7 @@ import { Icons } from "../constants/Icons";
 import { max } from "moment";
 
 const OrdersScreen = ({ navigation }) => {
-  const {
-    role,
-    orders,
-    loading,
-    fetchOrders,
-    cancelOrder,
-  } = useOrders();
+  const { role, orders, loading, fetchOrders, cancelOrder } = useOrders();
 
   const handleOrderClick = (order) => {
     if (order.status !== "delivered" && order.status !== "canceled") {
@@ -70,9 +64,7 @@ const OrdersScreen = ({ navigation }) => {
         : "";
 
     return (
-      <TouchableOpacity
-        onPress={() => handleOrderClick(order)}
-      >
+      <TouchableOpacity onPress={() => handleOrderClick(order)}>
         <View style={styles.orderItem}>
           <View
             style={{
@@ -83,35 +75,31 @@ const OrdersScreen = ({ navigation }) => {
           >
             <Text style={styles.orderTitle}>Order ID {order.id}</Text>
             {/* {statusText} */}
-            {role === "customer" && statusText == "In Progress" ?
-              (
-                order.status !== "canceled" &&
-                order.status !== "delivered" &&
-                order.status !== "picked_up" && (
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => cancelOrder(order.id)}
-                  >
-                    <Text style={{ color: "white" }}>Cancel Order</Text>
-                  </TouchableOpacity>
-                )
+            {role === "customer" && statusText == "In Progress" ? (
+              order.status !== "canceled" &&
+              order.status !== "delivered" &&
+              order.status !== "picked_up" && (
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => cancelOrder(order.id)}
+                >
+                  <Text style={{ color: "white" }}>Cancel Order</Text>
+                </TouchableOpacity>
               )
-                :
-                (
-                  <View
-                    style={{
-                      backgroundColor: "#f0f0f0",
-                      padding: 10,
-                      borderRadius: 16,
-                      width: "30%",
-                    }}
-                  >
-                    <Text style={{ color: statusColor, textAlign: "center" }}>
-                      {statusText}
-                    </Text>
-                  </View>
-                )
-              }
+            ) : (
+              <View
+                style={{
+                  backgroundColor: "#f0f0f0",
+                  padding: 10,
+                  borderRadius: 16,
+                  width: "30%",
+                }}
+              >
+                <Text style={{ color: statusColor, textAlign: "center" }}>
+                  {statusText}
+                </Text>
+              </View>
+            )}
           </View>
           <View
             style={{
@@ -160,26 +148,31 @@ const OrdersScreen = ({ navigation }) => {
             </Text>
           </View>
           {/* Progress Bar */}
-          {(order.status === "partner_assigned" || order.status === "picked_up" || order.status === "restaurant_pending_approval") && (
+          {(order.status === "partner_assigned" ||
+            order.status === "picked_up" ||
+            order.status === "restaurant_pending_approval") && (
             <View>
-              <View style={{flexDirection: 'row', gap: 4}}>
+              <View style={{ flexDirection: "row", gap: 4 }}>
                 <ProgressBar
                   progress={getProgress() > 0 ? 1 : 0}
-                  color="#4caf50" style={{marginTop: 20}}
+                  color="#4caf50"
+                  style={{ marginTop: 20 }}
                   indeterminate={order.status === "restaurant_pending_approval"}
                   containerHeight={100}
                   width={"32%"}
                 />
                 <ProgressBar
                   progress={getProgress() >= 0.5 ? 1 : 0}
-                  color="#4caf50" style={{marginTop: 20}}
+                  color="#4caf50"
+                  style={{ marginTop: 20 }}
                   indeterminate={order.status === "partner_assigned"}
                   containerHeight={100}
                   width={"32%"}
                 />
                 <ProgressBar
                   progress={getProgress() === 1 ? 1 : 0}
-                  color="#4caf50" style={{marginTop: 20}}
+                  color="#4caf50"
+                  style={{ marginTop: 20 }}
                   indeterminate={order.status === "picked_up"}
                   containerHeight={100}
                   width={"32%"}
@@ -241,7 +234,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 8
+    marginVertical: 8,
   },
   orderItem: {
     padding: 10,

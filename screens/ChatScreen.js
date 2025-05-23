@@ -30,7 +30,7 @@ const ChatScreen = ({ navigation }) => {
   const [newMessage, setNewMessage] = useState("");
   const route = useRoute();
   const [conversationId, setConversationId] = useState(
-    route.params.conversationId
+    route.params.conversationId,
   );
 
   useEffect(() => {
@@ -51,7 +51,7 @@ const ChatScreen = ({ navigation }) => {
             console.log("Received new message:", data);
             setMessages((messages) => [...messages, data]);
           },
-        }
+        },
       );
 
       console.log("subscription", subscription);
@@ -72,13 +72,13 @@ const ChatScreen = ({ navigation }) => {
       },
     };
     createMessage(body);
-    setNewMessage('');
+    setNewMessage("");
   };
 
   const handleCall = () => {
     const phoneNumber = "+92111111111";
     Linking.openURL(`tel:${phoneNumber}`).catch((err) =>
-      console.error("Failed to open dialer", err)
+      console.error("Failed to open dialer", err),
     );
   };
 

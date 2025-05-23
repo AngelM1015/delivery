@@ -22,15 +22,15 @@ export const CartProvider = ({ children }) => {
       autoHide: true,
     });
     setCartItems((currentItems) =>
-      currentItems.filter((item, index) => index !== itemId)
+      currentItems.filter((item, index) => index !== itemId),
     );
   };
 
   const updateItemQuantity = (itemId, newQuantity) => {
     setCartItems((currentItems) =>
       currentItems.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
+        item.id === itemId ? { ...item, quantity: newQuantity } : item,
+      ),
     );
   };
 

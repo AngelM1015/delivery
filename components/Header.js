@@ -1,12 +1,23 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Linking } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Linking,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons"; // Change from FontAwesome to Ionicons
 import BackIcon from "../assets/svgs/backIcon.svg";
 
-const Header = ({ title, navigation, showBackIcon = true, showShareIcon = false }) => {
+const Header = ({
+  title,
+  navigation,
+  showBackIcon = true,
+  showShareIcon = false,
+}) => {
   // Function to open the website when share icon is clicked
   const openWebsite = () => {
-    Linking.openURL('https://www.bigskyeats.delivery');
+    Linking.openURL("https://www.bigskyeats.delivery");
   };
 
   return (

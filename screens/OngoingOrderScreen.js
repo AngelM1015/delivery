@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
-  StatusBar
+  StatusBar,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -45,10 +45,13 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
       case "canceled":
         return "Canceled";
       default:
-        return status?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Processing";
+        return (
+          status?.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) ||
+          "Processing"
+        );
     }
   };
-  
+
   const getStatusColor = (status) => {
     switch (status) {
       case "restaurant_approved":
@@ -83,7 +86,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
           `${base_url}api/v1/orders/${route.params.id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
 
         const ongoingOrder = response.data;
@@ -100,12 +103,14 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
             received(data) {
               console.log("new order message:", data);
               if (data.partner_message) setPartnerMessage(data.partner_message);
-              if (data.customer_message) setCustomerMessage(data.customer_message);
-              if (data.partner_location) setPartnerLocation(data.partner_location);
+              if (data.customer_message)
+                setCustomerMessage(data.customer_message);
+              if (data.partner_location)
+                setPartnerLocation(data.partner_location);
             },
-          }
+          },
         );
-        
+
         setLoading(false);
         return () => {
           subscription.unsubscribe();
@@ -133,7 +138,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
         order,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       if (order.order_type === "pickup") {
@@ -151,8 +156,12 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
     if (!order.address) return null;
 
     const partnerCoords = {
-      latitude: partnerLocation ? partnerLocation.latitude : order.partner_location.latitude,
-      longitude: partnerLocation ? partnerLocation.longitude : order.partner_location.longitude,
+      latitude: partnerLocation
+        ? partnerLocation.latitude
+        : order.partner_location.latitude,
+      longitude: partnerLocation
+        ? partnerLocation.longitude
+        : order.partner_location.longitude,
     };
 
     const customerCoords = {
@@ -183,11 +192,7 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
 
           <Marker coordinate={customerCoords} title="Delivery Location">
             <View style={styles.markerContainer}>
-              <FontAwesome
-                name="home"
-                size={24}
-                style={styles.homeMarker}
-              />
+              <FontAwesome name="home" size={24} style={styles.homeMarker} />
             </View>
           </Marker>
 
@@ -229,7 +234,12 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
           </TouchableOpacity>
           <Text style={styles.orderText}>Order #{order.id}</Text>
           <View style={styles.statusBadge}>
-            <Text style={[styles.statusBadgeText, { color: getStatusColor(order.status) }]}>
+            <Text
+              style={[
+                styles.statusBadgeText,
+                { color: getStatusColor(order.status) },
+              ]}
+            >
               {getStatusText(order.status)}
             </Text>
           </View>
@@ -238,16 +248,23 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
         {order.status === "picked_up" && renderMap()}
 
         <View style={styles.contentContainer}>
-          {order.status === "partner_assigned" || order.status === "picked_up" ? (
+          {order.status === "partner_assigned" ||
+          order.status === "picked_up" ? (
             <View style={styles.chatRow}>
               <Text style={styles.chatText}>Chat with your driver</Text>
               <TouchableOpacity
                 style={styles.chatIconContainer}
-                onPress={() => navigation.navigate("Chat", {
-                  conversationId: order.conversation_id,
-                })}
+                onPress={() =>
+                  navigation.navigate("Chat", {
+                    conversationId: order.conversation_id,
+                  })
+                }
               >
-                <Ionicons name="chatbox-ellipses-outline" size={30} color="white" />
+                <Ionicons
+                  name="chatbox-ellipses-outline"
+                  size={30}
+                  color="white"
+                />
               </TouchableOpacity>
             </View>
           ) : null}
@@ -271,46 +288,69 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
               {/* Order summary card moved inside details section */}
               <View style={styles.orderSummaryCard}>
                 <View style={styles.restaurantInfo}>
-                  <Text style={styles.restaurantName}>{order.restaurant_name || "Restaurant"}</Text>
+                  <Text style={styles.restaurantName}>
+                    {order.restaurant_name || "Restaurant"}
+                  </Text>
                   <Text style={styles.orderItems}>
                     {order.order_items && order.order_items.length > 0
                       ? `${order.order_items.length} item(s)`
                       : "Items being prepared"}
                   </Text>
                 </View>
-                <Text style={styles.orderPrice}>${order.total_price || "0.00"}</Text>
+                <Text style={styles.orderPrice}>
+                  ${order.total_price || "0.00"}
+                </Text>
               </View>
-              
+
               <View style={styles.statusContainer}>
                 <Text style={styles.detailLabel}>Status:</Text>
-                <Text style={[styles.statusValue, { color: getStatusColor(order.status) }]}>
+                <Text
+                  style={[
+                    styles.statusValue,
+                    { color: getStatusColor(order.status) },
+                  ]}
+                >
                   {getStatusText(order.status)}
                 </Text>
               </View>
-              
+
               {customerMessage && (
                 <View style={styles.messageContainer}>
                   <Text style={styles.detailLabel}>Order message:</Text>
                   <Text style={styles.messageText}>{customerMessage}</Text>
                 </View>
               )}
-              
+
               <View style={styles.estimateContainer}>
-                <Ionicons name="time-outline" size={20} color="#F09B00" style={styles.estimateIcon} />
+                <Ionicons
+                  name="time-outline"
+                  size={20}
+                  color="#F09B00"
+                  style={styles.estimateIcon}
+                />
                 <Text style={styles.estimateText}>
-                  Your order will be delivered in {order.estimated_wait_time} - {order.estimated_wait_time + 15} mins
+                  Your order will be delivered in {order.estimated_wait_time} -{" "}
+                  {order.estimated_wait_time + 15} mins
                 </Text>
               </View>
 
-              {order.order_type === "pickup" && order.status === "restaurant_approved" && (
-                <TouchableOpacity
-                  style={styles.pickupButton}
-                  onPress={() => handlePickedUp()}
-                >
-                  <Ionicons name="bag-check-outline" size={24} color="white" style={styles.pickupIcon} />
-                  <Text style={styles.pickupButtonText}>Pick Up Your Order</Text>
-                </TouchableOpacity>
-              )}
+              {order.order_type === "pickup" &&
+                order.status === "restaurant_approved" && (
+                  <TouchableOpacity
+                    style={styles.pickupButton}
+                    onPress={() => handlePickedUp()}
+                  >
+                    <Ionicons
+                      name="bag-check-outline"
+                      size={24}
+                      color="white"
+                      style={styles.pickupIcon}
+                    />
+                    <Text style={styles.pickupButtonText}>
+                      Pick Up Your Order
+                    </Text>
+                  </TouchableOpacity>
+                )}
             </View>
           )}
         </View>
@@ -319,7 +359,6 @@ const OngoingOrderScreen = ({ isVisible, onClose, id }) => {
   );
 };
 
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -327,14 +366,14 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#555',
+    color: "#555",
   },
   container: {
     flex: 1,
@@ -362,13 +401,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: "#f8f8f8",
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: "#eee",
   },
   statusBadgeText: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   contentContainer: {
     flex: 1,
@@ -379,14 +418,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginVertical: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     padding: 16,
     borderRadius: 12,
   },
   chatText: {
     fontSize: 18,
-    color: '#333',
-    fontWeight: '500',
+    color: "#333",
+    fontWeight: "500",
   },
   chatIconContainer: {
     backgroundColor: "#F09B00",
@@ -394,9 +433,9 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   toggleDetailsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginVertical: 10,
     padding: 8,
   },
@@ -404,13 +443,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#F09B00",
     marginRight: 5,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   mapContainer: {
     width: "100%",
     height: 300,
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 16,
   },
   map: {
@@ -418,8 +457,8 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   markerContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   driverMarker: {
     padding: 4,
@@ -427,7 +466,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     color: "#F09B00",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   homeMarker: {
     padding: 4,
@@ -435,59 +474,59 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     color: "#4A89F3",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   content: {
     marginTop: 10,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
   statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   detailLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#555',
+    fontWeight: "600",
+    color: "#555",
     marginRight: 8,
   },
   statusValue: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   messageContainer: {
     marginBottom: 12,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   messageText: {
     fontSize: 16,
-    color: '#333',
-    fontStyle: 'italic',
+    color: "#333",
+    fontStyle: "italic",
     marginTop: 4,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     padding: 10,
     borderRadius: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#F09B00',
+    borderLeftColor: "#F09B00",
   },
   estimateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
-    backgroundColor: '#FFF9E6',
+    backgroundColor: "#FFF9E6",
     padding: 12,
     borderRadius: 8,
   },
@@ -496,7 +535,7 @@ const styles = StyleSheet.create({
   },
   estimateText: {
     fontSize: 15,
-    color: '#333',
+    color: "#333",
     flex: 1,
   },
   pickupButton: {
@@ -516,7 +555,7 @@ const styles = StyleSheet.create({
   },
   pickupIcon: {
     marginRight: 8,
-  }  
+  },
 });
 
 export default OngoingOrderScreen;

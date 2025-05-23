@@ -25,7 +25,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Debounce timer reference
   const debounceTimerRef = useRef(null);
 
@@ -43,14 +43,14 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
       fetchLocations();
     }
   }, [isVisible]);
-  
+
   // Effect for debounced search
   useEffect(() => {
     // Clear previous timer
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
-    
+
     // Only search if query is at least 3 characters
     if (searchQuery.length >= 3) {
       // Set a new timer
@@ -60,7 +60,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
     } else {
       setSuggestions([]);
     }
-    
+
     // Cleanup function to clear timer if component unmounts or searchQuery changes
     return () => {
       if (debounceTimerRef.current) {
@@ -94,7 +94,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
             strictbounds: true,
             key: GOOGLE_MAPS_API_KEY,
           },
-        }
+        },
       );
       setSuggestions(response.data.predictions || []);
     } catch (error) {
@@ -115,7 +115,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
 
     console.log("location data", locationData);
 
-    if(role === 'guest') {
+    if (role === "guest") {
       saveSelectedLocation(locationData);
       onSelectLocation(locationData);
       return;
@@ -127,7 +127,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
         { address: locationData },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       setLocations([...locations, response.data]);
       setNewLocation("");
@@ -148,7 +148,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
             place_id: placeId,
             key: GOOGLE_MAPS_API_KEY,
           },
-        }
+        },
       );
       const { lat, lng } = response.data.result.geometry.location;
       const formattedAddress = response.data.result.formatted_address;
@@ -197,7 +197,7 @@ const Locations = ({ isVisible, onClose, onSelectLocation }) => {
             latlng: `${latitude},${longitude}`,
             key: GOOGLE_MAPS_API_KEY,
           },
-        }
+        },
       );
       if (response.data.results[0]) {
         return response.data.results[0].formatted_address;
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
     borderColor: "#eee",
     borderRadius: 5,
     marginBottom: 10,
-  }
+  },
 });
 
 export default Locations;

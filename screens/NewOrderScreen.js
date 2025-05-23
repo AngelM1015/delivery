@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   TextInput,
   Button as RNButton,
-  Modal
+  Modal,
 } from "react-native";
 import {
   Button,
@@ -22,8 +22,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import cable from "../cable";
 import { base_url } from "../constants/api";
-import Icon from 'react-native-vector-icons/MaterialIcons';
-
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 const formatStatus = (status) => {
   return status
@@ -57,7 +56,6 @@ const formatTime = (dateTime) => {
 };
 
 const NewOrderScreen = ({ navigation }) => {
-
   const [orders, setOrders] = useState([]);
   const [newOrders, setNewOrders] = useState([]);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -67,7 +65,7 @@ const NewOrderScreen = ({ navigation }) => {
   const [isActive, setIsActive] = useState(true);
   const [historyVisible, setHistoryVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [cancellationReason, setCancellationReason] = useState('');
+  const [cancellationReason, setCancellationReason] = useState("");
 
   const toggleStatus = () => {
     setIsActive(!isActive);
@@ -91,7 +89,7 @@ const NewOrderScreen = ({ navigation }) => {
       setRestaurant(response.data[0]["restaurant_id"]);
       console.log("restaurant", response.data[0]["restaurant_id"]);
       response.data.forEach((order) =>
-        handleReceived({ order_id: order.id, status: order.status })
+        handleReceived({ order_id: order.id, status: order.status }),
       );
 
       restaurantSubscription(response.data[0]["restaurant_id"]);
@@ -112,11 +110,13 @@ const NewOrderScreen = ({ navigation }) => {
         const response = await axios.get(apiUrl, { headers });
         const newestOrders = response.data || [];
 
-        if(newestOrders.length > 0){
+        if (newestOrders.length > 0) {
           setNewOrders((prevOrders) => {
-            const existingOrderIds = new Set(prevOrders.map((order) => order.id));
+            const existingOrderIds = new Set(
+              prevOrders.map((order) => order.id),
+            );
             const uniqueNewOrders = newestOrders.filter(
-              (order) => !existingOrderIds.has(order.id)
+              (order) => !existingOrderIds.has(order.id),
             );
             return [...uniqueNewOrders, ...prevOrders];
           });
@@ -139,7 +139,7 @@ const NewOrderScreen = ({ navigation }) => {
           console.log("data", data);
           setOrders((prevOrders) => [data, ...prevOrders]);
         },
-      }
+      },
     );
 
     console.log("restaurant subscription", subscription);
@@ -158,13 +158,13 @@ const NewOrderScreen = ({ navigation }) => {
 
     if (data.message && data.message.startsWith("Order status updated")) {
       setSnackbarMessage(
-        `Status updated to, ${status.replace(/_|-|\\. /g, " ")}`
+        `Status updated to, ${status.replace(/_|-|\\. /g, " ")}`,
       );
       setSnackbarVisible(true);
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          order.id === order_id ? { ...order, status: status } : order
-        )
+          order.id === order_id ? { ...order, status: status } : order,
+        ),
       );
     }
   };
@@ -178,20 +178,20 @@ const NewOrderScreen = ({ navigation }) => {
         { status, cancellation_reason: cancellationReason },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          order.id === id ? { ...order, status } : order
-        )
+          order.id === id ? { ...order, status } : order,
+        ),
       );
 
       setNewOrders((prevNewOrders) =>
-        prevNewOrders.filter((order) => order.id !== id)
+        prevNewOrders.filter((order) => order.id !== id),
       );
       setSnackbarMessage(
-        `Status updated to ${status.replace(/_|-|\\. /g, " ")}`
+        `Status updated to ${status.replace(/_|-|\\. /g, " ")}`,
       );
       setSnackbarVisible(true);
     } catch (error) {
@@ -249,111 +249,118 @@ const NewOrderScreen = ({ navigation }) => {
         <Text style={styles.textValue}>{item.restaurant_name}</Text>
       </View>
       <View style={styles.actions}>
-      <Button
-        mode="contained"
-        onPress={handleCancelOrder}
-        style={styles.cancelButton}
-        labelStyle={styles.cancelButtonText}
-      >
-        Cancel order
-      </Button>
-      <Button
-        mode="contained"
-        onPress={() => updateOrderStatus(item.id, "restaurant_approved")}
-        style={styles.acceptButton}
-        labelStyle={styles.acceptButtonText}
-      >
-        Accept order
-      </Button>
+        <Button
+          mode="contained"
+          onPress={handleCancelOrder}
+          style={styles.cancelButton}
+          labelStyle={styles.cancelButtonText}
+        >
+          Cancel order
+        </Button>
+        <Button
+          mode="contained"
+          onPress={() => updateOrderStatus(item.id, "restaurant_approved")}
+          style={styles.acceptButton}
+          labelStyle={styles.acceptButtonText}
+        >
+          Accept order
+        </Button>
 
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.cancelModalContainer}>
-          <View style={styles.cancelModalContent}>
-            <TouchableOpacity
-              style={styles.crossButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Icon name="close" size={24} color="#000" />
-            </TouchableOpacity>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', marginVertical: 5 }}>
-              Cancellation Reason
-            </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter cancellation reason"
-              value={cancellationReason}
-              onChangeText={setCancellationReason}
-            />
-            <RNButton
-              title="Confirm Cancel"
-              onPress={() => handleConfirmCancel(item)}
-              disabled={!cancellationReason}
-            />
-            <RNButton
-              title="Accept Order"
-              onPress={() => {
-                updateOrderStatus(item.id, "restaurant_approved");
-                setModalVisible(false);
-              }}
-            />
+        <Modal
+          visible={modalVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.cancelModalContainer}>
+            <View style={styles.cancelModalContent}>
+              <TouchableOpacity
+                style={styles.crossButton}
+                onPress={() => setModalVisible(false)}
+              >
+                <Icon name="close" size={24} color="#000" />
+              </TouchableOpacity>
+              <Text
+                style={{ fontSize: 16, fontWeight: "bold", marginVertical: 5 }}
+              >
+                Cancellation Reason
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter cancellation reason"
+                value={cancellationReason}
+                onChangeText={setCancellationReason}
+              />
+              <RNButton
+                title="Confirm Cancel"
+                onPress={() => handleConfirmCancel(item)}
+                disabled={!cancellationReason}
+              />
+              <RNButton
+                title="Accept Order"
+                onPress={() => {
+                  updateOrderStatus(item.id, "restaurant_approved");
+                  setModalVisible(false);
+                }}
+              />
+            </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
     </View>
   );
 
   const showDetails = (orderId) => {
-    navigation.navigate("OrderDetails", { orderId: orderId })
-  }
+    navigation.navigate("OrderDetails", { orderId: orderId });
+  };
 
   const renderOrderHistory = ({ item }) => (
     <TouchableOpacity onPress={() => showDetails(item.id)}>
-    <View style={styles.orderItem}>
-      <View
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          flexDirection: "row",
-          alignItems: "center",
-        }}
-      >
-        <Text style={styles.orderType}>{item.order_type}</Text>
+      <View style={styles.orderItem}>
+        <View
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <Text style={styles.orderType}>{item.order_type}</Text>
+        </View>
+        <View
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <Text style={styles.orderId}> Order ID: {item.id}</Text>
+        </View>
+        <View
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <Text style={styles.menuItemName}>
+            {item.order_items[0].menu_item}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row", gap: 5 }}>
+          <Text style={{ fontSize: 16, fontWeight: "bold" }}> Status: </Text>
+          <Text style={styles.textValue}>{formatStatus(item.status)}</Text>
+        </View>
+        <View style={{ flexDirection: "row", gap: 5 }}>
+          <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+            {" "}
+            Restaurant:{" "}
+          </Text>
+          <Text style={styles.textValue}>{item.restaurant_name}</Text>
+        </View>
       </View>
-      <View
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          flexDirection: "row",
-          alignItems: "center",
-        }}
-      >
-        <Text style={styles.orderId}> Order ID: {item.id}</Text>
-      </View>
-      <View
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          flexDirection: "row",
-          alignItems: "center",
-        }}
-      >
-        <Text style={styles.menuItemName}>{item.order_items[0].menu_item}</Text>
-      </View>
-      <View style={{ flexDirection: "row", gap: 5 }}>
-        <Text style={{ fontSize: 16, fontWeight: "bold" }}> Status: </Text>
-        <Text style={styles.textValue}>{formatStatus(item.status)}</Text>
-      </View>
-      <View style={{ flexDirection: "row", gap: 5 }}>
-        <Text style={{ fontSize: 16, fontWeight: "bold" }}> Restaurant: </Text>
-        <Text style={styles.textValue}>{item.restaurant_name}</Text>
-      </View>
-    </View>
     </TouchableOpacity>
   );
 
@@ -402,7 +409,7 @@ const NewOrderScreen = ({ navigation }) => {
             </TouchableOpacity>
             <FlatList
               data={orders.filter(
-                (order) => order.status !== "restaurant_pending_approval"
+                (order) => order.status !== "restaurant_pending_approval",
               )}
               renderItem={renderOrderHistory}
               keyExtractor={(item) => item.id.toString()}
@@ -554,25 +561,25 @@ const styles = StyleSheet.create({
   },
   cancelModalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   cancelModalContent: {
-    width: '80%',
+    width: "80%",
     padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 10,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
   },
   crossButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 10,
     right: 10,
     zIndex: 1,

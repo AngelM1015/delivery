@@ -22,9 +22,12 @@ const RestaurantMenuScreen = ({ route, navigation }) => {
         const url = `${base_url}api/v1/restaurants/${restaurantId}/menu_items/`;
         const response = await axios.get(url, { headers });
         setMenuItems(response.data);
-        
+
         // Save the restaurant ID for checkout
-        await AsyncStorage.setItem("selectedRestaurantId", restaurantId.toString());
+        await AsyncStorage.setItem(
+          "selectedRestaurantId",
+          restaurantId.toString(),
+        );
       } catch (error) {
         console.error("Error fetching menu items:", error);
       } finally {
@@ -37,7 +40,7 @@ const RestaurantMenuScreen = ({ route, navigation }) => {
 
   const filteredMenuItems = searchQuery
     ? menuItems.filter((item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : menuItems;
 

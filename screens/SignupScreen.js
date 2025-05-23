@@ -16,13 +16,13 @@ import CustomButton from "../components/CustomButton";
 import CustomInput from "../components/CustomInput";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { base_url, auth } from "../constants/api";
-import SuccessfulSignUpComponent from '../components/SuccessfulSignUpComponent';
+import SuccessfulSignUpComponent from "../components/SuccessfulSignUpComponent";
 
 const SignupScreen = ({ navigation, route }) => {
   // Safely destructure route.params with default values
   const { isRoleChanged, setIsRoleChanged } = route?.params || {
     isRoleChanged: false,
-    setIsRoleChanged: () => {}
+    setIsRoleChanged: () => {},
   };
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -30,7 +30,7 @@ const SignupScreen = ({ navigation, route }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [newUserName, setNewUserName] = useState('');
+  const [newUserName, setNewUserName] = useState("");
 
   const handleSignup = async () => {
     // Input validation
@@ -68,7 +68,10 @@ const SignupScreen = ({ navigation, route }) => {
           // Store user data
           await AsyncStorage.setItem("userToken", response.data.token);
           await AsyncStorage.setItem("userRole", response.data.role || "guest");
-          await AsyncStorage.setItem("userId", (response.data.user_id || "").toString());
+          await AsyncStorage.setItem(
+            "userId",
+            (response.data.user_id || "").toString(),
+          );
           await AsyncStorage.setItem("userEmail", response.data.email || "");
           await AsyncStorage.setItem("userName", response.data.name || "");
         } catch (storageError) {
@@ -77,14 +80,13 @@ const SignupScreen = ({ navigation, route }) => {
         }
 
         // Update role state if the function exists
-        if (typeof setIsRoleChanged === 'function') {
+        if (typeof setIsRoleChanged === "function") {
           setIsRoleChanged(!isRoleChanged);
         }
-        
+
         // Show success modal instead of immediately navigating
         setNewUserName(name);
         setShowSuccessModal(true);
-        
       } else {
         Alert.alert("Error", "Signup failed. Please try again.");
       }
@@ -93,7 +95,8 @@ const SignupScreen = ({ navigation, route }) => {
       // Handle specific error messages from the API
       let errorMessage = "Signup failed. Please try again.";
       if (error?.response?.data) {
-        errorMessage = error.response.data.error ||
+        errorMessage =
+          error.response.data.error ||
           error.response.data.message ||
           errorMessage;
       } else if (error?.message?.includes("Network")) {
@@ -108,7 +111,7 @@ const SignupScreen = ({ navigation, route }) => {
   const handleSuccessModalClose = () => {
     setShowSuccessModal(false);
     // Navigate to main screen after modal is dismissed
-    if (navigation && typeof navigation.replace === 'function') {
+    if (navigation && typeof navigation.replace === "function") {
       navigation.replace("Main");
     } else {
       console.error("Navigation is unavailable");
@@ -169,7 +172,7 @@ const SignupScreen = ({ navigation, route }) => {
             <Text style={styles.footerText}>Already have an account?</Text>
             <TouchableOpacity
               onPress={() => {
-                if (navigation && typeof navigation.navigate === 'function') {
+                if (navigation && typeof navigation.navigate === "function") {
                   navigation.navigate("Login");
                 }
               }}
@@ -177,7 +180,7 @@ const SignupScreen = ({ navigation, route }) => {
               <Text style={styles.loginText}>Login</Text>
             </TouchableOpacity>
           </View>
-          
+
           {/* Success Modal */}
           <SuccessfulSignUpComponent
             visible={showSuccessModal}

@@ -8,14 +8,14 @@ import {
   ScrollView,
   SafeAreaView,
   ActivityIndicator,
-  Alert
+  Alert,
 } from "react-native";
 import { Card } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { base_url } from "../constants/api";
 import { useCart } from "../context/CartContext";
-import { FontAwesome, AntDesign, Ionicons, Fontisto} from "@expo/vector-icons";
+import { FontAwesome, AntDesign, Ionicons, Fontisto } from "@expo/vector-icons";
 import Header from "../components/Header";
 import Toast from "react-native-toast-message";
 import useUser from "../hooks/useUser";
@@ -28,7 +28,8 @@ const MenuAboutScreen = ({ route, navigation }) => {
   const [modifierCounts, setModifierCounts] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [modifiers, setModifiers] = useState([]);
-  const { addToCart, clearCart, cartRestaurantId, setCartRestaurantId } = useCart();
+  const { addToCart, clearCart, cartRestaurantId, setCartRestaurantId } =
+    useCart();
   const [selectedModifierOptions, setSelectedModifierOptions] = useState({});
   const [primaryModifiers, setPrimaryModifiers] = useState([]);
 
@@ -54,10 +55,10 @@ const MenuAboutScreen = ({ route, navigation }) => {
             });
             return counts;
           },
-          {}
+          {},
         );
         setModifierCounts(initialCounts);
-        console.log('modifiers', initialCounts)
+        console.log("modifiers", initialCounts);
 
         // Set recommended items excluding the selected item
         // const recommended = response.data.filter(item => item.id !== menuItemId);
@@ -73,16 +74,15 @@ const MenuAboutScreen = ({ route, navigation }) => {
   const checkPrimaryModifiers = async (allModifiers) => {
     let primary = [];
     allModifiers.map((modifier) => {
-      if(modifier.primary) primary.push(`${modifier.id}`)
-    })
+      if (modifier.primary) primary.push(`${modifier.id}`);
+    });
     setPrimaryModifiers(primary);
 
-    console.log('primary modifiers', primary);
-  }
+    console.log("primary modifiers", primary);
+  };
 
   const handleAddToCart = () => {
-    if(role === 'guest')
-    {
+    if (role === "guest") {
       Alert.alert("You cannot add items to cart. Please sign in to continue.");
       return;
     }
@@ -91,24 +91,22 @@ const MenuAboutScreen = ({ route, navigation }) => {
     const selectedModifiers = Object.entries(selectedModifierOptions)
       .map(([modifierId, optionsCounts]) => ({
         modifierId,
-        options: optionsCounts
-          .map((optionId) => {
-            console.log('options id', optionId);
-            const option = modifiers
-              ?.find((modifier) => modifier.id === parseInt(modifierId))
-              ?.modifier_options?.find(
-                (option) => option.id === optionId
-              );
-            return { ...option };
-          }),
+        options: optionsCounts.map((optionId) => {
+          console.log("options id", optionId);
+          const option = modifiers
+            ?.find((modifier) => modifier.id === parseInt(modifierId))
+            ?.modifier_options?.find((option) => option.id === optionId);
+          return { ...option };
+        }),
       }))
       .filter((modifier) => modifier.options.length > 0);
 
-    const price = menuItem.item_prices?.length > 0
-                  ? parseFloat(menuItem.item_prices[0])
-                  : "0.0";
+    const price =
+      menuItem.item_prices?.length > 0
+        ? parseFloat(menuItem.item_prices[0])
+        : "0.0";
 
-    console.log('selected modifiers', selectedModifiers[0])
+    console.log("selected modifiers", selectedModifiers[0]);
 
     const imageUrl = menuItem.image_url
       ? base_url + menuItem.image_url
@@ -123,11 +121,8 @@ const MenuAboutScreen = ({ route, navigation }) => {
         selectedModifiers.reduce(
           (w, x) =>
             w +
-            x.options.reduce(
-              (a, b) => a + parseFloat(b.additional_price),
-              0
-            ),
-          0
+            x.options.reduce((a, b) => a + parseFloat(b.additional_price), 0),
+          0,
         ),
       imageUrl,
       selectedModifiers,
@@ -164,22 +159,23 @@ const MenuAboutScreen = ({ route, navigation }) => {
         ? currentOptions.filter((id) => id !== optionId) // Remove option
         : [...currentOptions, optionId]; // Add option
 
-        if(updatedOptions.length === 0) delete prevSelectedOptions[modifierId]
+      if (updatedOptions.length === 0) delete prevSelectedOptions[modifierId];
 
-      return updatedOptions.length > 0 ? { ...prevSelectedOptions, [modifierId]: updatedOptions } :
-              { ...prevSelectedOptions }
+      return updatedOptions.length > 0
+        ? { ...prevSelectedOptions, [modifierId]: updatedOptions }
+        : { ...prevSelectedOptions };
     });
   };
 
   const enableCartButton = () => {
-    if(!primaryModifiers.length > 0) return false;
+    if (!primaryModifiers.length > 0) return false;
 
-    const selectedIds = Object.keys(selectedModifierOptions)
+    const selectedIds = Object.keys(selectedModifierOptions);
 
-    for(let id of primaryModifiers){
-      if(!selectedIds.includes(id)) return true
+    for (let id of primaryModifiers) {
+      if (!selectedIds.includes(id)) return true;
     }
-  }
+  };
 
   const renderRecommendedItem = ({ item }) => {
     const imageUrl = menuItem.image_url
@@ -244,7 +240,8 @@ const MenuAboutScreen = ({ route, navigation }) => {
   }
 
   const incrementQuantity = () => setQuantity((prev) => prev + 1);
-  const decrementQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  const decrementQuantity = () =>
+    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -275,7 +272,8 @@ const MenuAboutScreen = ({ route, navigation }) => {
             </Text>
             <View style={styles.metaDetails}>
               <Text>
-              <Fontisto name="motorcycle" size={14} color="#F09B00" /> ${deliveryFee}
+                <Fontisto name="motorcycle" size={14} color="#F09B00" /> $
+                {deliveryFee}
               </Text>
               <Text>
                 <FontAwesome name="clock-o" color="#F09B00" />{" "}
@@ -295,24 +293,44 @@ const MenuAboutScreen = ({ route, navigation }) => {
             <Text style={styles.modifiersTitle}>Available Modifiers:</Text>
             {modifiers.map((modifier) => (
               <Card key={modifier.id} style={styles.card}>
-                <Card.Title titleStyle={styles.modifierName} title={modifier.name + (modifier.primary ? '( required )' : '')} />
+                <Card.Title
+                  titleStyle={styles.modifierName}
+                  title={
+                    modifier.name + (modifier.primary ? "( required )" : "")
+                  }
+                />
                 <Card.Content>
                   {(modifier.modifier_options || []).map((option) => (
-                    <TouchableOpacity key={option.id} style={styles.optionContainer} onPress={() => handleSelectModifierOption(modifier.id, option.id)}>
-                      <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
+                    <TouchableOpacity
+                      key={option.id}
+                      style={styles.optionContainer}
+                      onPress={() =>
+                        handleSelectModifierOption(modifier.id, option.id)
+                      }
+                    >
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
                         <Ionicons
-                          name={ !selectedModifierOptions[modifier.id]?.includes(option.id) ?
-                               "radio-button-off" :
-                               "radio-button-on"
+                          name={
+                            !selectedModifierOptions[modifier.id]?.includes(
+                              option.id,
+                            )
+                              ? "radio-button-off"
+                              : "radio-button-on"
                           }
                           size={24}
                         />
-                        <Text>
-                          {option.name}
-                        </Text>
+                        <Text>{option.name}</Text>
                       </View>
                       <Text>
-                        {option.additional_price !== '0.0' ? `+$${option.additional_price}` : 'Free'}
+                        {option.additional_price !== "0.0"
+                          ? `+$${option.additional_price}`
+                          : "Free"}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -354,7 +372,11 @@ const MenuAboutScreen = ({ route, navigation }) => {
         <TouchableOpacity
           onPress={handleAddToCart}
           disabled={enableCartButton()}
-          style={enableCartButton() ? styles.offAddToCartButton : styles.addToCartButton}
+          style={
+            enableCartButton()
+              ? styles.offAddToCartButton
+              : styles.addToCartButton
+          }
         >
           <Text style={styles.addToCartText}>
             <FontAwesome name="shopping-cart" size={20} color="white" /> Add To

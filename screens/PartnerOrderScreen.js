@@ -9,15 +9,20 @@ import {
   RefreshControl,
   Image,
   Linking,
-  Platform
+  Platform,
 } from "react-native";
 import useOrders from "../hooks/useOrders";
 import { Ionicons } from "@expo/vector-icons";
 import { base_url } from "../constants/api";
 
 const PartnerOrderScreen = ({ navigation }) => {
-  const { loading, partnerOrders, fetchPartnerPendingOrders, deliverOrder, pickUpOrder } =
-    useOrders();
+  const {
+    loading,
+    partnerOrders,
+    fetchPartnerPendingOrders,
+    deliverOrder,
+    pickUpOrder,
+  } = useOrders();
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -36,10 +41,10 @@ const PartnerOrderScreen = ({ navigation }) => {
 
     const url = Platform.select({
       ios: `maps://?q=${label}&ll=${latitude},${longitude}`,
-      android: "geo:" + latitude + "," + longitude + "?q=" + label
+      android: "geo:" + latitude + "," + longitude + "?q=" + label,
     });
 
-    Linking.canOpenURL(url).then(supported => {
+    Linking.canOpenURL(url).then((supported) => {
       if (supported) {
         return Linking.openURL(url);
       } else {
@@ -84,7 +89,9 @@ const PartnerOrderScreen = ({ navigation }) => {
               }
             />
           </View>
-        ) : ('')}
+        ) : (
+          ""
+        )}
       </View>
       <View
         style={{
@@ -123,7 +130,7 @@ const PartnerOrderScreen = ({ navigation }) => {
         </Text>
       </View>
       <Text>Delivery Address: {item.delivery_address}</Text>
-      {item.status === 'picked_up' && (
+      {item.status === "picked_up" && (
         <TouchableOpacity
           style={styles.directionButton}
           onPress={() => redirectToMap(item)}
@@ -133,9 +140,15 @@ const PartnerOrderScreen = ({ navigation }) => {
       )}
       <TouchableOpacity
         style={styles.pickupButton}
-        onPress={item.status === 'partner_assigned' ? (() => pickUpOrder(item.id)) : (() => deliverOrder(item.id))}
+        onPress={
+          item.status === "partner_assigned"
+            ? () => pickUpOrder(item.id)
+            : () => deliverOrder(item.id)
+        }
       >
-        <Text style={styles.pickupButtonText}>{item.status === 'partner_assigned' ? "Pick Order" : "Deliver Order"}</Text>
+        <Text style={styles.pickupButtonText}>
+          {item.status === "partner_assigned" ? "Pick Order" : "Deliver Order"}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -231,9 +244,9 @@ const styles = StyleSheet.create({
   directionText: {
     color: "blue",
     fontSize: 18,
-    fontStyle: 'italic',
-    textAlign: 'right',
-    marginEnd: 4
+    fontStyle: "italic",
+    textAlign: "right",
+    marginEnd: 4,
   },
   pickupButton: {
     marginTop: 8,

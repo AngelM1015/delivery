@@ -20,11 +20,11 @@ import useRestaurants from "../hooks/useRestaurants";
 import Locations from "../components/Locations";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import client from "../client";
-import * as Location from 'expo-location'
+import * as Location from "expo-location";
 import { GOOGLE_MAPS_API_KEY } from "@env";
 import axios from "axios";
 import useAddress from "../hooks/useAddress";
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from "@react-navigation/native";
 import useUser from "../hooks/useUser";
 import { UserContext } from "../context/UserContext";
 
@@ -38,7 +38,7 @@ const HomeScreen = ({ navigation }) => {
   } = useRestaurants();
   const { role: userRole } = useUser();
   // const { userRole } = useContext(UserContext);
-  const {addresses, addAddress} = useAddress();
+  const { addresses, addAddress } = useAddress();
   const [searchQuery, setSearchQuery] = useState("");
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const [locationModalVisible, setLocationModalVisible] = useState(false);
@@ -80,7 +80,7 @@ const HomeScreen = ({ navigation }) => {
         easing: Easing.ease,
       }).start(() => {
         setBackgroundIndex(
-          (prevIndex) => (prevIndex + 1) % backgroundImages.length
+          (prevIndex) => (prevIndex + 1) % backgroundImages.length,
         );
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -106,11 +106,9 @@ const HomeScreen = ({ navigation }) => {
   }, [fadeAnim]);
 
   useEffect(() => {
-    if(selectedLocation !== null)
-      calculateDistance(selectedLocation);
-    else
-      if(addresses.length > 0) setCurrentLocation();
-  }, [selectedLocation, addresses])
+    if (selectedLocation !== null) calculateDistance(selectedLocation);
+    else if (addresses.length > 0) setCurrentLocation();
+  }, [selectedLocation, addresses]);
 
   const handleSelectLocation = (location) => {
     console.log("location", location);
@@ -119,28 +117,26 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const calculateDistance = async (location) => {
-
-    const token = AsyncStorage.getItem('userToken');
-    const url = `api/v1/restaurants/fetch_restaurants_mileage`
+    const token = AsyncStorage.getItem("userToken");
+    const url = `api/v1/restaurants/fetch_restaurants_mileage`;
     const restaurant = {
       destination_latitude: location.latitude,
-      destination_longitude: location.longitude
-    }
+      destination_longitude: location.longitude,
+    };
 
     try {
-      const response = await client.get(url,
-        { params: {
-          restaurant
+      const response = await client.get(url, {
+        params: {
+          restaurant,
         },
-          Header: { Authorization: `Bearer ${token}` }
-        }
-      )
-      console.log('distance response', response.data);
+        Header: { Authorization: `Bearer ${token}` },
+      });
+      console.log("distance response", response.data);
 
       setDistances(response.data);
     } catch (error) {
-        console.error("Error fetching distance:", error);
-        return;
+      console.error("Error fetching distance:", error);
+      return;
     }
   };
 
@@ -148,63 +144,68 @@ const HomeScreen = ({ navigation }) => {
     try {
       // Try to get current location
       const currentLocation = await Location.getCurrentPositionAsync();
-      
+
       const currentLat = currentLocation.coords.latitude;
       const currentLng = currentLocation.coords.longitude;
-      
+
       for (const address of addresses) {
         const isWithinRadius = await checkProximity(
           { lat: currentLat, lng: currentLng },
-          { lat: address.latitude, lng: address.longitude }
+          { lat: address.latitude, lng: address.longitude },
         );
-        
+
         if (isWithinRadius) {
-          console.log('Address within 50 meters:', address);
+          console.log("Address within 50 meters:", address);
           setSelectedLocation(address);
           await AsyncStorage.setItem("location", JSON.stringify(address));
           return;
         }
       }
-      
-      console.log('current location lat and long in home screen ', { lat: currentLat, long: currentLng});
+
+      console.log("current location lat and long in home screen ", {
+        lat: currentLat,
+        long: currentLng,
+      });
       const newAddress = await addAddress(currentLat, currentLng);
       setSelectedLocation(newAddress);
       await AsyncStorage.setItem("location", JSON.stringify(newAddress));
-      
     } catch (locationError) {
-      console.log('Error getting current location:', locationError);
-      
+      console.log("Error getting current location:", locationError);
+
       // Instead of using default location, check if we have any saved addresses
       if (addresses.length > 0) {
         // Use the most recent saved address
         const mostRecentAddress = addresses[0];
-        console.log('Using most recent saved address:', mostRecentAddress);
+        console.log("Using most recent saved address:", mostRecentAddress);
         setSelectedLocation(mostRecentAddress);
-        await AsyncStorage.setItem("location", JSON.stringify(mostRecentAddress));
+        await AsyncStorage.setItem(
+          "location",
+          JSON.stringify(mostRecentAddress),
+        );
       } else {
         // If no addresses available, prompt user to enter location manually
         setLocationModalVisible(true);
         Alert.alert(
           "Location Required",
           "We couldn't access your current location. Please select a delivery location manually.",
-          [{ text: "OK" }]
+          [{ text: "OK" }],
         );
       }
     }
-  };  
+  };
 
   const checkProximity = async (currentLocation, savedLocation) => {
     const url = `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${currentLocation.lat},${currentLocation.lng}&destinations=${savedLocation.lat},${savedLocation.lng}&key=${GOOGLE_MAPS_API_KEY}`;
     try {
       const response = await axios.get(url);
-      if(!response.data.rows[0].elements[0].distance) return false;
+      if (!response.data.rows[0].elements[0].distance) return false;
 
       const distanceInMeters = response.data.rows[0].elements[0].distance.value;
 
       console.log(`Distance to saved location: ${distanceInMeters} meters`);
       return distanceInMeters <= 50;
     } catch (error) {
-      console.error('Error checking distance:', error);
+      console.error("Error checking distance:", error);
       return false;
     }
   };
@@ -212,8 +213,12 @@ const HomeScreen = ({ navigation }) => {
   const renderRestaurant = ({ item: restaurant }) => {
     const isSelected = selectedRestaurant === restaurant.id;
     const image_url = base_url + restaurant.image_url;
-    const distance = distances[restaurant.id] ? `${distances[restaurant.id].distance.toFixed(1)}km` : "2km";
-    const deliveryPrice = distances[restaurant.id] ? distances[restaurant.id].delivery_price : 15;
+    const distance = distances[restaurant.id]
+      ? `${distances[restaurant.id].distance.toFixed(1)}km`
+      : "2km";
+    const deliveryPrice = distances[restaurant.id]
+      ? distances[restaurant.id].delivery_price
+      : 15;
 
     return (
       <TouchableOpacity onPress={() => setSelectedRestaurant(restaurant.id)}>
@@ -232,8 +237,14 @@ const HomeScreen = ({ navigation }) => {
             {restaurant.name}
           </Text>
           <View style={styles.distanceContainer}>
-            <Text style={styles.distanceText}><FontAwesome name="map-marker" size={14} color="gray" /> {distance}</Text>
-            <Text style={styles.distanceText}><Fontisto name="motorcycle" size={14} color="black" /> ${deliveryPrice}</Text>
+            <Text style={styles.distanceText}>
+              <FontAwesome name="map-marker" size={14} color="gray" />{" "}
+              {distance}
+            </Text>
+            <Text style={styles.distanceText}>
+              <Fontisto name="motorcycle" size={14} color="black" /> $
+              {deliveryPrice}
+            </Text>
           </View>
         </Card>
       </TouchableOpacity>
@@ -241,11 +252,14 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const renderMenuItem = ({ item }) => {
-    const price = item.item_prices?.length > 0 ? item.item_prices[0] : "Not Available";
+    const price =
+      item.item_prices?.length > 0 ? item.item_prices[0] : "Not Available";
     const imageUrl = item.image_url
       ? base_url + item.image_url
       : "https://via.placeholder.com/150";
-    const deliveryPrice = distances[item.restaurant_id] ? distances[item.restaurant_id].delivery_price : 15;
+    const deliveryPrice = distances[item.restaurant_id]
+      ? distances[item.restaurant_id].delivery_price
+      : 15;
 
     return (
       <TouchableOpacity
@@ -253,7 +267,7 @@ const HomeScreen = ({ navigation }) => {
           navigation.navigate("MenuAboutScreen", {
             menuItemId: item.id,
             restaurantId: item.restaurant_id,
-            deliveryFee: deliveryPrice
+            deliveryFee: deliveryPrice,
           })
         }
       >
@@ -302,15 +316,17 @@ const HomeScreen = ({ navigation }) => {
                   </Text>
                 </View>
               </View>
-          <TouchableOpacity onPress={() => navigation.navigate('NotificationSettingScreen')}>
-        <Icons.NotificationIcon />
-          </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("NotificationSettingScreen")}
+              >
+                <Icons.NotificationIcon />
+              </TouchableOpacity>
             </View>
             <View style={styles.title}>
               <Text style={styles.subtitle}>
                 Provide the best {"\n"}food for you
               </Text>
-              { userRole === 'guest' && (
+              {userRole === "guest" && (
                 <TouchableOpacity
                   style={styles.signUpButton}
                   onPress={() => navigation.navigate("SignupScreen")}
@@ -335,7 +351,7 @@ const HomeScreen = ({ navigation }) => {
 
         <FlatList
           data={menuItems.filter((item) =>
-            item.name.toLowerCase().includes(searchQuery.toLowerCase())
+            item.name.toLowerCase().includes(searchQuery.toLowerCase()),
           )}
           renderItem={renderMenuItem}
           keyExtractor={(item) => item.id.toString()}
@@ -395,7 +411,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     top: 25,
-
   },
   subtitle: {
     fontSize: 32,
@@ -425,8 +440,8 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 40,
     paddingHorizontal: 10,
-    minHeight: '45%',
-    maxHeight: '45%'
+    minHeight: "45%",
+    maxHeight: "45%",
   },
   restaurantCard: {
     width: 120,
@@ -493,8 +508,8 @@ const styles = StyleSheet.create({
   },
   distanceContainer: {
     flexDirection: "row",
-    justifyContent: 'space-between',
-    marginTop: 14
+    justifyContent: "space-between",
+    marginTop: 14,
   },
   distanceText: {
     fontSize: 12,
@@ -505,7 +520,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#F09B00",
-  }
+  },
 });
 
 export default HomeScreen;

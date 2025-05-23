@@ -68,7 +68,7 @@ const useOrder = () => {
 
     try {
       const order = await OrderServiceClient.fetchLastOrder();
-      console.log('last order ', order)
+      console.log("last order ", order);
       setLastOrder(order);
     } catch (error) {
       console.error("Error fetching last order:", error);
@@ -91,7 +91,7 @@ const useOrder = () => {
     lastOrder,
     createOrder,
     getRecentOrder,
-    fetchLastOrder
+    fetchLastOrder,
   };
 };
 

@@ -25,7 +25,12 @@ export const UserProvider = ({ children }) => {
       try {
         const storedUserId = await AsyncStorage.getItem("userId");
         const storedUserRole = await AsyncStorage.getItem("userRole");
-        console.log("UserContext loading - userRole:", storedUserRole, "userId:", storedUserId);
+        console.log(
+          "UserContext loading - userRole:",
+          storedUserRole,
+          "userId:",
+          storedUserId,
+        );
 
         if (storedUserId) setUserId(storedUserId);
         if (storedUserRole) setUserRole(storedUserRole);

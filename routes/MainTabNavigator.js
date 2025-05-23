@@ -125,7 +125,7 @@ const MainTabNavigator = ({ route }) => {
           setRole(userRole);
           return;
         }
-        
+
         // Otherwise try to get from AsyncStorage
         const storedRole = await AsyncStorage.getItem("userRole");
         if (storedRole && storedRole !== role) {
@@ -136,7 +136,7 @@ const MainTabNavigator = ({ route }) => {
         console.error("Error syncing role:", error);
       }
     };
-    
+
     syncRole();
   }, [userRole]); // Only re-run when userRole changes
 
@@ -187,10 +187,16 @@ const MainTabNavigator = ({ route }) => {
         })}
       >
         {["partner", "admin"].includes(role) && (
-          <Tab.Screen name="PartnerDashboard" component={PartnerDashboardScreen} />
+          <Tab.Screen
+            name="PartnerDashboard"
+            component={PartnerDashboardScreen}
+          />
         )}
         {["restaurant_owner"].includes(role) && (
-          <Tab.Screen name="RestaurantDashboard" component={RestaurantDashboardScreen} />
+          <Tab.Screen
+            name="RestaurantDashboard"
+            component={RestaurantDashboardScreen}
+          />
         )}
         {["customer", "guest"].includes(role) && (
           <Tab.Screen name="Home" component={HomeScreen} />

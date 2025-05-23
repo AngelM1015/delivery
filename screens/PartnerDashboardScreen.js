@@ -33,29 +33,31 @@ const DashboardScreen = () => {
     try {
       const currentLocation = await Location.getCurrentPositionAsync();
       console.log("location fetched: ", currentLocation.coords);
-  
+
       if (subscription && typeof subscription.sendLocation === "function") {
         subscription.sendLocation({ location: currentLocation.coords });
         console.log("location sent: ", currentLocation.coords);
       } else {
-        console.error("subscription.sendLocation is not a function or subscription is undefined");
+        console.error(
+          "subscription.sendLocation is not a function or subscription is undefined",
+        );
       }
     } catch (error) {
       console.error("Error sending location to backend:", error);
     }
-  };  
+  };
 
   useEffect(() => {
     const fetchRoleAndData = async () => {
       await fetchData(role);
-      const status = await AsyncStorage.getItem('status');
-      setIsActive(status === 'true');
+      const status = await AsyncStorage.getItem("status");
+      setIsActive(status === "true");
     };
 
     const fetchData = async (role) => {
       setLoading(true);
       try {
-        let endpoint = "orders/partner_orders"
+        let endpoint = "orders/partner_orders";
 
         const response = await axios.get(`${base_url}api/v1/${endpoint}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -70,7 +72,7 @@ const DashboardScreen = () => {
       }
     };
 
-    console.log('subscriptions: ', cable.subscriptions);
+    console.log("subscriptions: ", cable.subscriptions);
 
     fetchRoleAndData();
   }, [token, role]);
@@ -78,7 +80,7 @@ const DashboardScreen = () => {
   useEffect(() => {
     const setupWebSocket = async () => {
       const userId = await AsyncStorage.getItem("userId");
-  
+
       const subscription = cable.subscriptions.create(
         { channel: "PartnerChannel", id: userId },
         {
@@ -100,13 +102,13 @@ const DashboardScreen = () => {
           },
           sendLocation(locationData) {
             this.perform("send_location", { location: locationData });
-          }
-        }
+          },
+        },
       );
 
       const intervalId = setInterval(
         () => sendLocationToBackend(subscription),
-        10000
+        10000,
       );
 
       return () => {
@@ -114,7 +116,7 @@ const DashboardScreen = () => {
         clearInterval(intervalId);
       };
     };
-  
+
     setupWebSocket();
   }, []);
 
@@ -122,17 +124,19 @@ const DashboardScreen = () => {
     setLoading(true);
 
     try {
-      const partnerId = await AsyncStorage.getItem('userId');
-      const url = `api/v1/users/${partnerId}/change_activity_status`
+      const partnerId = await AsyncStorage.getItem("userId");
+      const url = `api/v1/users/${partnerId}/change_activity_status`;
 
-      await client.patch(url, {status: isActive ? 'inactive' : 'active'},
-        { headers: {Authorization: `Bearer ${token}`}}
-      )
+      await client.patch(
+        url,
+        { status: isActive ? "inactive" : "active" },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
 
-      setIsActive(!isActive)
+      setIsActive(!isActive);
     } catch (error) {
-      console.log('error', error);
-      Alert.alert('Error while updating Activity Status')
+      console.log("error", error);
+      Alert.alert("Error while updating Activity Status");
     } finally {
       setLoading(false);
     }
@@ -150,28 +154,30 @@ const DashboardScreen = () => {
 
   const addNewOrder = (newOrder) => {
     setNewOrders((prevOrders) => {
-      const orderExists = prevOrders.some((order) => order.order_id === newOrder.order_id);
-  
+      const orderExists = prevOrders.some(
+        (order) => order.order_id === newOrder.order_id,
+      );
+
       if (!orderExists) {
         return [...prevOrders, newOrder];
       } else {
         return prevOrders;
       }
     });
-  
+
     // Remove the order after 10 seconds
     setTimeout(() => {
       setNewOrders((prevOrders) =>
-        prevOrders.filter((order) => order.order_id !== newOrder.order_id)
+        prevOrders.filter((order) => order.order_id !== newOrder.order_id),
       );
     }, 10000);
   };
 
   const handleAcceptOrder = (orderId) => {
-    const subscription = cable.subscriptions.subscriptions.find(
-      (sub) => sub.identifier.includes("PartnerChannel")
+    const subscription = cable.subscriptions.subscriptions.find((sub) =>
+      sub.identifier.includes("PartnerChannel"),
     );
-  
+
     if (subscription) {
       subscription.perform("accept_order", { order_id: orderId });
     }
@@ -202,42 +208,51 @@ const DashboardScreen = () => {
             />
           </View>
           <ScrollView style={styles.newOrdersContainer}>
-          {newOrders.map((order) => (
-            <View key={order.order_id} style={styles.newOrderCard}>
-              <View style={styles.orderHeader}>
-                <Text style={styles.orderIdText}>{`Order # ${order.order_id}`}</Text>
-                <View style={styles.priceContainer}>
-                  <Text style={styles.priceLabel}>Price: </Text>
-                  <Text style={styles.priceText}>{`$${order.price}`}</Text>
+            {newOrders.map((order) => (
+              <View key={order.order_id} style={styles.newOrderCard}>
+                <View style={styles.orderHeader}>
+                  <Text
+                    style={styles.orderIdText}
+                  >{`Order # ${order.order_id}`}</Text>
+                  <View style={styles.priceContainer}>
+                    <Text style={styles.priceLabel}>Price: </Text>
+                    <Text style={styles.priceText}>{`$${order.price}`}</Text>
+                  </View>
                 </View>
-              </View>
 
-              <View style={styles.orderForContainer}>
-                <Text style={styles.orderForLabel}>Order For</Text>
-                <Text style={styles.orderForValue}>{order.restaurant_name}</Text>
-              </View>
+                <View style={styles.orderForContainer}>
+                  <Text style={styles.orderForLabel}>Order For</Text>
+                  <Text style={styles.orderForValue}>
+                    {order.restaurant_name}
+                  </Text>
+                </View>
 
-              <View style={styles.addressContainer}>
-                <Text style={styles.deliveryAddressContainer}>
-                  <Text style={styles.deliveryAddressLabel}>Delivery Address: </Text>
-                  {order.delivery_address}
-                </Text>
-              </View>
+                <View style={styles.addressContainer}>
+                  <Text style={styles.deliveryAddressContainer}>
+                    <Text style={styles.deliveryAddressLabel}>
+                      Delivery Address:{" "}
+                    </Text>
+                    {order.delivery_address}
+                  </Text>
+                </View>
 
-              <Button
-                mode="contained"
-                onPress={() => handleAcceptOrder(order.order_id)}
-                style={styles.acceptButton}
-                labelStyle={styles.acceptButtonText}
-              >
-                Accept order
-              </Button>
-            </View>
-          ))}
-        </ScrollView>
+                <Button
+                  mode="contained"
+                  onPress={() => handleAcceptOrder(order.order_id)}
+                  style={styles.acceptButton}
+                  labelStyle={styles.acceptButtonText}
+                >
+                  Accept order
+                </Button>
+              </View>
+            ))}
+          </ScrollView>
           <View style={styles.footer}>
             <View style={styles.orderGroups}>
-              <Text style={styles.canceledOrders}> {canceledOrders} Cancel</Text>
+              <Text style={styles.canceledOrders}>
+                {" "}
+                {canceledOrders} Cancel
+              </Text>
               <Text style={styles.completedOrders}>
                 {completedOrders} Completed
               </Text>
@@ -263,11 +278,7 @@ const DashboardScreen = () => {
     }
   };
 
-  return (
-    <ScrollView style={styles.container}>
-      {renderDashboard()}
-    </ScrollView>
-  );
+  return <ScrollView style={styles.container}>{renderDashboard()}</ScrollView>;
 };
 
 const styles = StyleSheet.create({
@@ -373,7 +384,7 @@ const styles = StyleSheet.create({
   },
   acceptButton: {
     flex: 1,
-    marginHorizontal: 'auto',
+    marginHorizontal: "auto",
     backgroundColor: "#F09B00",
     marginTop: 12,
     paddingVertical: 8, // ↓ was 12
@@ -383,8 +394,8 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     paddingVertical: 6,
-    fontSize: 15    
-  },  
+    fontSize: 15,
+  },
   footer: {
     backgroundColor: "#FFF",
     padding: 20,

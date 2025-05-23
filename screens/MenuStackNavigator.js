@@ -39,7 +39,6 @@ const CartIcon = ({ navigation }) => {
 };
 
 function MenuStackNavigator() {
-
   return (
     <>
       <MenuStack.Navigator>

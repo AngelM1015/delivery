@@ -56,7 +56,7 @@ const AddPaymentMethod = ({ isVisible, onClose }) => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data.success) {
@@ -68,11 +68,11 @@ const AddPaymentMethod = ({ isVisible, onClose }) => {
     } catch (error) {
       console.error(
         "Error adding payment method:",
-        error.response?.data?.message
+        error.response?.data?.message,
       );
       Alert.alert(
         "Oops!",
-        error.response?.data?.message || "Something went wrong"
+        error.response?.data?.message || "Something went wrong",
       );
     }
   };
@@ -112,7 +112,9 @@ const AddPaymentMethod = ({ isVisible, onClose }) => {
               disabled={!cardDetails.complete}
               style={styles.button}
             >
-              <Text style={[styles.ButtonText, {color: "white"}]}>Add Payment Method</Text>
+              <Text style={[styles.ButtonText, { color: "white" }]}>
+                Add Payment Method
+              </Text>
             </TouchableOpacity>
           </Card.Actions>
         </Card>

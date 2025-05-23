@@ -6,11 +6,7 @@ import {
   Dimensions,
   RefreshControl,
 } from "react-native";
-import {
-  Card,
-  Text,
-  Provider,
-} from "react-native-paper";
+import { Card, Text, Provider } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -99,10 +95,10 @@ const MetricScreen = ({ navigation }) => {
   }, [partnerOrders]);
 
   const fetchOrders = async () => {
-    const userRole = await AsyncStorage.getItem('userRole');
-    const userToken = await AsyncStorage.getItem('userToken');
-    console.log('user role,', userRole)
-    if(userRole !== "restaurant_owner") return;
+    const userRole = await AsyncStorage.getItem("userRole");
+    const userToken = await AsyncStorage.getItem("userToken");
+    console.log("user role,", userRole);
+    if (userRole !== "restaurant_owner") return;
 
     setRefreshing(true);
     const headers = { Authorization: `Bearer ${userToken}` };
@@ -114,7 +110,7 @@ const MetricScreen = ({ navigation }) => {
       setRestaurant(response.data[0]["restaurant_id"]);
       console.log("restaurant", response.data[0]["restaurant_id"]);
       response.data.forEach((order) =>
-        handleReceived({ order_id: order.id, status: order.status })
+        handleReceived({ order_id: order.id, status: order.status }),
       );
 
       if (role === "restaurant_owner") {
@@ -137,7 +133,7 @@ const MetricScreen = ({ navigation }) => {
           console.log("data", data);
           setOrders((prevOrders) => [data, ...prevOrders]);
         },
-      }
+      },
     );
 
     console.log("restaurant subscription", subscription);
@@ -156,13 +152,13 @@ const MetricScreen = ({ navigation }) => {
 
     if (data.message && data.message.startsWith("Order status updated")) {
       setSnackbarMessage(
-        `Status updated to, ${status.replace(/_|-|\\. /g, " ")}`
+        `Status updated to, ${status.replace(/_|-|\\. /g, " ")}`,
       );
       setSnackbarVisible(true);
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          order.id === order_id ? { ...order, status: status } : order
-        )
+          order.id === order_id ? { ...order, status: status } : order,
+        ),
       );
     }
   };

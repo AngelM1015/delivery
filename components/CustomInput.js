@@ -21,11 +21,11 @@ const CustomInput = ({
   // Handle both onChangeText and setValue props
   const handleChangeText = (text) => {
     // Try onChangeText first
-    if (typeof onChangeText === 'function') {
+    if (typeof onChangeText === "function") {
       onChangeText(text);
-    } 
+    }
     // Fall back to setValue if onChangeText is not provided
-    else if (typeof setValue === 'function') {
+    else if (typeof setValue === "function") {
       setValue(text);
     }
   };

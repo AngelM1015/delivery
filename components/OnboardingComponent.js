@@ -20,8 +20,8 @@ const OnboardingComponent = ({ navigation }) => {
   // ✅ Called when user taps "Skip" — sets guest role and routes to main
   const handleSkipOnboarding = async () => {
     await AsyncStorage.setItem("hasOnboarded", "false"); // Still track skip
-    await AsyncStorage.setItem("userRole", "guest");     // Guest fallback
-    navigation.replace("Main", { role: "guest" });       // Send to main UI
+    await AsyncStorage.setItem("userRole", "guest"); // Guest fallback
+    navigation.replace("Main", { role: "guest" }); // Send to main UI
     Alert.alert(
       "Hey! We've noticed you hit skip",
       "We're glad you're excited to use our platform but we need access to some phone functionality. You can sign up at any time through the account page.",
@@ -31,7 +31,7 @@ const OnboardingComponent = ({ navigation }) => {
           text: "Make an Account",
           onPress: () => navigation.navigate("SignupScreen"), // CTA for conversion
         },
-      ]
+      ],
     );
   };
 
@@ -41,23 +41,24 @@ const OnboardingComponent = ({ navigation }) => {
     if (status !== "granted") {
       Alert.alert(
         "Location Required",
-        "To use BigSkyEats fully, you’ll need to enable location in your phone settings later."
+        "To use BigSkyEats fully, you’ll need to enable location in your phone settings later.",
       );
       return;
     }
 
-    let { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
+    let { status: backgroundStatus } =
+      await Location.requestBackgroundPermissionsAsync();
     if (backgroundStatus !== "granted") {
       Alert.alert(
         "Background Location",
-        "To find drivers while you're not using the app, background location must be granted. You can update this in settings."
+        "To find drivers while you're not using the app, background location must be granted. You can update this in settings.",
       );
       return;
     }
 
     Alert.alert(
       "Location Enabled",
-      "You've enabled location services. You're all set!"
+      "You've enabled location services. You're all set!",
     );
   };
 
@@ -67,7 +68,7 @@ const OnboardingComponent = ({ navigation }) => {
     if (status !== "granted") {
       Alert.alert(
         "Notifications Blocked",
-        "You won’t receive updates unless notifications are enabled in system settings."
+        "You won’t receive updates unless notifications are enabled in system settings.",
       );
     }
   };
@@ -96,7 +97,8 @@ const OnboardingComponent = ({ navigation }) => {
       subtitle: (
         <View style={styles.subtitleContainer}>
           <Text style={styles.subtitleText}>
-            Allow location access to discover nearby restaurants and get faster delivery.
+            Allow location access to discover nearby restaurants and get faster
+            delivery.
           </Text>
           <View style={styles.buttonContainer}>
             <Button
@@ -126,7 +128,8 @@ const OnboardingComponent = ({ navigation }) => {
       subtitle: (
         <View style={styles.subtitleContainer}>
           <Text style={styles.subtitleText}>
-            Enable notifications to receive order updates, special offers, and important alerts.
+            Enable notifications to receive order updates, special offers, and
+            important alerts.
           </Text>
           <View style={styles.buttonContainer}>
             <Button
@@ -188,12 +191,12 @@ const OnboardingComponent = ({ navigation }) => {
     <Provider>
       <Onboarding
         containerStyles={{ paddingHorizontal: 15 }}
-        onDone={handleCompleteOnboarding}     // Triggered when swiper is completed
-        onSkip={handleSkipOnboarding}         // Triggered when "Skip" is pressed
+        onDone={handleCompleteOnboarding} // Triggered when swiper is completed
+        onSkip={handleSkipOnboarding} // Triggered when "Skip" is pressed
         showSkip={true}
         showNext={true}
         showDone={true}
-        pages={onboardingPages}               // Custom pages with animations & actions
+        pages={onboardingPages} // Custom pages with animations & actions
       />
     </Provider>
   );
@@ -227,7 +230,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 10,
-    backgroundColor: "#f09b00"
+    backgroundColor: "#f09b00",
   },
 });
 

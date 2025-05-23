@@ -15,7 +15,7 @@ const useRestaurants = () => {
     if (token) {
       return new RestaurantService(token);
     } else if (role === "guest") {
-      return new RestaurantService('');
+      return new RestaurantService("");
     } else {
       return null;
     }
@@ -62,7 +62,10 @@ const useRestaurants = () => {
 
   const fetchMenuItems = async (restaurantId) => {
     try {
-      const url = role === 'restaurant_owner' ? `api/v1/restaurants/${restaurantId}/all_menu_items/` :`api/v1/restaurants/${restaurantId}/menu_items/`;
+      const url =
+        role === "restaurant_owner"
+          ? `api/v1/restaurants/${restaurantId}/all_menu_items/`
+          : `api/v1/restaurants/${restaurantId}/menu_items/`;
       const response = await client.get(url);
 
       setMenuItems(response.data);
@@ -77,13 +80,13 @@ const useRestaurants = () => {
         `api/v1/restaurants/${restaurantId}/menu_items/${menuItemId}/change_status`,
         {
           isenabled: newStatus,
-        }
+        },
       );
       // Update the local state to reflect the change
       setMenuItems((prevMenuItems) =>
         prevMenuItems.map((item) =>
-          item.id === menuItemId ? { ...item, isenabled: newStatus } : item
-        )
+          item.id === menuItemId ? { ...item, isenabled: newStatus } : item,
+        ),
       );
     } catch (err) {
       console.error("Error changing status:", err);

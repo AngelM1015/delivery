@@ -62,7 +62,7 @@ export class OrderService {
       },
       {
         headers: { Authorization: `Bearer ${this.token}` },
-      }
+      },
     );
     return response.data;
   }

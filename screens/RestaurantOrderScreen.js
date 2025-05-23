@@ -68,19 +68,19 @@ const RestaurantOrderScreen = () => {
       await axios.post(
         `${base_url}api/v1/orders/accept_order`,
         { order_id: orderId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       fetchOrders(token, userRole);
     } catch (err) {
       console.error(
         "Request Error:",
-        err.response ? err.response.data : err.message
+        err.response ? err.response.data : err.message,
       );
       Alert.alert(
         "Request Error",
         err.response
           ? err.response.data.error
-          : "An error occurred while accepting the order."
+          : "An error occurred while accepting the order.",
       );
     }
   };

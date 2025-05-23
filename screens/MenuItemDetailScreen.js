@@ -51,12 +51,12 @@ const MenuItemDetailScreen = ({ route }) => {
             });
             return counts;
           },
-          {}
+          {},
         );
         setModifierCounts(initialCounts);
       } catch (err) {
         setError(
-          err.message || "Failed to load menu item. Please try again later."
+          err.message || "Failed to load menu item. Please try again later.",
         );
       } finally {
         setIsLoading(false);
@@ -79,7 +79,7 @@ const MenuItemDetailScreen = ({ route }) => {
             const option = menuItemDetails.modifiers
               .find((modifier) => modifier.id === parseInt(modifierId))
               .modifier_options.find(
-                (option) => option.id === parseInt(optionId)
+                (option) => option.id === parseInt(optionId),
               );
             return { ...option, count };
           }),
@@ -107,9 +107,9 @@ const MenuItemDetailScreen = ({ route }) => {
             w +
             x.options.reduce(
               (a, b) => a + parseFloat(b.additional_price * b.count),
-              0
+              0,
             ),
-          0
+          0,
         ),
       imageUrl, // Include the imageUrl here
       selectedModifiers,

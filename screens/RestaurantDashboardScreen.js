@@ -16,7 +16,6 @@ import useRestaurants from "../hooks/useRestaurants";
 import { base_url } from "../constants/api";
 import client from "../client";
 
-
 const DashboardScreen = () => {
   const [role, setRole] = useState(null);
   const {
@@ -29,9 +28,8 @@ const DashboardScreen = () => {
   } = useRestaurants();
 
   const [backgroundImage, setBackgroundImage] = useState(
-    "https://via.placeholder.com/150"
+    "https://via.placeholder.com/150",
   );
-
 
   useEffect(() => {
     const fetchRoleAndData = async () => {
@@ -45,7 +43,6 @@ const DashboardScreen = () => {
       } else {
         await fetchData(role);
       }
-
     };
 
     fetchRoleAndData();
@@ -115,23 +112,27 @@ const DashboardScreen = () => {
     );
   };
 
-  const toggleSwitch = async ( item ) => {
+  const toggleSwitch = async (item) => {
     item.isenabled = !item.isenabled;
 
     setMenuItems((prevItems) =>
       prevItems.map((menu) =>
-        menu.id === item.id ? { ...menu, isenabled: item.isenabled } : menu
-      )
+        menu.id === item.id ? { ...menu, isenabled: item.isenabled } : menu,
+      ),
     );
     try {
       const token = await AsyncStorage.getItem("userToken");
-      const endpoint = `restaurants/${selectedRestaurant}/menu_items/${item.id}/enable_menu_item`
+      const endpoint = `restaurants/${selectedRestaurant}/menu_items/${item.id}/enable_menu_item`;
 
-      const response = await client.patch(`api/v1/${endpoint}`,{menu_item: item}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await client.patch(
+        `api/v1/${endpoint}`,
+        { menu_item: item },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
-      console.log('new value of enabled', item.isenabled)
+      console.log("new value of enabled", item.isenabled);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -141,40 +142,36 @@ const DashboardScreen = () => {
     // if (loading) {
     //   return <Text>Loading...</Text>;
     // }
-      return (
-        <SafeAreaView>
-          <Image
-            source={{ uri: backgroundImage }}
-            style={styles.backgroundImage}
+    return (
+      <SafeAreaView>
+        <Image
+          source={{ uri: backgroundImage }}
+          style={styles.backgroundImage}
+        />
+        <View style={{ flex: 1, marginTop: 10 }}>
+          <FlatList
+            data={restaurants}
+            renderItem={renderRestaurant}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalListContainer}
           />
-          <View style={{ flex: 1, marginTop: 10 }}>
-            <FlatList
-              data={restaurants}
-              renderItem={renderRestaurant}
-              keyExtractor={(item) => item.id.toString()}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalListContainer}
-            />
 
-            <FlatList
-              data={menuItems}
-              renderItem={renderMenuItem}
-              keyExtractor={(item) => item.id.toString()}
-              numColumns={2}
-              columnWrapperStyle={{ justifyContent: "space-between" }}
-              ListEmptyComponent={<Text>No menu items available</Text>}
-            />
-          </View>
-        </SafeAreaView>
-      );
+          <FlatList
+            data={menuItems}
+            renderItem={renderMenuItem}
+            keyExtractor={(item) => item.id.toString()}
+            numColumns={2}
+            columnWrapperStyle={{ justifyContent: "space-between" }}
+            ListEmptyComponent={<Text>No menu items available</Text>}
+          />
+        </View>
+      </SafeAreaView>
+    );
   };
 
-  return (
-    <ScrollView style={styles.container}>
-      {renderDashboard()}
-    </ScrollView>
-  );
+  return <ScrollView style={styles.container}>{renderDashboard()}</ScrollView>;
 };
 
 const styles = StyleSheet.create({
@@ -196,7 +193,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 10,
     borderRadius: 8,
-    marginStart: 10
+    marginStart: 10,
   },
   restaurantImage: {
     width: 100,
@@ -235,7 +232,7 @@ const styles = StyleSheet.create({
   menuImage: {
     width: "100%",
     height: 120,
-    borderRadius: 10
+    borderRadius: 10,
   },
   menuDetails: {
     padding: 2,
@@ -244,12 +241,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
   },
-  switchContainer: {
-
-  },
+  switchContainer: {},
   switch: {
     top: -110,
-    left: 8
+    left: 8,
   },
   priceText: {
     marginTop: 10,

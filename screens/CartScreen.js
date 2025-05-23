@@ -13,7 +13,7 @@ import CustomButton from "../components/CustomButton";
 import Header from "../components/Header";
 import Locations from "../components/Locations";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from "@react-navigation/native";
 import LottieView from "lottie-react-native";
 
 const CartScreen = ({ navigation }) => {
@@ -44,12 +44,13 @@ const CartScreen = ({ navigation }) => {
   const calculateCartTotal = () => {
     return cartItems.reduce(
       (total, item) => total + item.price * item.quantity,
-      0
+      0,
     );
   };
 
   const calculateMinimumOrderFee = (cartTotal) => {
-    const calculatedFee = (cartTotal * 0.2).toFixed(2) < 8.0 ? (8 - cartTotal * 0.2) : 0.0;
+    const calculatedFee =
+      (cartTotal * 0.2).toFixed(2) < 8.0 ? 8 - cartTotal * 0.2 : 0.0;
     return parseFloat(calculatedFee.toFixed(2));
   };
 
@@ -81,19 +82,19 @@ const CartScreen = ({ navigation }) => {
       };
 
       getLocation();
-    }, [])
+    }, []),
   );
 
   return (
     <PaperProvider>
       <View style={{ flex: 1 }}>
         <View style={{ paddingTop: 50 }}>
-        <Header
-      title="Your Cart"
-      navigation={navigation}
-      showBackIcon={true}
-      showShareIcon={true}
-    />
+          <Header
+            title="Your Cart"
+            navigation={navigation}
+            showBackIcon={true}
+            showShareIcon={true}
+          />
         </View>
         <View style={styles.locationContainer}>
           <View style={{ gap: 10 }}>
@@ -101,18 +102,18 @@ const CartScreen = ({ navigation }) => {
               {" "}
               Delivery Location
             </Text>
-            {selectedLocation &&
+            {selectedLocation && (
               <Text style={styles.locationText} numberOfLines={2}>
                 {selectedLocation.location_name}
               </Text>
-            }
+            )}
           </View>
           <TouchableOpacity
             onPress={() => setLocationModalVisible(true)}
             style={styles.changeLocation}
           >
             <Text style={{ color: "#F09B00", textAlign: "center" }}>
-              {selectedLocation ? 'Change Location' : 'Add Location'}
+              {selectedLocation ? "Change Location" : "Add Location"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -169,9 +170,7 @@ const CartScreen = ({ navigation }) => {
                             <AntDesign name="plus" size={20} />
                           </TouchableOpacity>
                         </View>
-                        <TouchableOpacity
-                          onPress={() => removeFromCart(index)}
-                        >
+                        <TouchableOpacity onPress={() => removeFromCart(index)}>
                           <FontAwesome5
                             name="trash-alt"
                             size={20}
@@ -197,9 +196,7 @@ const CartScreen = ({ navigation }) => {
                 {minOrderFee > 0 && (
                   <View style={styles.summaryRow}>
                     <Text>Small Order Fee:</Text>
-                    <Text style={styles.summaryValue}>
-                      +${minOrderFee}
-                    </Text>
+                    <Text style={styles.summaryValue}>+${minOrderFee}</Text>
                   </View>
                 )}
 
@@ -401,27 +398,27 @@ const styles = StyleSheet.create({
   },
   // New styles for the empty cart and Lottie animation
   emptyCartContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 20,
     gap: 25,
   },
   lottieContainer: {
     width: 250,
     height: 250,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginVertical: 20,
   },
   lottieAnimation: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   emptyCartTitle: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 26,
-    textAlign: 'center',
-    color: '#333',
+    textAlign: "center",
+    color: "#333",
   },
 });
 

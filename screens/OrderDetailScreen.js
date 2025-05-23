@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+} from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { base_url } from "../constants/api";
@@ -18,7 +24,7 @@ const OrderDetailScreen = ({ navigation, route }) => {
         const headers = { Authorization: `Bearer ${token}` };
         const response = await axios.get(
           `${base_url}api/v1/orders/${orderId}`,
-          { headers }
+          { headers },
         );
         console.log(response.data);
         setOrderDetails(response.data);
@@ -61,9 +67,7 @@ const OrderDetailScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <View
-        style={styles.header}
-      >
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icons.BackIcon />
         </TouchableOpacity>
@@ -130,18 +134,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 20,
     paddingTop: 20,
-    marginTop: '5%'
+    marginTop: "5%",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 8
-    },
+    marginVertical: 8,
+  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    minWidth: "80%"
+    minWidth: "80%",
   },
   detailRow: {
     marginBottom: 10,

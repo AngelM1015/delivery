@@ -13,12 +13,13 @@ const SplashScreen = ({ navigation }) => {
         toValue: 1,
         duration: 4000,
         useNativeDriver: true,
-      })
+      }),
     ).start();
 
     const timer = setTimeout(async () => {
       const token = await AsyncStorage.getItem("userToken");
-      const hasOnboarded = await AsyncStorage.getItem("hasOnboarded") === "true";
+      const hasOnboarded =
+        (await AsyncStorage.getItem("hasOnboarded")) === "true";
 
       if (token) {
         // User is authenticated, go to Main

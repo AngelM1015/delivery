@@ -8,7 +8,7 @@ const usePartnerOrders = () => {
   const { loading: fetchingUser, role, token } = useUser();
 
   const PartnerOrderClient = useMemo(() => {
-    if (token && role === 'partner') {
+    if (token && role === "partner") {
       console.log("Initializing OrderService with token and role");
       return new OrderService(token, role);
     }
@@ -33,7 +33,7 @@ const usePartnerOrders = () => {
   };
 
   useEffect(() => {
-    if (!fetchingUser && PartnerOrderClient && role === 'partner') {
+    if (!fetchingUser && PartnerOrderClient && role === "partner") {
       fetchAllPartnerOrders();
     }
   }, [fetchingUser, PartnerOrderClient]);

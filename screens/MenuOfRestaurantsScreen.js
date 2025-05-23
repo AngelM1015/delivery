@@ -17,7 +17,13 @@ import useRestaurants from "../hooks/useRestaurants";
 
 const MenuOfRestaurantsScreen = ({ navigation }) => {
   const { orders } = useOrders();
-  const { restaurants, menuItems, selectedRestaurant, setSelectedRestaurant, fetchRestaurants } = useRestaurants();
+  const {
+    restaurants,
+    menuItems,
+    selectedRestaurant,
+    setSelectedRestaurant,
+    fetchRestaurants,
+  } = useRestaurants();
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,8 +48,8 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
     const filtered = orders.filter(
       (order) =>
         order.order_items.some(
-          (item) => item.menu_item && item.menu_item.includes(query)
-        ) || order.status.toLowerCase().includes(query.toLowerCase())
+          (item) => item.menu_item && item.menu_item.includes(query),
+        ) || order.status.toLowerCase().includes(query.toLowerCase()),
     );
     console.log("filtered orders", filtered.length);
     setFilteredOrders(filtered);
@@ -123,9 +129,10 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
     return (
       <TouchableOpacity
         style={styles.orderItem}
-        onPress={() => statusText == "In Progress" ?
-          navigation.navigate("OngoingOrder" , { id: item.id }) :
-          navigation.navigate("OrderDetails", { orderId: item.id })
+        onPress={() =>
+          statusText == "In Progress"
+            ? navigation.navigate("OngoingOrder", { id: item.id })
+            : navigation.navigate("OrderDetails", { orderId: item.id })
         }
       >
         <View
@@ -242,7 +249,9 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
         />
         <Text style={styles.recentText}>My recent orders</Text>
         <FlatList
-          data={filteredOrders.filter((order) => order.restaurant_id == selectedRestaurant)}
+          data={filteredOrders.filter(
+            (order) => order.restaurant_id == selectedRestaurant,
+          )}
           renderItem={renderOrderItem}
           keyExtractor={(item) => item.id.toString()}
           horizontal
@@ -252,10 +261,10 @@ const MenuOfRestaurantsScreen = ({ navigation }) => {
           style={styles.orderHorizontalList}
         />
 
-        <Text style={{marginStart: 10, fontWeight: "bold"}}>MENU</Text>
+        <Text style={{ marginStart: 10, fontWeight: "bold" }}>MENU</Text>
         <FlatList
           data={menuItems.filter((item) =>
-            item.name.toLowerCase().includes(searchQuery.toLowerCase())
+            item.name.toLowerCase().includes(searchQuery.toLowerCase()),
           )}
           renderItem={renderMenuItem}
           keyExtractor={(item) => item.id.toString()}
@@ -365,7 +374,7 @@ const styles = StyleSheet.create({
   orderHorizontalList: {
     minHeight: 110,
     maxHeight: 110,
-    marginBottom: 14
+    marginBottom: 14,
   },
   orderItem: {
     padding: 10,
@@ -375,7 +384,7 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 5,
     marginEnd: 8,
-    height: '100%'
+    height: "100%",
   },
   orderTitle: {
     fontSize: 16,

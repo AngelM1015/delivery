@@ -28,7 +28,7 @@ export class ConversationService {
           "Content-Type": "application/json",
           Authorization: `Bearer ${this.token}`,
         },
-      }
+      },
     );
     return response.data;
   }

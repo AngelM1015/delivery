@@ -1,5 +1,7 @@
-export const base_url = "http://localhost:3000/";
-
+import { BACKEND_HOST } from "@env";
+console.log("BACKEND_HOST", BACKEND_HOST);
+export const base_url = `http://${BACKEND_HOST || "localhost"}:3000/`;
+console.log("base_url_________", base_url);
 export const auth = {
   login: "api/v1/auth/login",
   register: "api/v1/auth/register",

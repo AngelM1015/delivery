@@ -49,7 +49,7 @@ const LoginScreen = ({ navigation }) => {
     setUserRole = () => {},
     setUserId = () => {},
     isRoleChanged = false,
-    setIsRoleChanged = () => {}
+    setIsRoleChanged = () => {},
   } = contextValue;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,6 +61,7 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
     try {
+      console.log("base_url", base_url);
       console.log(`email ${email}`);
       let url = `${base_url}${auth.login}`;
 
@@ -77,13 +78,16 @@ const LoginScreen = ({ navigation }) => {
         try {
           await AsyncStorage.setItem("userToken", response.data.token);
           await AsyncStorage.setItem("userRole", response.data.role || "guest");
-          await AsyncStorage.setItem("userId", (response.data.user_id || "").toString());
+          await AsyncStorage.setItem(
+            "userId",
+            (response.data.user_id || "").toString(),
+          );
           await AsyncStorage.setItem("userEmail", response.data.email || "");
           await AsyncStorage.setItem("userName", response.data.name || "");
           // DEFENSIVE: Check role before setting partner status
-          if (response.data.role === 'partner') {
+          if (response.data.role === "partner") {
             const isActive = !!response.data.active; // Convert to boolean
-            await AsyncStorage.setItem('status', isActive ? 'true' : 'false');
+            await AsyncStorage.setItem("status", isActive ? "true" : "false");
           }
         } catch (storageError) {
           console.error("Storage error:", storageError);
@@ -91,18 +95,18 @@ const LoginScreen = ({ navigation }) => {
         }
 
         // DEFENSIVE: Safely call context functions
-        if (typeof setUserRole === 'function') {
+        if (typeof setUserRole === "function") {
           setUserRole(response.data.role || "guest");
         }
-        if (typeof setUserId === 'function') {
+        if (typeof setUserId === "function") {
           setUserId((response.data.user_id || "").toString());
         }
-        if (typeof setIsRoleChanged === 'function') {
+        if (typeof setIsRoleChanged === "function") {
           setIsRoleChanged(!isRoleChanged);
         }
 
         // DEFENSIVE: Check navigation before using
-        if (navigation && typeof navigation.replace === 'function') {
+        if (navigation && typeof navigation.replace === "function") {
           navigation.replace("Main");
         } else {
           console.error("Navigation is unavailable");
@@ -192,7 +196,7 @@ const LoginScreen = ({ navigation }) => {
             <TouchableOpacity
               onPress={() => {
                 // DEFENSIVE: Check navigation before using
-                if (navigation && typeof navigation.navigate === 'function') {
+                if (navigation && typeof navigation.navigate === "function") {
                   navigation.navigate("EmailVerificationScreen");
                 }
               }}
@@ -209,7 +213,7 @@ const LoginScreen = ({ navigation }) => {
               <TouchableOpacity
                 onPress={() => {
                   // DEFENSIVE: Check navigation before using
-                  if (navigation && typeof navigation.navigate === 'function') {
+                  if (navigation && typeof navigation.navigate === "function") {
                     navigation.navigate("SignupScreen");
                   }
                 }}

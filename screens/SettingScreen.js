@@ -21,12 +21,11 @@ import useOrder from "../hooks/useOrder";
 import LottieView from "lottie-react-native";
 import FavoriteFoodMenuItemScreen from "../screens/FavoriteFoodMenuItemScreen";
 
-
-  <Stack
-    name="FavoriteFoodMenuItemScreen"
-    component={FavoriteFoodMenuItemScreen}
-    options={{ title: "Favorites" }}
-  />
+<Stack
+  name="FavoriteFoodMenuItemScreen"
+  component={FavoriteFoodMenuItemScreen}
+  options={{ title: "Favorites" }}
+/>;
 
 const SettingScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -141,7 +140,7 @@ const SettingScreen = ({ route }) => {
     if (role === "guest") {
       navigation.navigate("SignupScreen");
     } else {
-    setModalVisible(true);
+      setModalVisible(true);
     }
   };
 
@@ -163,12 +162,15 @@ const SettingScreen = ({ route }) => {
   };
 
   const profileOptions = [
-    ...(role != "guest" ? [
-    {
-      icon: <Icons.PersonalData />,
-      text: "Personal Data",
-      navigateTo: "PersonalData",
-    }] : []),
+    ...(role != "guest"
+      ? [
+          {
+            icon: <Icons.PersonalData />,
+            text: "Personal Data",
+            navigateTo: "PersonalData",
+          },
+        ]
+      : []),
     {
       icon: <Icons.SettingsIcon />,
       text: "Settings",
@@ -217,108 +219,108 @@ const SettingScreen = ({ route }) => {
           )}
         </>
       )} */}
-      {role != "guest" ? (
-        <>
-          <View style={styles.header}>
-            <Text style={styles.settingText}>Profile Setting</Text>
-            <Image
-              source={require("../assets/images/icon.png")}
-              style={styles.profileImage}
-            />
-            <View style={{ marginTop: 15 }}>
-              <Text style={styles.name}>{userName}</Text>
-              <Text style={styles.email}>{userEmail}</Text>
-            </View>
-          </View>
-          {role === "customer" && (
-            <View style={styles.ordersContainer}>
-              <View style={styles.ordersHeader}>
-                <Text style={styles.ordersHeaderText}>My Orders</Text>
-                <TouchableOpacity onPress={() => navigation.navigate("Orders")}>
-                  <Text style={styles.ordersToggleText}>See All</Text>
-                </TouchableOpacity>
+        {role != "guest" ? (
+          <>
+            <View style={styles.header}>
+              <Text style={styles.settingText}>Profile Setting</Text>
+              <Image
+                source={require("../assets/images/icon.png")}
+                style={styles.profileImage}
+              />
+              <View style={{ marginTop: 15 }}>
+                <Text style={styles.name}>{userName}</Text>
+                <Text style={styles.email}>{userEmail}</Text>
               </View>
-              {lastOrder ?
-                renderOrderItem()
-              : (
-                <Text>
-                  No Order Available
-                </Text>
-              )}
             </View>
-          )}
-
-          <View style={styles.separator}></View>
-
-          <Text style={{ marginLeft: 20, paddingTop: 10 }}>Profile</Text>
-          <View style={styles.profileOptionsContainer}>
-            {profileOptions.map((option) => (
-              <TouchableOpacity
-                key={option.text}
-                style={styles.profileOption}
-                onPress={() => navigation.navigate(option.navigateTo)}
-              >
-                {option.icon}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    width: "90%",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={styles.profileOptionText}>{option.text}</Text>
-                  <Icons.GotoIcon />
+            {role === "customer" && (
+              <View style={styles.ordersContainer}>
+                <View style={styles.ordersHeader}>
+                  <Text style={styles.ordersHeaderText}>My Orders</Text>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate("Orders")}
+                  >
+                    <Text style={styles.ordersToggleText}>See All</Text>
+                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+                {lastOrder ? (
+                  renderOrderItem()
+                ) : (
+                  <Text>No Order Available</Text>
+                )}
+              </View>
+            )}
 
-          <Text style={{ marginLeft: 20, paddingTop: 10 }}>Support</Text>
-          <TouchableOpacity
-            style={{
-              backgroundColor: "#F09B00",
-              margin: 20,
-              padding: 15,
-              borderRadius: 12,
-              alignItems: "center",
-            }}
-            onPress={() =>
-              navigation.navigate("FavoriteFoodMenuItemScreen", {
-                restaurantId: 1, // replace with dynamic value if needed
-              })
-            }
-          >
-            <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
-              Browse Favorites
-            </Text>
-          </TouchableOpacity>
-          <View style={styles.profileOptionsContainer}>
-            {support.map((option) => (
-              <TouchableOpacity
-                key={option.text}
-                style={styles.profileOption}
-                onPress={() =>
-                  Alert.alert(
-                    "This feature is currently unavailable, it will be added soon!"
-                  )
-                }
-              >
-                {option.icon}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    width: "90%",
-                    alignItems: "center",
-                  }}
+            <View style={styles.separator}></View>
+
+            <Text style={{ marginLeft: 20, paddingTop: 10 }}>Profile</Text>
+            <View style={styles.profileOptionsContainer}>
+              {profileOptions.map((option) => (
+                <TouchableOpacity
+                  key={option.text}
+                  style={styles.profileOption}
+                  onPress={() => navigation.navigate(option.navigateTo)}
                 >
-                  <Text style={styles.profileOptionText}>{option.text}</Text>
-                  <Icons.GotoIcon />
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+                  {option.icon}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      width: "90%",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={styles.profileOptionText}>{option.text}</Text>
+                    <Icons.GotoIcon />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={{ marginLeft: 20, paddingTop: 10 }}>Support</Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#F09B00",
+                margin: 20,
+                padding: 15,
+                borderRadius: 12,
+                alignItems: "center",
+              }}
+              onPress={() =>
+                navigation.navigate("FavoriteFoodMenuItemScreen", {
+                  restaurantId: 1, // replace with dynamic value if needed
+                })
+              }
+            >
+              <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
+                Browse Favorites
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.profileOptionsContainer}>
+              {support.map((option) => (
+                <TouchableOpacity
+                  key={option.text}
+                  style={styles.profileOption}
+                  onPress={() =>
+                    Alert.alert(
+                      "This feature is currently unavailable, it will be added soon!",
+                    )
+                  }
+                >
+                  {option.icon}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      width: "90%",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={styles.profileOptionText}>{option.text}</Text>
+                    <Icons.GotoIcon />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
           </>
         ) : (
           <View style={styles.emptyCartContainer}>
@@ -335,7 +337,7 @@ const SettingScreen = ({ route }) => {
                 fontWeight: "bold",
                 fontSize: 26,
                 textAlign: "center",
-                color: '#333',
+                color: "#333",
               }}
             >
               Ouch! Hungry
@@ -343,20 +345,22 @@ const SettingScreen = ({ route }) => {
             <Text style={styles.displayMessage}>
               Seems like you have not ordered any food yet
             </Text>
-          </View>               
+          </View>
         )}
 
         <TouchableOpacity
           style={[
             styles.logoutButton,
-            role === 'guest' && { position: 'absolute', bottom: 4 },
+            role === "guest" && { position: "absolute", bottom: 4 },
           ]}
           onPress={handleSubmit}
         >
           <View style={styles.buttonContent}>
             <Icons.LogoutIcon style={styles.icon} />
             {role === "guest" ? (
-              <Text style={styles.logoutButtonText}>Register To Order Food</Text>
+              <Text style={styles.logoutButtonText}>
+                Register To Order Food
+              </Text>
             ) : (
               <Text style={styles.logoutButtonText}>Logout</Text>
             )}
@@ -650,32 +654,32 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   emptyCartContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 20,
     gap: 25,
     flex: 1,
-  },  
+  },
   displayMessage: {
     textAlign: "center",
     fontSize: 16,
     color: "gray",
     maxWidth: "70%",
-    alignSelf: 'center',
+    alignSelf: "center",
     marginTop: 10,
-  },  
+  },
   lottieContainer: {
     width: 250,
     height: 250,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
     marginVertical: 20,
   },
   lottieAnimation: {
-    width: '100%',
-    height: '100%',
-  }
+    width: "100%",
+    height: "100%",
+  },
 });
 
 export default SettingScreen;

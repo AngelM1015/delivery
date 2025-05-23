@@ -8,10 +8,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
-import LottieView from 'lottie-react-native';
-import * as Location from 'expo-location';
+import LottieView from "lottie-react-native";
+import * as Location from "expo-location";
 import CustomButton from "../components/CustomButton";
 import Header from "../components/Header";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -37,7 +37,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [orderType, setOrderType] = useState(null);
   const [deliveryFee, setDeliveryFee] = useState(0.0);
-  const [restaurantDelivery, setRestaurantDelivery] = useState({})
+  const [restaurantDelivery, setRestaurantDelivery] = useState({});
   const [bigSkyTax, setBigSkyTax] = useState(orderDetails.totalPrice * 0.04);
   const [address, setAddress] = useState({
     id: 0,
@@ -59,11 +59,13 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   const debugAsyncStorage = async () => {
     try {
       const restaurantId = await AsyncStorage.getItem("restaurantId");
-      const selectedRestaurantId = await AsyncStorage.getItem("selectedRestaurantId");
+      const selectedRestaurantId = await AsyncStorage.getItem(
+        "selectedRestaurantId",
+      );
       console.log("Debug AsyncStorage:", {
         restaurantId,
         selectedRestaurantId,
-        cartItems: cartItems.length > 0 ? cartItems[0].restaurantId : null
+        cartItems: cartItems.length > 0 ? cartItems[0].restaurantId : null,
       });
     } catch (error) {
       console.error("Debug error:", error);
@@ -75,11 +77,11 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
     try {
       // Try all possible sources for restaurant ID
       let restaurantId = await AsyncStorage.getItem("selectedRestaurantId");
-      
+
       if (!restaurantId) {
         restaurantId = await AsyncStorage.getItem("restaurantId");
       }
-      
+
       // If still not found, try to get from cart items
       if (!restaurantId && cartItems && cartItems.length > 0) {
         const firstItem = cartItems[0];
@@ -90,7 +92,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           console.log("Saved restaurant ID from cart item:", restaurantId);
         }
       }
-      
+
       return restaurantId;
     } catch (error) {
       console.error("Error retrieving restaurant ID:", error);
@@ -99,19 +101,22 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    if(!cartItems.length > 0) navigation.goBack();
+    if (!cartItems.length > 0) navigation.goBack();
 
     const checkRestaurantId = async () => {
       const id = await getRestaurantId();
       console.log("Current restaurant ID:", id);
-      
+
       // If no restaurant ID found, try to extract from cart items
       if (!id && cartItems.length > 0 && cartItems[0].restaurantId) {
-        await AsyncStorage.setItem("selectedRestaurantId", cartItems[0].restaurantId.toString());
+        await AsyncStorage.setItem(
+          "selectedRestaurantId",
+          cartItems[0].restaurantId.toString(),
+        );
         console.log("Set restaurant ID from cart:", cartItems[0].restaurantId);
       }
     };
-    
+
     checkRestaurantId();
     fetchPaymentMethods();
 
@@ -130,40 +135,39 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   }, [cartItems]);
 
   useEffect(() => {
-    if( address.location_name !== "") calculateDistance(address);
-  }, [address])
+    if (address.location_name !== "") calculateDistance(address);
+  }, [address]);
 
   const calculateDistance = async (location) => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await AsyncStorage.getItem("userToken");
       const restaurantId = await getRestaurantId();
-      
+
       if (!restaurantId) {
         console.error("No restaurant ID available for distance calculation");
         return;
       }
-      
+
       const url = `api/v1/restaurants/${restaurantId}/delivery_mileage`;
       const restaurant = {
         destination_latitude: location.latitude,
-        destination_longitude: location.longitude
+        destination_longitude: location.longitude,
       };
 
-      const response = await client.get(url,
-        { params: {
-          restaurant
+      const response = await client.get(url, {
+        params: {
+          restaurant,
         },
-          Header: { Authorization: `Bearer ${token}` }
-        }
-      );
-      console.log('distance response', response.data);
+        Header: { Authorization: `Bearer ${token}` },
+      });
+      console.log("distance response", response.data);
 
       setRestaurantDelivery(response.data);
     } catch (error) {
-        console.error("Error fetching distance:", error);
-        return;
+      console.error("Error fetching distance:", error);
+      return;
     }
-  }
+  };
 
   const fetchPaymentMethods = async () => {
     try {
@@ -174,7 +178,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       setPaymentMethods(response.data);
@@ -195,34 +199,36 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   };
 
   const requestLocationPermissions = async () => {
-    const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
-    if (foregroundStatus !== 'granted') {
+    const { status: foregroundStatus } =
+      await Location.requestForegroundPermissionsAsync();
+    if (foregroundStatus !== "granted") {
       Alert.alert(
         "Permission Denied",
-        "You need to grant location permissions to place an order."
+        "You need to grant location permissions to place an order.",
       );
       return;
     }
-    
+
     // Then in your function:
-    const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-    if (backgroundStatus !== 'granted') {
+    const { status: backgroundStatus } =
+      await Location.requestBackgroundPermissionsAsync();
+    if (backgroundStatus !== "granted") {
       Alert.alert(
         "Background Location Required",
         "To find drivers while you're not using the app, please set to [Always] background location must be granted.",
         [
           {
             text: "Cancel",
-            style: "cancel"
+            style: "cancel",
           },
           {
             text: "Open Settings",
             onPress: () => {
               // This will open the app settings on iOS or app details on Android
               Linking.openSettings();
-            }
-          }
-        ]
+            },
+          },
+        ],
       );
       return;
     }
@@ -232,10 +238,13 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
     try {
       // Validate order requirements
       if (!orderType) {
-        Alert.alert("Missing Information", "Please select an order type (delivery or pickup)");
+        Alert.alert(
+          "Missing Information",
+          "Please select an order type (delivery or pickup)",
+        );
         return;
       }
-      
+
       if (!paymentMethod || !paymentMethod.id) {
         Alert.alert("Payment Required", "Please select a valid payment method");
         return;
@@ -243,17 +252,17 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 
       // Get restaurant ID using our helper function
       const restaurantId = await getRestaurantId();
-      
+
       if (!restaurantId) {
         Alert.alert(
-          "Restaurant Not Found", 
-          "We couldn't identify which restaurant you're ordering from. Please try selecting a restaurant again."
+          "Restaurant Not Found",
+          "We couldn't identify which restaurant you're ordering from. Please try selecting a restaurant again.",
         );
         return;
       }
-      
+
       console.log("Using restaurant ID for order:", restaurantId);
-      
+
       // Validate delivery-specific requirements
       if (orderType === "delivery") {
         if (!address || !address.location_name) {
@@ -263,17 +272,25 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 
         // Check location permissions for delivery tracking
         try {
-          const { status: foregroundStatus } = await Location.getForegroundPermissionsAsync();
-          const { status: backgroundStatus } = await Location.getBackgroundPermissionsAsync();
-          
-          if (foregroundStatus !== 'granted' || backgroundStatus !== 'granted') {
+          const { status: foregroundStatus } =
+            await Location.getForegroundPermissionsAsync();
+          const { status: backgroundStatus } =
+            await Location.getBackgroundPermissionsAsync();
+
+          if (
+            foregroundStatus !== "granted" ||
+            backgroundStatus !== "granted"
+          ) {
             Alert.alert(
               "Location Permission Required",
               "To find drivers while you're not using the app, background location must be granted.",
               [
                 { text: "Cancel", style: "cancel" },
-                { text: "Enable Location", onPress: requestLocationPermissions }
-              ]
+                {
+                  text: "Enable Location",
+                  onPress: requestLocationPermissions,
+                },
+              ],
             );
             return;
           }
@@ -281,7 +298,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           console.error("Error checking location permissions:", locationError);
           Alert.alert(
             "Location Services Error",
-            "There was a problem accessing location services. Please check your device settings."
+            "There was a problem accessing location services. Please check your device settings.",
           );
           return;
         }
@@ -291,7 +308,8 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
       const orderData = {
         order: {
           restaurant_id: parseInt(restaurantId),
-          delivery_address: orderType === "delivery" ? address.location_name : "",
+          delivery_address:
+            orderType === "delivery" ? address.location_name : "",
           total_price: (
             parseFloat(orderDetails.totalPrice || 0) +
             parseFloat(bigSkyTax || 0) +
@@ -310,17 +328,17 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
                 modifier_id: modifier.modifierId,
                 order_modifier_options_attributes: modifier.options.map(
                   (modifier_option) => ({
-                    modifier_option_id: modifier_option.id
-                  })
-                )
-              })
+                    modifier_option_id: modifier_option.id,
+                  }),
+                ),
+              }),
             ),
           })),
         },
       };
 
       console.log("Submitting order with data:", orderData);
-      
+
       setIsLoading(true);
       try {
         await createOrder(navigation, orderData.order);
@@ -339,11 +357,11 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       {isLoading && (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#FFA500" />
-            <Text style={styles.loadingText}>Placing your order...</Text>
-          </View>
-        )}
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#FFA500" />
+          <Text style={styles.loadingText}>Placing your order...</Text>
+        </View>
+      )}
       <View style={styles.headerContainer}>
         <Header title="Checkout" navigation={navigation} showShareIcon={true} />
       </View>
@@ -383,9 +401,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           <View style={styles.transactionDetails}>
             <View style={styles.transactionRow}>
               <Text style={styles.detailText}>Big Sky Tax 4%</Text>
-              <Text style={styles.detailAmount}>
-                ${bigSkyTax.toFixed(2)}
-              </Text>
+              <Text style={styles.detailAmount}>${bigSkyTax.toFixed(2)}</Text>
             </View>
             {deliveryFee > 0 && (
               <View style={styles.transactionRow}>
@@ -449,7 +465,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
                 setIsFeatureTypeSelected(true);
               }}
             >
-              <LottieView 
+              <LottieView
                 source={require("./../assets/lottie-images/Order-On-The-Way.json")}
                 autoPlay={orderType === "delivery"}
                 loop={false}
@@ -468,7 +484,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
                 setIsFeatureTypeSelected(true);
               }}
             >
-              <LottieView 
+              <LottieView
                 source={require("./../assets/lottie-images/Ready-Food-Order.json")}
                 autoPlay={orderType === "pickup"}
                 loop={false}
@@ -618,7 +634,7 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 16,
     color: "#666",
-    fontStyle: "italic"
+    fontStyle: "italic",
   },
   detailAmount: {
     fontSize: 16,
@@ -627,7 +643,7 @@ const styles = StyleSheet.create({
   totalText: {
     fontWeight: "bold",
     fontSize: 18,
-    fontStyle: "italic"
+    fontStyle: "italic",
   },
   totalAmount: {
     fontWeight: "bold",
@@ -646,7 +662,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-    fontStyle: "italic"
+    fontStyle: "italic",
   },
   deliveryDetail: {
     fontSize: 16,
@@ -717,7 +733,7 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 8,
     alignItems: "center",
-    marginBottom: 14
+    marginBottom: 14,
   },
 });
 
