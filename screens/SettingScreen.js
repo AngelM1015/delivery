@@ -15,11 +15,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { Icons } from "../constants/Icons";
 import { COLORS } from "../constants/colors";
-import { base_url, orders } from "../constants/api";
+import { base_url } from "../constants/api";
 import useUser from "../hooks/useUser";
 import useOrder from "../hooks/useOrder";
+import useSubscription from "../hooks/useSubscription";
 import LottieView from "lottie-react-native";
 import FavoriteFoodMenuItemScreen from "../screens/FavoriteFoodMenuItemScreen";
+import SubscriptionPlansModal from "../components/SubscriptionPlansModal";
 
 <Stack
   name="FavoriteFoodMenuItemScreen"
@@ -32,13 +34,25 @@ const SettingScreen = ({ route }) => {
 
   const { role, userEmail, userName } = useUser();
   const { lastOrder, fetchLastOrder } = useOrder();
+  const {
+    subscriptionStatus,
+  } = useSubscription();
   const [modalVisible, setModalVisible] = useState(false);
+  const [subscriptionModalVisible, setSubscriptionModalVisible] = useState(false);
 
   useEffect(() => {
     if (role === "customer") {
       fetchLastOrder();
     }
   }, [role]);
+
+  const handleSubscriptionAction = () => {
+    if (role !== "customer") {
+      Alert.alert("Access Denied", "Subscription is only available for customers.");
+      return;
+    }
+    setSubscriptionModalVisible(true);
+  };
 
   const renderOrderItem = () => {
     let statusText = "";
@@ -183,6 +197,11 @@ const SettingScreen = ({ route }) => {
             text: "Payment Methods",
             navigateTo: "AddPaymentMethod",
           },
+          {
+            icon: <Icons.ExtraCard />,
+            text: subscriptionStatus?.has_subscription ? "Manage Subscription" : "Subscribe Now",
+            onPress: handleSubscriptionAction,
+          },
         ]
       : []),
   ];
@@ -258,7 +277,13 @@ const SettingScreen = ({ route }) => {
                 <TouchableOpacity
                   key={option.text}
                   style={styles.profileOption}
-                  onPress={() => navigation.navigate(option.navigateTo)}
+                  onPress={() => {
+                    if (option.navigateTo) {
+                      navigation.navigate(option.navigateTo);
+                    } else if (option.onPress) {
+                      option.onPress();
+                    }
+                  }}
                 >
                   {option.icon}
                   <View
@@ -407,6 +432,12 @@ const SettingScreen = ({ route }) => {
             </View>
           </View>
         </Modal>
+
+        <SubscriptionPlansModal
+          visible={subscriptionModalVisible}
+          onClose={() => setSubscriptionModalVisible(false)}
+          initialSubscriptionStatus={subscriptionStatus}
+        />
       </ScrollView>
     </View>
   );
@@ -679,6 +710,45 @@ const styles = StyleSheet.create({
   lottieAnimation: {
     width: "100%",
     height: "100%",
+  },
+  subscriptionPlans: {
+    width: '100%',
+    marginTop: 20,
+  },
+  planOption: {
+    backgroundColor: '#f8f8f8',
+    padding: 20,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  planTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.black,
+    marginBottom: 5,
+  },
+  planPrice: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#F09B00',
+    marginBottom: 10,
+  },
+  planFeatures: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  noPlansText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginVertical: 20,
   },
 });
 

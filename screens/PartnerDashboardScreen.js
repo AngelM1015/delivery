@@ -87,7 +87,10 @@ const DashboardScreen = () => {
           received(data) {
             console.log("New order notification:", data);
             if (data.new_order) {
-              addNewOrder(data.new_order);
+              const orderExists = orders.some(order => order.id === data.new_order.id);
+              if (!orderExists) {
+                addNewOrder(data.new_order);
+              }
             } else if (data.order_request) {
               addNewOrder(data.order_request);
               console.log("New order request:", data.order_request);
@@ -181,6 +184,10 @@ const DashboardScreen = () => {
     if (subscription) {
       subscription.perform("accept_order", { order_id: orderId });
     }
+
+    setNewOrders((prevOrders) => {
+      return prevOrders.filter((order) => order.order_id !== orderId);
+    });
   };
 
   const renderDashboard = () => {
