@@ -24,18 +24,20 @@ const SignupScreen = ({ navigation, route }) => {
     isRoleChanged: false,
     setIsRoleChanged: () => {},
   };
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [newUserName, setNewUserName] = useState("");
+  const [role, setRole] = useState("");
 
   const handleSignup = async () => {
     // Input validation
-    if (!name || !email || !password || !confirmPassword) {
-      Alert.alert("Error", "Please fill in all fields");
+    if (!firstName || !lastName || !email || !password || !confirmPassword || !role) {
+      Alert.alert("Error", "Please fill in all fields and select a role");
       return;
     }
 
@@ -53,12 +55,14 @@ const SignupScreen = ({ navigation, route }) => {
 
     setLoading(true);
     try {
-      const url = `${base_url}${auth.signup}`;
+      const url = `${base_url}${auth.register}`;
       const response = await axios.post(url, {
-        name,
+        first_name: firstName,
+        last_name: lastName,
         email,
         password,
         password_confirmation: confirmPassword,
+        role,
       });
 
       if (response?.data?.token) {
@@ -85,7 +89,7 @@ const SignupScreen = ({ navigation, route }) => {
         }
 
         // Show success modal instead of immediately navigating
-        setNewUserName(name);
+        setNewUserName(`${firstName} ${lastName}`);
         setShowSuccessModal(true);
       } else {
         Alert.alert("Error", "Signup failed. Please try again.");
@@ -135,9 +139,15 @@ const SignupScreen = ({ navigation, route }) => {
 
           <View style={styles.formContainer}>
             <CustomInput
-              placeholder="Full Name"
-              value={name}
-              setValue={setName}
+              placeholder="First Name"
+              value={firstName}
+              setValue={setFirstName}
+              secureTextEntry={false}
+            />
+            <CustomInput
+              placeholder="Last Name"
+              value={lastName}
+              setValue={setLastName}
               secureTextEntry={false}
             />
             <CustomInput
@@ -160,11 +170,60 @@ const SignupScreen = ({ navigation, route }) => {
               setValue={setConfirmPassword}
               secureTextEntry={true}
             />
-
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10 }}>Select Role</Text>
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                {[
+                  { label: "Customer", value: "customer" },
+                  { label: "Partner", value: "partner" },
+                  { label: "Restaurant Owner", value: "restaurant_owner" },
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item.value}
+                    style={{ flexDirection: "row", alignItems: "center" }}
+                    onPress={() => setRole(item.value)}
+                  >
+                    <View
+                      style={{
+                        height: 20,
+                        width: 20,
+                        borderRadius: 10,
+                        borderWidth: 2,
+                        borderColor: "#F09B00",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: 6,
+                        backgroundColor: "#fff",
+                      }}
+                    >
+                      {role === item.value && (
+                        <View
+                          style={{
+                            height: 10,
+                            width: 10,
+                            borderRadius: 5,
+                            backgroundColor: "#F09B00",
+                          }}
+                        />
+                      )}
+                    </View>
+                    <Text style={{ fontSize: 15, color: "#333", marginRight: 12 }}>{item.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
             <CustomButton
               text={loading ? "Creating Account..." : "Sign Up"}
               onPress={handleSignup}
-              disable={loading}
+              disable={
+                loading ||
+                !firstName ||
+                !lastName ||
+                !email ||
+                !password ||
+                !confirmPassword ||
+                !role
+              }
             />
           </View>
 
