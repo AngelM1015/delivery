@@ -29,7 +29,7 @@ client.defaults.timeout = 30000; // 30 seconds timeout
 
 const MenuCheckoutScreen = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { cartItems } = useCart();
+  const { cartItems, cartRestaurantId } = useCart();
   const { createOrder } = useOrder();
   const { userName } = useUser();
   const { orderDetails = {} } = route.params || {};

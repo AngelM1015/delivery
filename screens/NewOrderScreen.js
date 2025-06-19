@@ -87,7 +87,6 @@ const NewOrderScreen = ({ navigation }) => {
       const response = await axios.get(apiUrl, { headers });
       setOrders(response.data);
       setRestaurant(response.data[0]["restaurant_id"]);
-      console.log("restaurant", response.data[0]["restaurant_id"]);
       response.data.forEach((order) =>
         handleReceived({ order_id: order.id, status: order.status }),
       );
@@ -136,13 +135,10 @@ const NewOrderScreen = ({ navigation }) => {
       { channel: "RestaurantChannel", id: restaurantId },
       {
         received: (data) => {
-          console.log("data", data);
           setOrders((prevOrders) => [data, ...prevOrders]);
         },
       },
     );
-
-    console.log("restaurant subscription", subscription);
   };
 
   const onRefresh = () => {
@@ -170,6 +166,7 @@ const NewOrderScreen = ({ navigation }) => {
   };
 
   const updateOrderStatus = async (id, status, cancellationReason = null) => {
+    console.log("updateOrderStatus", id, status, cancellationReason);
     const token = await AsyncStorage.getItem("userToken");
 
     try {
