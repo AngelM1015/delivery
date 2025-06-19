@@ -15,10 +15,9 @@ import { createStackNavigator } from "@react-navigation/stack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CartProvider } from "./context/CartContext";
 import { UserProvider } from "./context/UserContext";
-import OngoingOrderDrawer from "./components/OngoingOrderDrawer";
 import SplashScreen from "./screens/splashscreen";
 import FavoriteFoodMenuItemScreen from "./screens/FavoriteFoodMenuItemScreen";
-import LoginScreen from "./screens/LoginScreen";
+import LoginScreen from "./screens/loginscreen";
 import SignupScreen from "./screens/SignupScreen";
 import OnboardingComponent from "./components/OnboardingComponent";
 import RestaurantMenuScreen from "./screens/RestaurantMenuScreen";
@@ -89,7 +88,6 @@ function App() {
     const fetchUserData_CheckActiveOrder = async () => {
       try {
         const role = await AsyncStorage.getItem("userRole");
-        console.log("role", role);
         if (role) {
           setUserRole(role);
         }
