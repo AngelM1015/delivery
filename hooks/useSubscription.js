@@ -25,10 +25,10 @@ const useSubscription = () => {
     }
   };
 
-  const createSubscription = async (paymentMethodId, priceId) => {
+  const createSubscription = async (paymentMethodId, priceId, productName) => {
     setLoading(true);
     try {
-      const result = await subscriptionService.createSubscription(paymentMethodId, priceId);
+      const result = await subscriptionService.createSubscription(paymentMethodId, priceId, productName);
       await fetchSubscriptionStatus();
       return result;
     } catch (error) {

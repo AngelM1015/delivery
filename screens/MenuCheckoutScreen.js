@@ -32,13 +32,27 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   const { cartItems, cartRestaurantId } = useCart();
   const { createOrder } = useOrder();
   const { userName } = useUser();
-  const { orderDetails = {} } = route.params || {};
   const [paymentMethod, setPaymentMethod] = useState({});
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [orderType, setOrderType] = useState(null);
   const [deliveryFee, setDeliveryFee] = useState(0.0);
   const [restaurantDelivery, setRestaurantDelivery] = useState({});
-  const [bigSkyTax, setBigSkyTax] = useState(orderDetails.totalPrice * 0.04);
+  const [surgeFee, setSurgeFee] = useState({
+    total: 0.0,
+    driver: 0.0,
+    restaurant: 0.0,
+  });
+  const [retryOrderData, setRetryOrderData] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 2;
+
+  const subTotal = cartItems.reduce(
+    (sum, item) => sum + (parseFloat(item.price) || 0) * (item.quantity || 1),
+    0,
+  );
+  const bigSkyTax = subTotal * 0.04;
+  const totalPrice = subTotal + bigSkyTax + parseFloat(deliveryFee || 0) + parseFloat(surgeFee.total || 0);
+
   const [address, setAddress] = useState({
     id: 0,
     location_name: "",
@@ -53,23 +67,6 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
     name: userName,
     phone: "+12 8347 2838 28",
     address: address.location_name,
-  };
-
-  // Add this function to help debug
-  const debugAsyncStorage = async () => {
-    try {
-      const restaurantId = await AsyncStorage.getItem("restaurantId");
-      const selectedRestaurantId = await AsyncStorage.getItem(
-        "selectedRestaurantId",
-      );
-      console.log("Debug AsyncStorage:", {
-        restaurantId,
-        selectedRestaurantId,
-        cartItems: cartItems.length > 0 ? cartItems[0].restaurantId : null,
-      });
-    } catch (error) {
-      console.error("Debug error:", error);
-    }
   };
 
   // Add this function at the top of your component
@@ -89,7 +86,6 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           restaurantId = firstItem.restaurantId.toString();
           // Save it for future use
           await AsyncStorage.setItem("selectedRestaurantId", restaurantId);
-          console.log("Saved restaurant ID from cart item:", restaurantId);
         }
       }
 
@@ -105,15 +101,12 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
 
     const checkRestaurantId = async () => {
       const id = await getRestaurantId();
-      console.log("Current restaurant ID:", id);
 
-      // If no restaurant ID found, try to extract from cart items
       if (!id && cartItems.length > 0 && cartItems[0].restaurantId) {
         await AsyncStorage.setItem(
           "selectedRestaurantId",
           cartItems[0].restaurantId.toString(),
         );
-        console.log("Set restaurant ID from cart:", cartItems[0].restaurantId);
       }
     };
 
@@ -128,7 +121,7 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           setAddress(parsedLocation);
         }
       } catch (error) {
-        console.log("Error fetching location:", error);
+        console.error("Error fetching location:", error);
       }
     };
     getLocation();
@@ -137,6 +130,10 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
   useEffect(() => {
     if (address.location_name !== "") calculateDistance(address);
   }, [address]);
+
+  // Recalculate total when surge fee changes
+  useEffect(() => {
+  }, [surgeFee]);
 
   const calculateDistance = async (location) => {
     try {
@@ -160,7 +157,6 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         },
         Header: { Authorization: `Bearer ${token}` },
       });
-      console.log("distance response", response.data);
 
       setRestaurantDelivery(response.data);
     } catch (error) {
@@ -188,12 +184,79 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
     }
   };
 
-  const orderTypeSelection = (value) => {
-    console.log("value of order type", value);
+  const fetchSurgeFee = async (restaurantId, addressId) => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      const response = await axios.get(
+        `${base_url}api/v1/orders/surge_fee`,
+        {
+          params: {
+            restaurant_id: restaurantId,
+            address_id: addressId,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.data) {
+        if (response.data.delivery_fee && typeof response.data.delivery_fee.total_fee === 'number') {
+          setDeliveryFee(response.data.delivery_fee.total_fee);
+        } else {
+          setDeliveryFee(0);
+        }
+        if (response.data.surge_fee && response.data.surge_fee.table && typeof response.data.surge_fee.table.total === 'number') {
+          setSurgeFee(response.data.surge_fee.table);
+        } else {
+          setSurgeFee({
+            total: 0.0,
+            driver: 0.0,
+            restaurant: 0.0,
+          });
+        }
+      } else {
+        setDeliveryFee(0);
+        setSurgeFee({
+          total: 0.0,
+          driver: 0.0,
+          restaurant: 0.0,
+        });
+      }
+    } catch (error) {
+      setDeliveryFee(0);
+      setSurgeFee({
+        total: 0.0,
+        driver: 0.0,
+        restaurant: 0.0,
+      });
+      console.error("Error fetching surge fee:", error);
+    }
+  };
+
+  const orderTypeSelection = async (value) => {
     if (value === "delivery") {
-      setDeliveryFee(restaurantDelivery.delivery_price);
+      if(address.location_name === "") {
+        Alert.alert("Address Required", "Please add a delivery address");
+        return;
+      }
+      const restaurantId = await getRestaurantId();
+      if (restaurantId && address.id) {
+        fetchSurgeFee(restaurantId, address.id);
+      } else {
+        setDeliveryFee(0);
+        setSurgeFee({
+          total: 0.0,
+          driver: 0.0,
+          restaurant: 0.0,
+        });
+      }
     } else {
       setDeliveryFee(0);
+      setSurgeFee({
+        total: 0.0,
+        driver: 0.0,
+        restaurant: 0.0,
+      });
     }
     setOrderType(value);
   };
@@ -261,12 +324,18 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         return;
       }
 
-      console.log("Using restaurant ID for order:", restaurantId);
-
       // Validate delivery-specific requirements
       if (orderType === "delivery") {
         if (!address || !address.location_name) {
           Alert.alert("Address Required", "Please add a delivery address");
+          return;
+        }
+
+        if (!deliveryFee || deliveryFee <= 0) {
+          Alert.alert(
+            "Delivery Fee Error",
+            "A delivery fee could not be calculated. Please ensure your address is correct and try again.",
+          );
           return;
         }
 
@@ -310,11 +379,10 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
           restaurant_id: parseInt(restaurantId),
           delivery_address:
             orderType === "delivery" ? address.location_name : "",
-          total_price: (
-            parseFloat(orderDetails.totalPrice || 0) +
-            parseFloat(bigSkyTax || 0) +
-            parseFloat(deliveryFee || 0)
-          ).toFixed(2),
+          total_price: totalPrice.toFixed(2),
+          surge_fee: parseFloat(surgeFee.total || 0).toFixed(2),
+          driver_surge_share: parseFloat(surgeFee.driver_share || 0).toFixed(2),
+          restaurant_surge_share: parseFloat(surgeFee.restaurant_share || 0).toFixed(2),
           delivery_fee: deliveryFee,
           payment_method_id: paymentMethod.id,
           address_id: address.id,
@@ -337,19 +405,75 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         },
       };
 
-      console.log("Submitting order with data:", orderData);
-
-      setIsLoading(true);
-      try {
-        await createOrder(navigation, orderData.order);
-      } catch (error) {
-        Alert.alert("Error", "Failed to create order. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
+      setRetryOrderData(orderData.order);
+      setRetryCount(0);
+      await executeOrderSubmission(orderData.order);
     } catch (error) {
       console.error("Order submission error:", error);
       Alert.alert("Error", "An unexpected error occurred. Please try again.");
+      setIsLoading(false);
+    }
+  };
+
+  const executeOrderSubmission = async (orderData, isRetry = false) => {
+    setIsLoading(true);
+
+    // Define callback to handle surge fee updates
+    const handleSurgeFeeUpdate = (expectedSurgeFee) => {
+
+      // Update the surge fee with the expected value from backend
+      setSurgeFee(prevState => ({
+        ...prevState,
+        total: parseFloat(expectedSurgeFee),
+      }));
+
+      if (isRetry && retryCount < MAX_RETRIES) {
+        // Auto-retry with updated surge fee
+        setRetryCount(prev => prev + 1);
+        setTimeout(() => {
+          executeOrderSubmission(orderData, true);
+        }, 1000); // Wait 1 second before retry
+      } else if (isRetry && retryCount >= MAX_RETRIES) {
+        Alert.alert(
+          "Maximum Retries Reached",
+          "We've tried to update the pricing multiple times but encountered issues. Please try again later.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                setRetryCount(0);
+                setRetryOrderData(null);
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert(
+          "Pricing Updated",
+          `The delivery pricing has been updated. Please review the new total and try placing your order again.`,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                // The user can try submitting again with the updated surge fee
+              }
+            }
+          ]
+        );
+      }
+    };
+
+    try {
+      await createOrder(navigation, orderData, handleSurgeFeeUpdate);
+      // If successful, reset retry state
+      setRetryCount(0);
+      setRetryOrderData(null);
+    } catch (error) {
+      console.error("Order creation error:", error);
+      if (!isRetry) {
+        Alert.alert("Error", "Failed to create order. Please try again.");
+      }
+    } finally {
       setIsLoading(false);
     }
   };
@@ -411,23 +535,18 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
                 </Text>
               </View>
             )}
-
-            {/* <View style={styles.transactionRow}>
-              <Text style={styles.detailText}>Tax 10%</Text>
-              <Text style={styles.detailAmount}>
-                ${orderDetails.tax || "0.00"}
-              </Text>
-            </View> */}
-            {/* <View style={styles.transactionRow}>
+            {surgeFee.total > 0 && (
+              <View style={styles.transactionRow}>
+                <Text style={styles.detailText}>Surge Fee</Text>
+                <Text style={styles.detailAmount}>${parseFloat(surgeFee.total).toFixed(2)}</Text>
+              </View>
+            )}
+            <View style={styles.transactionRow}>
               <Text style={styles.totalText}>Total Price</Text>
               <Text style={styles.totalAmount}>
-              ${(
-                parseFloat(orderDetails.totalPrice || 0) +
-                parseFloat(bigSkyTax || 0) +
-                parseFloat(deliveryFee || 0)
-              ).toFixed(2)}
+                ${totalPrice.toFixed(2)}
               </Text>
-            </View> */}
+            </View>
           </View>
         </View>
 
@@ -534,12 +653,34 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
         />
 
         <View style={styles.buttonContainer}>
+          {retryCount > 0 && retryCount < MAX_RETRIES && (
+            <Text style={styles.retryText}>
+              Updating pricing... (Attempt {retryCount}/{MAX_RETRIES})
+            </Text>
+          )}
+
+          {retryCount >= MAX_RETRIES && retryOrderData && (
+            <View style={styles.retryContainer}>
+              <Text style={styles.retryText}>
+                Maximum retries reached. Please try again.
+              </Text>
+              <CustomButton
+                text="Retry Order"
+                onPress={() => {
+                  setRetryCount(0);
+                  executeOrderSubmission(retryOrderData, false);
+                }}
+                style={styles.retryButton}
+              />
+            </View>
+          )}
+
           <CustomButton
             text="Checkout Now"
             onPress={() => {
               submitOrder();
             }}
-            disable={orderType === null && paymentMethod.length === 0}
+            disable={orderType === null || !paymentMethod.id || isLoading}
           />
         </View>
       </ScrollView>
@@ -734,6 +875,24 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     marginBottom: 14,
+  },
+  retryText: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 10,
+    fontStyle: "italic",
+  },
+  retryContainer: {
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: "#f8f8f8",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  retryButton: {
+    marginTop: 10,
   },
 });
 
