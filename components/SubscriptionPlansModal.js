@@ -135,7 +135,7 @@ const SubscriptionPlansModal = ({ visible, onClose, initialSubscriptionStatus })
     }
 
     try {
-      await createSubscription(selectedPaymentMethod.id, selectedPlan.priceId);
+      await createSubscription(selectedPaymentMethod.id, selectedPlan.priceId, selectedPlan.productName);
       Alert.alert("Success", "Your subscription has been activated!");
       onClose();
     } catch (error) {

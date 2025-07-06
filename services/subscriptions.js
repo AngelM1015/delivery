@@ -16,10 +16,11 @@ export class SubscriptionService {
     return response.data;
   }
 
-  async createSubscription(paymentMethodId, priceId) {
+  async createSubscription(paymentMethodId, priceId, productName) {
     const response = await client.post(subscriptions.create, {
       payment_method_id: paymentMethodId,
       price_id: priceId,
+      product_name: productName
     }, {
       headers: {
         'Authorization': `Bearer ${this.token}`,
