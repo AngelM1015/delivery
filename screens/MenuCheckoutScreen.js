@@ -537,7 +537,10 @@ const MenuCheckoutScreen = ({ navigation, route }) => {
             )}
             {surgeFee.total > 0 && (
               <View style={styles.transactionRow}>
-                <Text style={styles.detailText}>Surge Fee</Text>
+                <View style={styles.detailText}>
+                  <Text style={styles.detailText}>Surge Fee</Text>
+                  <Text style={styles.surgeFeeReason}>{surgeFee.reason}</Text>
+                </View>
                 <Text style={styles.detailAmount}>${parseFloat(surgeFee.total).toFixed(2)}</Text>
               </View>
             )}
@@ -776,6 +779,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     fontStyle: "italic",
+    gap: 5,
   },
   detailAmount: {
     fontSize: 16,
@@ -810,6 +814,14 @@ const styles = StyleSheet.create({
     color: "#666",
     maxWidth: "50%",
     textAlign: "right",
+  },
+  surgeFeeReason: {
+    fontSize: 12,
+    color: "#666",
+    fontStyle: "italic",
+    wordBreak: "break-word",
+    textAlign: "left",
+    maxWidth: "80%",
   },
   selectedOrderType: {
     borderColor: "#F09B00",
